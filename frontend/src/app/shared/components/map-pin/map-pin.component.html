@@ -1,0 +1,6 @@
+<div class="map-pin">
+  <div #canvas class="map-pin-canvas" [attr.aria-label]="label" role="application"></div>
+  <p class="map-pin-readout">
+    {{ latitude.toFixed(5) }}, {{ longitude.toFixed(5) }}
+  </p>
+</div>

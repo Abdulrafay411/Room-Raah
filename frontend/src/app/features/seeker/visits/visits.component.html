@@ -1,0 +1,81 @@
+<section class="visits-page container-centered" aria-labelledby="visits-title">
+  <h1 class="visits-title" id="visits-title">My visits</h1>
+  <p class="visits-lead">
+    Ask an owner for a visit from any listing. Once the visit has happened, mark it done —
+    that is what lets you write a review.
+  </p>
+
+  @if (actionError()) {
+    <p class="visits-error" role="alert" data-smoke="visit-action-error">{{ actionError() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="visits-loading" aria-busy="true">Loading your visits…</p>
+  } @else if (error()) {
+    <p class="visits-error" role="alert" data-smoke="visits-error">{{ error() }}</p>
+  } @else if (visits().length === 0) {
+    <div data-smoke="visits-empty">
+      <app-empty-state type="visits" />
+    </div>
+  } @else {
+    <ul class="visit-list" data-smoke="visits-list">
+      @for (visit of visits(); track visit.id) {
+        <li class="visit">
+          <div class="visit-head">
+            <a class="visit-listing" [routerLink]="['/property', visit.propertyId]">
+              {{ visit.propertyTitle }}
+            </a>
+            <app-badge [variant]="statusVariant(visit.status)" size="sm">
+              {{ visit.status }}
+            </app-badge>
+          </div>
+
+          <p class="visit-where">{{ visit.areaName }}, {{ visit.cityName }}</p>
+          <p class="visit-when">
+            {{ visit.visitType === 'Video' ? 'Video call' : 'In person' }} ·
+            {{ visit.preferredAt | date: 'EEEE d MMMM, h:mm a' }}
+          </p>
+
+          @if (visit.ownerResponseNote) {
+            <p class="visit-note">
+              <span class="visit-note-label">The owner wrote:</span>
+              {{ visit.ownerResponseNote }}
+            </p>
+          }
+
+          @if (waitingNote(visit); as note) {
+            <p class="visit-hint">{{ note }}</p>
+          }
+
+          <div class="visit-actions">
+            @if (canComplete(visit)) {
+              <app-button
+                variant="success"
+                size="sm"
+                [loading]="busyId() === visit.id"
+                (clicked)="complete(visit)"
+              >
+                Mark visit done
+              </app-button>
+            }
+            @if (canReview(visit)) {
+              <a class="visit-review" [routerLink]="['/property', visit.propertyId, 'review']">
+                Write a review
+              </a>
+            }
+            @if (canCancel(visit)) {
+              <app-button
+                variant="outline"
+                size="sm"
+                [loading]="busyId() === visit.id"
+                (clicked)="cancel(visit)"
+              >
+                Cancel request
+              </app-button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

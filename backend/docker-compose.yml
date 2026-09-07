@@ -1,0 +1,46 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: roomraah-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${ROOMRAAH_SQL_PASSWORD:?Set ROOMRAAH_SQL_PASSWORD before running Docker Compose}"
+    ports:
+      - "1433:1433"
+    volumes:
+      - roomraah-sqldata:/var/opt/mssql
+
+  redis:
+    image: redis:7-alpine
+    container_name: roomraah-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - roomraah-redisdata:/data
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: roomraah-azurite
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --skipApiVersionCheck --location /data"
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - roomraah-blobdata:/data
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: roomraah-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+volumes:
+  roomraah-sqldata:
+  roomraah-redisdata:
+  roomraah-blobdata:

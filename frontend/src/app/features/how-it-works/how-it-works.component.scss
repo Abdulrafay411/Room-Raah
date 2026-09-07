@@ -1,0 +1,79 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+  background: $color-background;
+  min-height: 100vh;
+}
+
+.how-page {
+  @include container-centered;
+  max-width: 760px;
+  padding-top: $space-8;
+  padding-bottom: $space-12;
+}
+
+.how-title {
+  margin: 0 0 $space-3;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-navy;
+}
+
+.how-lead {
+  margin: 0 0 $space-8;
+  color: $color-slate-600;
+  line-height: $line-height-relaxed;
+}
+
+.how-steps {
+  margin: 0 0 $space-8;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+}
+
+.how-step {
+  padding: $space-5;
+  background: $color-surface;
+  border: 1px solid $color-slate-200;
+  border-left: 3px solid $color-green;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+}
+
+.step-title {
+  margin: 0 0 $space-2;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-navy;
+}
+
+.step-text {
+  margin: 0;
+  color: $color-slate-700;
+  line-height: $line-height-relaxed;
+}
+
+.how-owner {
+  padding: $space-6;
+  background: $color-surface;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+}
+
+.how-cta {
+  display: inline-block;
+  margin-top: $space-4;
+  padding: $space-3 $space-5;
+  background: $color-navy;
+  color: #fff;
+  border-radius: $radius-md;
+  font-weight: $font-weight-semibold;
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}

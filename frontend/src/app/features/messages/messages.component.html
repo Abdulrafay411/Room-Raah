@@ -1,0 +1,136 @@
+<section class="messages-page container-centered" aria-labelledby="messages-title">
+  <header class="messages-head">
+    <div>
+      <h1 class="messages-title" id="messages-title">Messages</h1>
+      <p class="messages-lead">
+        Everything you have agreed with an owner stays here, on the record.
+      </p>
+    </div>
+
+    <!-- Said out loud because the difference is visible: with the channel open a reply
+         appears on its own, and without it the page catches up every few seconds. -->
+    @if (connected()) {
+      <span class="live-note" data-smoke="messages-live">
+        <span class="live-dot" aria-hidden="true"></span> Live
+      </span>
+    } @else {
+      <span class="live-note is-polling" data-smoke="messages-polling">
+        Checking for replies every few seconds
+      </span>
+    }
+  </header>
+
+  @if (error()) {
+    <p class="messages-error" role="alert" data-smoke="messages-error">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <p aria-busy="true">Loading your messages…</p>
+  } @else if (conversations().length === 0) {
+    <div data-smoke="messages-empty">
+      <app-empty-state type="inbox" />
+      <p class="messages-hint">
+        Open a listing you like and press “Message the owner” — that starts a thread here.
+      </p>
+      <a class="messages-cta" routerLink="/search">Find a room</a>
+    </div>
+  } @else {
+    <div class="messages-layout" data-smoke="messages-layout">
+      <aside class="thread-list" aria-label="Your conversations">
+        <ul class="thread-items">
+          @for (conversation of conversations(); track conversation.id) {
+            <li>
+              <button
+                type="button"
+                class="thread-item"
+                [class.is-active]="conversation.id === activeId()"
+                [attr.aria-current]="conversation.id === activeId() ? 'true' : null"
+                (click)="select(conversation)"
+              >
+                <span class="thread-top">
+                  <span class="thread-who">{{ conversation.otherParticipantDisplayName }}</span>
+                  @if (conversation.unreadCount > 0) {
+                    <app-badge variant="warning" size="sm">
+                      {{ conversation.unreadCount }} new
+                    </app-badge>
+                  }
+                </span>
+                <span class="thread-about">{{ conversation.propertyTitle }}</span>
+                <span class="thread-when">{{ sentLabel(conversation.lastMessageAt) }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      </aside>
+
+      <div class="thread-panel">
+        @if (active(); as conversation) {
+          <header class="thread-head">
+            <div>
+              <h2 class="thread-title">{{ conversation.otherParticipantDisplayName }}</h2>
+              <a class="thread-listing" [routerLink]="['/property', conversation.propertyId]">
+                {{ conversation.propertyTitle }}
+              </a>
+            </div>
+          </header>
+
+          <div class="thread-scroll" #thread data-smoke="messages-thread">
+            @if (threadLoading()) {
+              <p aria-busy="true">Loading…</p>
+            } @else if (messages().length === 0) {
+              <p class="thread-empty" data-smoke="thread-empty">
+                No messages yet. Ask about the room, the rent or when you could move in.
+              </p>
+            } @else {
+              <ol class="bubbles">
+                @for (message of messages(); track message.id) {
+                  <!-- isMine is the only thing saying which side this belongs on: the
+                       shape carries no sender id, deliberately. -->
+                  <li class="bubble-row" [class.is-mine]="message.isMine">
+                    <div class="bubble">
+                      <p class="bubble-body">{{ message.body }}</p>
+                      <p class="bubble-meta">
+                        <span class="bubble-who">
+                          {{ message.isMine ? 'You' : message.senderDisplayName }}
+                        </span>
+                        <span class="bubble-when">{{ sentLabel(message.sentAt) }}</span>
+                      </p>
+                    </div>
+                  </li>
+                }
+              </ol>
+            }
+          </div>
+
+          <form class="composer" (ngSubmit)="send()">
+            <label class="sr-only" for="message-body">Write a message</label>
+            <textarea
+              class="composer-input"
+              id="message-body"
+              name="body"
+              rows="2"
+              [maxlength]="maxLength"
+              placeholder="Write a message…"
+              [ngModel]="draft()"
+              (ngModelChange)="draft.set($event)"
+              (keydown)="onKey($event)"
+            ></textarea>
+
+            <div class="composer-side">
+              <app-button type="submit" variant="primary" [loading]="sending()">Send</app-button>
+              @if (remaining() < 200) {
+                <span class="composer-count">{{ remaining() }} left</span>
+              }
+            </div>
+          </form>
+
+          @if (sendError()) {
+            <p class="messages-error" role="alert" data-smoke="send-error">{{ sendError() }}</p>
+          }
+        } @else {
+          <p class="thread-none">Choose a conversation to read it.</p>
+        }
+      </div>
+    </div>
+  }
+</section>

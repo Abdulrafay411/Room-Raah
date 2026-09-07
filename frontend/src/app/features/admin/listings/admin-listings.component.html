@@ -1,0 +1,126 @@
+<section class="admin-panel" data-smoke="admin-listings">
+  <div class="panel-card panel-head">
+    <div>
+      <h2>Listing queue</h2>
+      <p class="muted">Review listing facts, record checks, then make a publishing decision.</p>
+    </div>
+    <label>
+      Status
+      <select [ngModel]="status()" (ngModelChange)="status.set($event); load()">
+        <option value="">All listings</option>
+        <option value="PendingReview">Pending review</option>
+        <option value="Published">Published</option>
+        <option value="ChangesRequested">Changes requested</option>
+        <option value="Rejected">Rejected</option>
+        <option value="Unpublished">Unpublished</option>
+        <option value="Draft">Draft</option>
+      </select>
+    </label>
+  </div>
+
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+
+  <div class="panel-card">
+    @if (loading()) {
+      <p>Loading listings…</p>
+    } @else if (items().length === 0) {
+      <p class="empty-copy" data-smoke="admin-listings-empty">No listings in this queue.</p>
+    } @else {
+      <ul class="queue" data-smoke="admin-listings-list">
+        @for (row of items(); track row.id) {
+          <li class="queue-row">
+            <div class="row-head">
+              <h3>{{ row.title }}</h3>
+              <span class="status" [attr.data-state]="row.status">{{ row.status }}</span>
+            </div>
+            <div class="meta">
+              <span>{{ row.areaName }}, {{ row.cityName }}</span>
+              <span>Owner: {{ row.ownerName }}</span>
+              <span>{{ row.monthlyRent | currency:'PKR':'symbol':'1.0-0' }}/month</span>
+              <span>{{ row.photoCount }} photos</span>
+            </div>
+            <div><app-button size="sm" variant="outline" (clicked)="open(row)">Review listing</app-button></div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (detailLoading()) {
+    <div class="panel-card"><p>Loading review…</p></div>
+  } @else if (selected(); as detail) {
+    <article class="panel-card listing-detail" data-smoke="admin-listing-detail">
+      <div class="panel-head">
+        <div><h2>{{ detail.title }}</h2><p>{{ detail.addressLine }}, {{ detail.areaName }}, {{ detail.cityName }}</p></div>
+        <span class="status" [attr.data-state]="detail.status">{{ detail.status }}</span>
+      </div>
+
+      <div class="detail-grid">
+        <p class="wide">{{ detail.description }}</p>
+        <p><strong>Owner</strong><br>{{ detail.owner.fullName }} · {{ detail.owner.identityStatus }}</p>
+        <p><strong>Room</strong><br>{{ detail.roomType }} · {{ detail.genderPolicy }}</p>
+        <p><strong>Beds</strong><br>{{ detail.availableBeds }} of {{ detail.totalBeds }} available</p>
+        <p><strong>Monthly rent</strong><br>{{ detail.monthlyRent | currency:'PKR':'symbol':'1.0-0' }}</p>
+        <p><strong>Facilities</strong><br>{{ detail.facilities.length ? detail.facilities.length + ' recorded' : 'None recorded' }}</p>
+        <p><strong>Photos</strong><br>{{ detail.photos.length }} uploaded</p>
+      </div>
+
+      <section class="checks">
+        <h3>Verification checks</h3>
+        <ul class="check-list">
+          @for (type of checkTypes; track type) {
+            <li>
+              <strong>{{ type }}</strong>
+              @if (checkFor(detail, type); as check) {
+                <span class="status" [attr.data-state]="check.status">{{ check.status }}</span>
+              } @else {
+                <span class="status">NotChecked</span>
+              }
+            </li>
+          }
+        </ul>
+
+        <div class="form-grid">
+          <label class="field">Check
+            <select [ngModel]="checkType()" (ngModelChange)="checkType.set($event)">
+              @for (type of checkTypes; track type) { <option [value]="type">{{ type }}</option> }
+            </select>
+          </label>
+          <label class="field">Result
+            <select [ngModel]="checkStatus()" (ngModelChange)="checkStatus.set($event)">
+              <option value="Checked">Checked</option><option value="Failed">Failed</option><option value="NotChecked">Not checked</option>
+            </select>
+          </label>
+          <label class="field">Evidence date (optional)
+            <input type="date" [max]="today" [ngModel]="evidenceDate()" (ngModelChange)="evidenceDate.set($event)">
+          </label>
+          <label class="field">Note (optional)
+            <input [ngModel]="checkNote()" (ngModelChange)="checkNote.set($event)" maxlength="1000">
+          </label>
+        </div>
+        <app-button size="sm" [loading]="saving()" (clicked)="recordCheck()">Record check</app-button>
+      </section>
+
+      <section class="decision">
+        <h3>Decision</h3>
+        <label class="field">Reason or note
+          <textarea [ngModel]="adminNote()" (ngModelChange)="adminNote.set($event)" maxlength="1000"></textarea>
+        </label>
+        <div class="action-row">
+          @if (detail.status === 'PendingReview') {
+            <app-button variant="success" [disabled]="!detail.canPublish" [loading]="saving()" (clicked)="decide('approve')">Approve and publish</app-button>
+            <app-button variant="outline" [loading]="saving()" (clicked)="decide('request-changes')">Request changes</app-button>
+            <app-button variant="danger" [loading]="saving()" (clicked)="decide('reject')">Reject</app-button>
+          }
+          @if (detail.status === 'Published') {
+            <app-button variant="danger" [loading]="saving()" (clicked)="decide('unpublish')">Unpublish listing</app-button>
+          }
+        </div>
+        @if (detail.status === 'PendingReview' && !detail.canPublish) {
+          <p class="muted">Complete the four required checks before publishing.</p>
+        }
+      </section>
+    </article>
+  }
+</section>

@@ -1,0 +1,221 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+:host {
+  display: inline-block;
+
+  &[fullWidth="true"] {
+    display: block;
+    width: 100%;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-family: $font-family-base;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+  border-radius: $radius-md;
+  border: 1px solid transparent;
+  transition: background-color $transition-fast, border-color $transition-fast, box-shadow $transition-fast, transform $transition-fast;
+  user-select: none;
+  text-decoration: none;
+  white-space: nowrap;
+
+  @include focus-visible;
+
+  // --- Sizes ---
+  &.btn-sm {
+    height: 32px;
+    padding: 0 $space-3;
+    font-size: $font-size-xs;
+    gap: $space-1;
+  }
+
+  &.btn-md {
+    height: 40px;
+    padding: 0 $space-4;
+    font-size: $font-size-sm;
+    gap: $space-2;
+  }
+
+  &.btn-lg {
+    height: 48px;
+    padding: 0 $space-6;
+    font-size: $font-size-base;
+    gap: $space-2;
+  }
+
+  // --- Icon Only ---
+  &.btn-icon-only {
+    padding: 0;
+
+    &.btn-sm {
+      width: 32px;
+    }
+
+    &.btn-md {
+      width: 40px;
+    }
+
+    &.btn-lg {
+      width: 48px;
+    }
+  }
+
+  &.btn-full-width {
+    width: 100%;
+  }
+
+  // --- Variants ---
+  &.btn-primary {
+    background-color: $color-navy;
+    color: #ffffff;
+    border-color: $color-navy;
+
+    &:hover:not(:disabled) {
+      background-color: $color-navy-hover;
+      border-color: $color-navy-hover;
+    }
+
+    &:active:not(:disabled) {
+      background-color: $color-navy-active;
+      border-color: $color-navy-active;
+      transform: translateY(1px);
+    }
+  }
+
+  &.btn-success {
+    background-color: $color-green-hover;
+    color: #ffffff;
+    border-color: $color-green-hover;
+
+    @include focus-visible-green;
+
+    &:hover:not(:disabled) {
+      background-color: $color-green-hover;
+      border-color: $color-green-hover;
+    }
+
+    &:active:not(:disabled) {
+      background-color: $color-green-active;
+      border-color: $color-green-active;
+      transform: translateY(1px);
+    }
+  }
+
+  &.btn-secondary {
+    background-color: $color-slate-100;
+    color: $color-navy;
+    border-color: $color-slate-200;
+
+    &:hover:not(:disabled) {
+      background-color: $color-slate-200;
+      border-color: $color-slate-300;
+    }
+
+    &:active:not(:disabled) {
+      background-color: $color-slate-300;
+      transform: translateY(1px);
+    }
+  }
+
+  &.btn-outline {
+    background-color: transparent;
+    color: $color-navy;
+    border-color: $color-navy;
+
+    &:hover:not(:disabled) {
+      background-color: $color-navy-light;
+    }
+
+    &:active:not(:disabled) {
+      background-color: $color-navy-subtle;
+      transform: translateY(1px);
+    }
+  }
+
+  &.btn-outline-green {
+    background-color: transparent;
+    color: $color-green-hover;
+    border-color: $color-green;
+
+    @include focus-visible-green;
+
+    &:hover:not(:disabled) {
+      background-color: $color-green-light;
+    }
+
+    &:active:not(:disabled) {
+      background-color: $color-green-subtle;
+      transform: translateY(1px);
+    }
+  }
+
+  &.btn-ghost {
+    background-color: transparent;
+    color: $color-slate-700;
+    border-color: transparent;
+
+    &:hover:not(:disabled) {
+      background-color: $color-slate-100;
+      color: $color-navy;
+    }
+
+    &:active:not(:disabled) {
+      background-color: $color-slate-200;
+    }
+  }
+
+  &.btn-danger {
+    background-color: $color-danger;
+    color: #ffffff;
+    border-color: $color-danger;
+
+    &:hover:not(:disabled) {
+      background-color: $color-danger-hover;
+      border-color: $color-danger-hover;
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+  }
+
+  // --- States ---
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
+  }
+
+  &.btn-loading {
+    cursor: wait;
+    pointer-events: none;
+  }
+}
+
+.btn-spinner-slot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: inherit;
+  transition: opacity $transition-fast;
+
+  &.btn-content-hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+}

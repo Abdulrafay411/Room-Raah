@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/RoomRaah.IntegrationTests/RoomRaah.IntegrationTests.csproj" />
+    <Project Path="tests/RoomRaah.UnitTests/RoomRaah.UnitTests.csproj" />
+  </Folder>
+  <Project Path="RoomRaah.API/RoomRaah.API.csproj" />
+  <Project Path="RoomRaah.Application/RoomRaah.Application.csproj" />
+  <Project Path="RoomRaah.Domain/RoomRaah.Domain.csproj" />
+  <Project Path="RoomRaah.Infrastructure/RoomRaah.Infrastructure.csproj" />
+</Solution>

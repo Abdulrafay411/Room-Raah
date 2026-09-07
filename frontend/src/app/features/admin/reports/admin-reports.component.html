@@ -1,0 +1,86 @@
+<section class="admin-panel" data-smoke="admin-reports">
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+
+  <section class="panel-card">
+    <div class="panel-head">
+      <div>
+        <h2>Listing reports</h2>
+        <p class="muted">A verdict records the report. Unpublishing remains a separate listing decision.</p>
+      </div>
+      <label>Status
+        <select [ngModel]="reportStatus()" (ngModelChange)="reportStatus.set($event); loadReports()">
+          <option value="">All reports</option><option value="Open">Open</option><option value="UnderReview">Under review</option><option value="Upheld">Upheld</option><option value="Dismissed">Dismissed</option>
+        </select>
+      </label>
+    </div>
+
+    @if (loadingReports()) {
+      <p>Loading reports…</p>
+    } @else if (reports().length === 0) {
+      <p class="empty-copy" data-smoke="admin-reports-empty">No reports in this queue.</p>
+    } @else {
+      <ul class="queue" data-smoke="admin-reports-list">
+        @for (report of reports(); track report.id) {
+          <li class="queue-row">
+            <div class="row-head"><h3>{{ report.propertyTitle }}</h3><span class="status" [attr.data-state]="report.status">{{ report.status }}</span></div>
+            <div class="meta"><span>{{ report.reason }}</span><span>Reported by {{ report.reportedByDisplayName }}</span><span>{{ report.createdAt | date:'mediumDate' }}</span></div>
+            <p>{{ report.details }}</p>
+            <div><app-button size="sm" variant="outline" (clicked)="selectedReport.set(report)">Review report</app-button></div>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (selectedReport(); as report) {
+      <div class="report-decision" data-smoke="admin-report-detail">
+        <h3>Decision for “{{ report.propertyTitle }}”</h3>
+        @if (report.status === 'Open' || report.status === 'UnderReview') {
+          <label class="field">Verdict note (required for uphold or dismiss)
+            <textarea [ngModel]="note()" (ngModelChange)="note.set($event)" maxlength="1000"></textarea>
+          </label>
+          <div class="action-row">
+            @if (report.status === 'Open') {
+              <app-button variant="outline" [loading]="saving()" (clicked)="resolve('UnderReview')">Mark under review</app-button>
+            }
+            <app-button variant="danger" [loading]="saving()" (clicked)="resolve('Upheld')">Uphold report</app-button>
+            <app-button variant="success" [loading]="saving()" (clicked)="resolve('Dismissed')">Dismiss report</app-button>
+          </div>
+        } @else {
+          <p><strong>Admin note:</strong> {{ report.adminNote }}</p>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="panel-card" data-smoke="admin-review-moderation">
+    <div class="panel-head">
+      <div><h2>Review moderation</h2><p class="muted">New reviews stay invisible until approved.</p></div>
+      <label>State
+        <select [ngModel]="reviewState()" (ngModelChange)="reviewState.set($event); loadReviews()">
+          <option value="">All reviews</option><option value="Pending">Pending</option><option value="Approved">Approved</option><option value="Hidden">Hidden</option>
+        </select>
+      </label>
+    </div>
+
+    @if (loadingReviews()) {
+      <p>Loading reviews…</p>
+    } @else if (reviews().length === 0) {
+      <p class="empty-copy" data-smoke="admin-reviews-empty">No reviews in this queue.</p>
+    } @else {
+      <ul class="queue" data-smoke="admin-reviews-list">
+        @for (review of reviews(); track review.id) {
+          <li class="queue-row">
+            <div class="row-head"><h3>{{ review.propertyTitle }}</h3><span class="status" [attr.data-state]="review.moderationState">{{ review.moderationState }}</span></div>
+            <div class="meta"><span>{{ review.rating }}/5</span><span>{{ review.stayStatus }}</span><span>By {{ review.authorDisplayName }}</span></div>
+            <p>{{ review.comment }}</p>
+            <div class="action-row">
+              <app-button size="sm" variant="success" [loading]="saving()" (clicked)="moderate(review, 'Approved')">Approve review</app-button>
+              <app-button size="sm" variant="danger" [loading]="saving()" (clicked)="moderate(review, 'Hidden')">Hide review</app-button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</section>

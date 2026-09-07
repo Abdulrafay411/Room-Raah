@@ -1,0 +1,162 @@
+@if (loading || !property) {
+  <!-- Skeleton Loading State -->
+  <article class="property-card is-skeleton" aria-busy="true" aria-label="Loading property listing">
+    <div class="card-media-wrapper">
+      <app-skeleton variant="rectangular" height="200px"></app-skeleton>
+    </div>
+    <div class="card-content">
+      <div class="card-badges-row">
+        <app-skeleton variant="rectangular" width="80px" height="22px"></app-skeleton>
+        <app-skeleton variant="rectangular" width="60px" height="22px"></app-skeleton>
+      </div>
+      <app-skeleton variant="text" width="90%"></app-skeleton>
+      <app-skeleton variant="text" width="60%"></app-skeleton>
+      <div class="card-footer-skeleton">
+        <app-skeleton variant="text" width="40%"></app-skeleton>
+        <app-skeleton variant="circular" width="36px" height="36px"></app-skeleton>
+      </div>
+    </div>
+  </article>
+} @else {
+  <!-- Real Property Card -->
+  <article class="property-card" [class.is-full]="property.availableBeds === 0">
+    <div class="card-media-wrapper">
+      <a [routerLink]="['/property', property.id]" class="card-media-link" [attr.aria-label]="'View details for ' + property.title">
+        @if (property.primaryThumbnailUrl && !imageFailed) {
+          <img
+            [src]="property.primaryThumbnailUrl"
+            [alt]="property.title"
+            class="card-image"
+            [class.is-loaded]="imageLoaded"
+            (load)="onImageLoad()"
+            (error)="onImageError()"
+            loading="lazy"
+          />
+        } @else {
+          <div class="card-image-placeholder" aria-hidden="true">
+            <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+            <span>Photo unavailable</span>
+          </div>
+        }
+      </a>
+
+      <!-- Inspection Badge Overlay -->
+      @if (property.hasInspectionBadge) {
+        <div class="media-overlay-badge top-left">
+          <app-badge variant="inspection" size="sm">
+            Inspected
+          </app-badge>
+        </div>
+      }
+
+      <!-- Photo count badge -->
+      @if (property.photoCount > 0) {
+        <div class="media-overlay-badge bottom-right">
+          <span class="photo-count-chip">
+            <svg class="photo-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2H4zm12 2L10 13l-3-3-3 4V7h12z" clip-rule="evenodd" />
+            </svg>
+            {{ property.photoCount }}
+          </span>
+        </div>
+      }
+
+      <!-- Shortlist Save Button -->
+      <button
+        type="button"
+        class="save-button"
+        [class.is-saved]="isSaved"
+        [attr.aria-label]="isSaved ? 'Remove ' + property.title + ' from shortlist' : 'Save ' + property.title + ' to shortlist'"
+        [attr.aria-pressed]="isSaved"
+        (click)="onSaveClick($event)"
+      >
+        <svg class="heart-icon" viewBox="0 0 24 24" [attr.fill]="isSaved ? '#dc2626' : 'rgba(0,0,0,0.35)'" stroke="#ffffff" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="card-content">
+      <!-- Tag / Badge Row -->
+      <div class="card-tags-row">
+        <app-badge variant="navy" size="sm">
+          {{ property.roomType }}
+        </app-badge>
+
+        <app-badge variant="neutral" size="sm">
+          {{ property.genderPolicy }}
+        </app-badge>
+
+        @if (property.availableBeds > 0) {
+          <app-badge variant="confirmed" size="sm" [showDot]="true">
+            {{ property.availableBeds }} / {{ property.totalBeds }} beds free
+          </app-badge>
+        } @else {
+          <app-badge variant="danger" size="sm">
+            Full (0 beds)
+          </app-badge>
+        }
+      </div>
+
+      <!-- Title Link -->
+      <h3 class="card-title">
+        <a [routerLink]="['/property', property.id]" class="card-title-link">
+          {{ property.title }}
+        </a>
+      </h3>
+
+      <!-- Location & Distance -->
+      <div class="card-location">
+        <svg class="pin-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+        </svg>
+        <span class="location-text">{{ property.areaName }}, {{ property.cityName }}</span>
+
+        @if (distanceLabel) {
+          <span class="location-separator" aria-hidden="true">·</span>
+          <span class="distance-text">{{ distanceLabel }}</span>
+        }
+      </div>
+
+      <!-- Compare tick. A label wrapping the input rather than a styled button, because
+           choosing several of a list is what a checkbox is, and screen readers already
+           know how to say it. -->
+      @if (comparable) {
+        <label class="card-compare" [class.is-disabled]="compareDisabled">
+          <input
+            type="checkbox"
+            class="card-compare-input"
+            data-smoke="compare-tick"
+            [checked]="isCompared"
+            [disabled]="compareDisabled"
+            (change)="onCompareChange()"
+          />
+          <span class="card-compare-text">
+            @if (compareDisabled) {
+              Comparing three already
+            } @else {
+              Compare
+            }
+          </span>
+        </label>
+      }
+
+      <!-- Footer: Rent & Action -->
+      <div class="card-footer">
+        <div class="price-block">
+          <span class="price-value">{{ formattedRent }}</span>
+          <span class="price-period">/ month</span>
+        </div>
+
+        <a [routerLink]="['/property', property.id]" class="view-link" [attr.aria-label]="'View details for ' + property.title">
+          View details
+          <svg class="arrow-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </article>
+}

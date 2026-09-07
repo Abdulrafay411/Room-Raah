@@ -1,0 +1,139 @@
+<div class="auth-page-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">Create your RoomRaah account</h1>
+      <p class="auth-subtitle">Join thousands finding verified rooms and shared spaces across Pakistan.</p>
+    </div>
+
+    <!-- Role Switcher -->
+    <div class="role-selector-row" role="radiogroup" aria-label="Select account type">
+      <button
+        type="button"
+        class="role-option"
+        [class.is-selected]="selectedRole() === 'Seeker'"
+        (click)="setRole('Seeker')"
+        role="radio"
+        [attr.aria-checked]="selectedRole() === 'Seeker'"
+      >
+        <span class="role-title">Room Seeker</span>
+        <span class="role-desc">Looking for a room, bed or shared portion</span>
+      </button>
+
+      <button
+        type="button"
+        class="role-option"
+        [class.is-selected]="selectedRole() === 'Owner'"
+        (click)="setRole('Owner')"
+        role="radio"
+        [attr.aria-checked]="selectedRole() === 'Owner'"
+      >
+        <span class="role-title">Property Owner</span>
+        <span class="role-desc">List a hostel, room or apartment for rent</span>
+      </button>
+    </div>
+
+    @if (generalError()) {
+      <div class="auth-alert error" role="alert">
+        {{ generalError() }}
+      </div>
+    }
+
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
+      <app-form-field
+        label="Full Name"
+        fieldId="signup-fullName"
+        [required]="true"
+        [error]="getFieldError('fullName')"
+      >
+        <input
+          appInput
+          id="signup-fullName"
+          type="text"
+          formControlName="fullName"
+          placeholder="e.g. Hamza Iqbal"
+          autocomplete="name"
+        />
+      </app-form-field>
+
+      <app-form-field
+        label="Email address"
+        fieldId="signup-email"
+        hint="Verification code will be sent to this email"
+        [required]="true"
+        [error]="getFieldError('email')"
+      >
+        <input
+          appInput
+          id="signup-email"
+          type="email"
+          formControlName="email"
+          placeholder="name@example.com"
+          autocomplete="email"
+        />
+      </app-form-field>
+
+      <app-form-field
+        label="Mobile Number"
+        fieldId="signup-phoneNumber"
+        hint="Digits with optional country code, e.g. 03XX XXXXXXX"
+        [required]="true"
+        [error]="getFieldError('phoneNumber')"
+      >
+        <input
+          appInput
+          id="signup-phoneNumber"
+          type="tel"
+          formControlName="phoneNumber"
+          placeholder="03XX XXXXXXX"
+          autocomplete="tel"
+        />
+      </app-form-field>
+
+      @if (selectedRole() === 'Owner') {
+        <app-form-field
+          label="CNIC Number (13 digits)"
+          fieldId="signup-cnicNumber"
+          hint="Required for owner verification (e.g. 3520112345673)"
+          [required]="true"
+          [error]="getFieldError('cnicNumber')"
+        >
+          <input appInput id="signup-cnicNumber" type="text" formControlName="cnicNumber" placeholder="3520112345673" maxlength="13" /> <!-- guard:allow-owner-contact: the owner's own -->
+        </app-form-field>
+      }
+
+      <app-form-field
+        label="Password"
+        fieldId="signup-password"
+        hint="At least 8 characters, with 1 uppercase letter and 1 digit"
+        [required]="true"
+        [error]="getFieldError('password')"
+      >
+        <input
+          appInput
+          id="signup-password"
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          autocomplete="new-password"
+        />
+      </app-form-field>
+
+      <div class="form-action-row">
+        <app-button
+          variant="primary"
+          size="lg"
+          type="submit"
+          [fullWidth]="true"
+          [loading]="isLoading()"
+        >
+          Create Account
+        </app-button>
+      </div>
+    </form>
+
+    <div class="auth-footer">
+      <span>Already have an account?</span>
+      <a routerLink="/login" class="auth-link">Sign in</a>
+    </div>
+  </div>
+</div>

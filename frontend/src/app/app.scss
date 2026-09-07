@@ -1,0 +1,256 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// The shell: header, the outlet, footer. Layout and behaviour only.
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+// Visible only once tabbed to, which is the whole point of it.
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: $space-3 $space-4;
+  background: $color-navy;
+  color: #fff;
+  border-radius: 0 0 $radius-md 0;
+
+  &:focus {
+    left: 0;
+  }
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: $color-surface;
+  border-bottom: 1px solid $color-slate-200;
+  box-shadow: 0 4px 24px rgb(18 59 93 / 4%);
+}
+
+.header-inner {
+  @include container-centered;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-3 $space-5;
+  min-height: 64px;
+  padding-top: $space-2;
+  padding-bottom: $space-2;
+}
+
+.brand-link {
+  text-decoration: none;
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.brand-title {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-navy;
+  letter-spacing: -0.055em;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  order: 3;
+  width: 100%;
+
+  // On a phone the links wrap to their own row under the brand; from tablet up they sit
+  // beside it, which is why the order changes rather than the markup.
+  @include tablet-up {
+    order: 0;
+    width: auto;
+  }
+}
+
+.nav-link {
+  color: $color-slate-700;
+  font-weight: $font-weight-medium;
+  text-decoration: none;
+  padding: $space-2 $space-2;
+  border-radius: 6px;
+  font-size: $font-size-sm;
+
+  &:hover,
+  &.is-active {
+    color: $color-navy;
+  }
+
+  &.is-active {
+    background: $color-navy-light;
+    box-shadow: inset 0 -2px 0 $color-green;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.header-account {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin-left: auto;
+}
+
+.account-name {
+  font-size: $font-size-sm;
+  color: $color-slate-700;
+  @include truncate;
+  max-width: 160px;
+}
+
+.verify-nudge {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-warning-hover;
+  text-decoration: underline;
+}
+
+.signup-link {
+  padding: $space-2 $space-4;
+  background: $color-navy;
+  color: #fff;
+  border-radius: $radius-md;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+
+  &:hover {
+    background: $color-navy-hover;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.app-main-content {
+  flex: 1 1 auto;
+
+  // The phone navigation is fixed to the bottom, so page actions must never sit behind it.
+  @include phone {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+}
+
+.app-footer {
+  background: #eef3f5;
+  border-top: 1px solid $color-slate-200;
+  padding: $space-6 0;
+}
+
+.footer-inner {
+  @include container-centered;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.footer-note {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-slate-500;
+}
+
+.footer-nav {
+  display: flex;
+  gap: $space-4;
+
+  a {
+    font-size: $font-size-sm;
+    color: $color-slate-600;
+  }
+}
+
+// Phone gets the bottom navigation promised by the brief. It scrolls horizontally when a
+// signed-in role adds more destinations, so labels stay readable instead of being crushed.
+@include phone {
+  .header-nav {
+    position: fixed;
+    z-index: 35;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    order: 0;
+    width: 100%;
+    min-height: 56px;
+    padding: $space-2 $space-4 calc(#{$space-2} + env(safe-area-inset-bottom));
+    gap: $space-5;
+    overflow-x: auto;
+    background: $color-surface;
+    border-top: 1px solid $color-slate-200;
+    box-shadow: 0 -4px 12px rgb(18 59 93 / 8%);
+  }
+
+  .nav-link {
+    flex: 0 0 auto;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .header-account {
+    max-width: calc(100% - 120px);
+  }
+
+  // The brand, the chip and the account row have to share one line at 360px. Left at its
+  // desktop width the chip pushed the row 33px past the viewport.
+  .location-chip {
+    max-width: 42vw;
+    padding: 0 0.5rem;
+    font-size: 0.8125rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .account-name,
+  .verify-nudge {
+    display: none;
+  }
+}
+
+// The one control that turns distances on. Quiet by default and clearly on once granted,
+// because it changes what several other screens say rather than doing something here.
+.location-chip {
+  min-height: 36px;
+  padding: 0 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #0f2b46;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.7;
+  }
+
+  &.is-on {
+    border-color: #16a36a;
+    background: #ecfdf5;
+    color: #0f7a4f;
+  }
+}

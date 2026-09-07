@@ -1,0 +1,127 @@
+// RoomRaah Design Tokens
+// Authoritative definitions from Brief §12:
+// Deep navy: #123B5D (trust)
+// Green: #16A36A (confirmed)
+// Soft background: #F7F9FA
+// Typeface: Inter
+
+// --- Colors ---
+$color-navy: #123B5D;
+$color-navy-hover: #0d2c46;
+$color-navy-active: #091e30;
+$color-navy-light: #eef4f8;
+$color-navy-subtle: #dbe8f1;
+
+$color-green: #16A36A;
+$color-green-hover: #128254;
+$color-green-active: #0e6441;
+$color-green-light: #eaf7f1;
+$color-green-subtle: #c7eedb;
+
+$color-background: #F7F9FA;
+$color-surface: #ffffff;
+$color-surface-muted: #f1f5f9;
+
+// Neutrals & Slate
+$color-slate-900: #0f172a;
+$color-slate-800: #1e293b;
+$color-slate-700: #334155;
+$color-slate-600: #475569;
+$color-slate-500: #64748b;
+$color-slate-400: #94a3b8;
+$color-slate-300: #cbd5e1;
+$color-slate-200: #e2e8f0;
+$color-slate-100: #f1f5f9;
+$color-slate-50: #f8fafc;
+
+// Status & Feedback Colors
+$color-danger: #dc2626;
+$color-danger-hover: #b91c1c;
+$color-danger-light: #fef2f2;
+$color-danger-border: #fecaca;
+
+$color-warning: #d97706;
+$color-warning-hover: #b45309;
+$color-warning-light: #fffbeb;
+$color-warning-border: #fde68a;
+
+$color-info: #0284c7;
+$color-info-hover: #0369a1;
+$color-info-light: #f0f9ff;
+$color-info-border: #bae6fd;
+
+$color-success: $color-green;
+$color-success-light: $color-green-light;
+
+// RoomRaah Inspection Badge Colors
+$color-inspection: #123B5D;
+$color-inspection-bg: #eef4f8;
+$color-inspection-gold: #b45309;
+
+// --- Typography ---
+$font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+$font-size-xs: 0.75rem;    // 12px
+$font-size-sm: 0.875rem;   // 14px
+$font-size-base: 1rem;     // 16px
+$font-size-lg: 1.125rem;   // 18px
+$font-size-xl: 1.25rem;    // 20px
+$font-size-2xl: 1.5rem;    // 24px
+$font-size-3xl: 1.875rem;  // 30px
+$font-size-4xl: 2.25rem;   // 36px
+
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.625;
+
+// --- Spacing ---
+$space-1: 0.25rem;  // 4px
+$space-2: 0.5rem;   // 8px
+$space-3: 0.75rem;  // 12px
+$space-4: 1rem;     // 16px
+$space-5: 1.25rem;  // 20px
+$space-6: 1.5rem;   // 24px
+$space-8: 2rem;     // 32px
+$space-10: 2.5rem;  // 40px
+$space-12: 3rem;    // 48px
+$space-16: 4rem;    // 64px
+
+// --- Border Radius ---
+$radius-xs: 2px;
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-2xl: 24px;
+$radius-full: 9999px;
+
+// --- Box Shadows (navy-tinted for cohesion) ---
+$shadow-xs: 0 1px 2px 0 rgba(18, 59, 93, 0.04);
+$shadow-sm: 0 3px 14px -6px rgba(18, 59, 93, 0.14);
+$shadow-md: 0 12px 32px -12px rgba(18, 59, 93, 0.18), 0 2px 5px rgba(18, 59, 93, 0.03);
+$shadow-lg: 0 10px 15px -3px rgba(18, 59, 93, 0.1), 0 4px 6px -4px rgba(18, 59, 93, 0.06);
+$shadow-xl: 0 20px 25px -5px rgba(18, 59, 93, 0.12), 0 8px 10px -6px rgba(18, 59, 93, 0.06);
+$shadow-focus: 0 0 0 3px rgba(18, 59, 93, 0.25);
+
+// --- Transitions ---
+$transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// --- Breakpoints (Brief §12) ---
+// Phone: up to 640px
+// Tablet: 641–1024px
+// Laptop: 1025–1440px
+// Desktop: above 1440px (capped at 1440px and centred)
+$breakpoint-phone-max: 640px;
+$breakpoint-tablet-min: 641px;
+$breakpoint-tablet-max: 1024px;
+$breakpoint-laptop-min: 1025px;
+$breakpoint-laptop-max: 1440px;
+$breakpoint-desktop-min: 1441px;
+$container-max-width: 1440px;

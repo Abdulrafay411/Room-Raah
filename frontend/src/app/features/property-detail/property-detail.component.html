@@ -1,0 +1,311 @@
+@if (loading()) {
+  <div class="detail-page container-centered" aria-busy="true">
+    <p class="loading-note">Loading this listing…</p>
+  </div>
+} @else if (error()) {
+  <div class="detail-page container-centered">
+    <div class="detail-error" role="alert" data-smoke="detail-error">
+      <h1 class="error-title">This listing is not available</h1>
+      <p class="error-text">{{ error() }}</p>
+      <a routerLink="/search" class="error-action">Back to search</a>
+    </div>
+  </div>
+} @else if (listing(); as listing) {
+  <article class="detail-page container-centered">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/search">Search</a>
+      <span aria-hidden="true">/</span>
+      <span>{{ listing.areaName }}, {{ listing.cityName }}</span>
+    </nav>
+
+    <header class="detail-header">
+      <div class="detail-heading">
+        <h1 class="detail-title">{{ listing.title }}</h1>
+        <p class="detail-location">
+          {{ listing.addressLine }} · {{ listing.areaName }}, {{ listing.cityName }}
+          <!-- `as` would drop a room 0.0km away: zero is falsy. Null is the absent case. -->
+          @let km = distanceFromYou(listing.latitude, listing.longitude);
+          @if (km !== null) {
+            <span class="detail-distance">
+              · {{ km | number:'1.0-1' }} km from you (straight-line)
+            </span>
+          }
+        </p>
+      </div>
+
+      <div class="detail-badges">
+        <app-badge variant="navy" size="sm">{{ listing.roomType }}</app-badge>
+        <app-badge variant="neutral" size="sm">{{ listing.genderPolicy }}</app-badge>
+        @if (listing.hasInspectionBadge) {
+          <app-badge variant="inspection" size="sm">Inspected</app-badge>
+        }
+        @if (hasBeds()) {
+          <app-badge variant="confirmed" size="sm" [showDot]="true">
+            {{ listing.availableBeds }} of {{ listing.totalBeds }} beds free
+          </app-badge>
+        } @else {
+          <app-badge variant="danger" size="sm">No beds free</app-badge>
+        }
+      </div>
+    </header>
+
+    <section class="gallery" aria-label="Photographs">
+      @if (photos().length) {
+        <figure class="gallery-main">
+          <img
+            class="gallery-image"
+            [src]="photos()[activePhoto()].url"
+            [alt]="listing.title + ' — photograph ' + (activePhoto() + 1)"
+          />
+          @if (photos().length > 1) {
+            <button
+              type="button"
+              class="gallery-nav is-previous"
+              aria-label="Previous photograph"
+              (click)="showPhoto(activePhoto() - 1)"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              class="gallery-nav is-next"
+              aria-label="Next photograph"
+              (click)="showPhoto(activePhoto() + 1)"
+            >
+              ›
+            </button>
+          }
+        </figure>
+
+        @if (photos().length > 1) {
+          <ul class="gallery-strip">
+            @for (photo of photos(); track photo.id; let i = $index) {
+              <li>
+                <button
+                  type="button"
+                  class="gallery-thumb"
+                  [class.is-active]="i === activePhoto()"
+                  [attr.aria-label]="'Show photograph ' + (i + 1)"
+                  [attr.aria-current]="i === activePhoto()"
+                  (click)="showPhoto(i)"
+                >
+                  <img [src]="photo.thumbnailUrl" alt="" />
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        <a class="gallery-all" [routerLink]="['/property', listing.id, 'photos']">
+          See all {{ listing.photoCount }} photographs
+        </a>
+      } @else {
+        <p class="gallery-empty">No photographs yet.</p>
+      }
+    </section>
+
+    <div class="detail-body">
+      <div class="detail-main">
+        <section class="panel" aria-label="About this room">
+          <h2 class="panel-title">About this room</h2>
+          <p class="panel-text">{{ listing.description }}</p>
+        </section>
+
+        @if (listing.facilities.length) {
+          <section class="panel" aria-label="Facilities">
+            <h2 class="panel-title">Facilities</h2>
+            <ul class="facility-list">
+              @for (facility of listing.facilities; track facility.id) {
+                <li class="facility">{{ facility.name }}</li>
+              }
+            </ul>
+          </section>
+        }
+
+        @if (listing.houseRules) {
+          <section class="panel" aria-label="House rules">
+            <h2 class="panel-title">House rules</h2>
+            <p class="panel-text">{{ listing.houseRules }}</p>
+          </section>
+        }
+
+        <section class="panel" aria-label="Verification">
+          <h2 class="panel-title">What we checked</h2>
+          <ul class="check-list">
+            @for (check of listing.checks; track check.checkType) {
+              <li class="check-row">
+                <span class="check-name">{{ checkLabel(check) }}</span>
+                <app-badge [variant]="checkVariant(check)" size="sm">
+                  {{ check.status === 'NotChecked' ? 'Not checked' : check.status }}
+                </app-badge>
+              </li>
+            }
+          </ul>
+        </section>
+
+        <section class="panel" aria-label="Reviews">
+          <div class="panel-head">
+            <h2 class="panel-title">Reviews</h2>
+            @if (reviewCount()) {
+              <p class="review-summary">
+                {{ averageRating() }} out of 5 · {{ reviewCount() }}
+                {{ reviewCount() === 1 ? 'review' : 'reviews' }}
+              </p>
+            }
+          </div>
+
+          @if (reviews().length === 0) {
+            <p class="panel-text">No reviews yet. Reviews appear once a visit is completed.</p>
+          } @else {
+            <ul class="review-list">
+              @for (review of reviews(); track review.id) {
+                <li class="review">
+                  <p class="review-head">
+                    <strong>{{ review.authorDisplayName }}</strong>
+                    <span class="review-rating">{{ review.rating }}/5</span>
+                  </p>
+                  <p class="review-body">{{ review.comment }}</p>
+                </li>
+              }
+            </ul>
+
+            <!-- Shown whenever there is a review at all, not only when some are hidden:
+                 the reviews page is its own page with its own paging, and gating the only
+                 link to it on "there are more than fit here" left it unreachable by
+                 clicking on every listing the seed data has. -->
+            <a class="review-all" [routerLink]="['/property', listing.id, 'reviews']">
+              @if (reviewCount() > reviews().length) {
+                Read all {{ reviewCount() }} reviews
+              } @else {
+                Read the reviews
+              }
+            </a>
+          }
+        </section>
+      </div>
+
+      <aside class="detail-side">
+        <div class="cost-card">
+          <p class="cost-rent">{{ money(listing.monthlyRent) }} <span>/ month</span></p>
+          <dl class="cost-breakdown">
+            <div class="cost-row">
+              <dt>Security deposit</dt>
+              <dd>{{ money(listing.securityDeposit) }}</dd>
+            </div>
+            <div class="cost-row">
+              <dt>Utilities</dt>
+              <dd>{{ money(listing.utilitiesCharge) }}</dd>
+            </div>
+            <div class="cost-row">
+              <dt>Mess</dt>
+              <dd>{{ money(listing.messCharge) }}</dd>
+            </div>
+            <div class="cost-row is-total">
+              <dt>Monthly total</dt>
+              <dd>{{ money(monthlyTotal()) }}</dd>
+            </div>
+          </dl>
+          <p class="cost-note">The deposit is paid once, not monthly.</p>
+        </div>
+
+        <!-- The owner block. A display name and whether their identity was checked is the
+             whole of it: there is no telephone number or email in the response and none is
+             meant to be shown. Contact goes through messaging and visit requests. -->
+        <div class="owner-card">
+          <h2 class="owner-title">Listed by</h2>
+          <p class="owner-name">{{ listing.owner.displayName }}</p>
+          @if (listing.owner.identityVerified) {
+            <app-badge variant="confirmed" size="sm">Identity verified</app-badge>
+          } @else {
+            <app-badge variant="neutral" size="sm">Identity not verified</app-badge>
+          }
+          <p class="owner-note">
+            Arrange a visit or send a message through RoomRaah — that way there is a record
+            of what was agreed.
+          </p>
+        </div>
+
+        <div class="action-card">
+          <!-- Rule 7: one open request per listing. A second is a 422, so the link becomes
+               a statement rather than letting somebody fill the form in and be refused at
+               the end of it. `hasOpenVisit` is empty for anyone signed out, which is right:
+               browsing does not need to know. -->
+          @if (hasOpenVisit(listing.id)) {
+            <p class="action-open-visit" data-smoke="visit-already-open">
+              You already have a visit request open on this room.
+              <a routerLink="/visits">See your visits</a>
+            </p>
+          } @else {
+            <a class="action-primary" [routerLink]="['/property', listing.id, 'visit']">
+              Request a visit
+            </a>
+          }
+
+          @if (canStartThread()) {
+            <app-button
+              variant="outline"
+              [fullWidth]="true"
+              [loading]="threadBusy()"
+              (clicked)="startThread(listing.id)"
+            >
+              Message the owner
+            </app-button>
+          }
+
+          @if (threadError()) {
+            <p class="action-error" role="alert">{{ threadError() }}</p>
+          }
+
+          <app-button
+            variant="outline"
+            [fullWidth]="true"
+            [pressed]="isSaved(listing.id)"
+            (clicked)="toggleSave(listing.id)"
+          >
+            {{ isSaved(listing.id) ? 'Saved' : 'Save this room' }}
+          </app-button>
+
+          <!-- The second way into the compare page: pick rooms one at a time while reading
+               them properly, rather than only by ticking a grid. Disabled at three, and the
+               link out only appears once there is something to compare. -->
+          <app-button
+            variant="outline"
+            [fullWidth]="true"
+            [pressed]="compare.has(listing.id)"
+            [disabled]="compare.full() && !compare.has(listing.id)"
+            (clicked)="compare.toggle(listing.id)"
+          >
+            @if (compare.has(listing.id)) {
+              Comparing this room
+            } @else if (compare.full()) {
+              Comparing three already
+            } @else {
+              Add to compare
+            }
+          </app-button>
+
+          @if (compare.count() > 0) {
+            <a
+              class="action-compare"
+              routerLink="/compare"
+              [queryParams]="{ ids: compare.query() }"
+              data-smoke="detail-compare-link"
+            >
+              Compare {{ compare.count() }} of {{ compare.limit }}
+            </a>
+          }
+
+          <button type="button" class="action-report" (click)="reportOpen.set(true)">
+            Report this listing
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <app-report-dialog
+      [isOpen]="reportOpen()"
+      [propertyId]="listing.id"
+      (closed)="reportOpen.set(false)"
+    />
+  </article>
+}

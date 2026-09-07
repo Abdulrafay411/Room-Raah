@@ -1,0 +1,77 @@
+<section class="hero">
+  <div class="hero-inner container-centered">
+    <h1 class="hero-title">Find a room you have actually seen</h1>
+    <p class="hero-lead">
+      Rooms and hostels across Pakistan, with photographs, checked addresses and reviews
+      from people who stayed. Arrange a visit before you commit to anything.
+    </p>
+
+    <form class="hero-search" (submit)="submit(); $event.preventDefault()" role="search">
+      <label class="hero-label" for="landing-search">
+        Where do you need to be? A city, an area, or your university
+      </label>
+      <div class="hero-search-row">
+        <input
+          id="landing-search"
+          type="search"
+          class="hero-input"
+          autocomplete="off"
+          placeholder="Try “Gulberg” or “University of the Punjab”"
+          [value]="query()"
+          (input)="onQuery($any($event.target).value)"
+        />
+        <button type="submit" class="hero-submit">Search</button>
+      </div>
+
+      @if (suggestions().length) {
+        <ul class="suggestion-list" role="listbox" aria-label="Place suggestions">
+          @for (suggestion of suggestions(); track suggestion.type + suggestion.id) {
+            <li role="option" [attr.aria-selected]="false">
+              <button type="button" class="suggestion" (click)="choose(suggestion)">
+                <span class="suggestion-name">{{ suggestion.name }}</span>
+                <span class="suggestion-meta">
+                  {{ suggestion.type }}@if (suggestion.city) { · {{ suggestion.city }} }
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </form>
+
+    <p class="hero-links">
+      <a routerLink="/search">Browse every room</a>
+      <span aria-hidden="true">·</span>
+      <a routerLink="/how-it-works">How RoomRaah works</a>
+    </p>
+  </div>
+</section>
+
+<section class="featured container-centered" aria-label="Featured rooms">
+  <header class="featured-head">
+    <h2 class="featured-title">Recently inspected</h2>
+    <a routerLink="/search" class="featured-link">See all rooms</a>
+  </header>
+
+  @if (loading()) {
+    <div class="featured-grid" aria-busy="true">
+      @for (placeholder of skeletons; track $index) {
+        <app-property-card [loading]="true" />
+      }
+    </div>
+  } @else if (featured().length === 0) {
+    <p class="featured-empty">
+      Nothing to show here just yet — <a routerLink="/search">browse every room</a> instead.
+    </p>
+  } @else {
+    <div class="featured-grid" data-smoke="featured">
+      @for (property of featured(); track property.id) {
+        <app-property-card
+          [property]="property"
+          [isSaved]="isSaved(property.id)"
+          (saveToggled)="toggleSave($event)"
+        />
+      }
+    </div>
+  }
+</section>

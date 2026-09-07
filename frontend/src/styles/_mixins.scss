@@ -1,0 +1,137 @@
+@use 'tokens' as *;
+
+// --- Responsive Breakpoint Mixins (Brief §12) ---
+
+/// Phone: up to 640px. One column, bottom navigation, full-height slide-overs.
+@mixin phone {
+  @media (max-width: #{$breakpoint-phone-max}) {
+    @content;
+  }
+}
+
+/// Tablet: 641px to 1024px. Two-column grid, collapsible panels.
+@mixin tablet {
+  @media (min-width: #{$breakpoint-tablet-min}) and (max-width: #{$breakpoint-tablet-max}) {
+    @content;
+  }
+}
+
+/// Tablet and above: 641px and up.
+@mixin tablet-up {
+  @media (min-width: #{$breakpoint-tablet-min}) {
+    @content;
+  }
+}
+
+/// Laptop: 1025px to 1440px. Three-column grid, persistent filter sidebar.
+@mixin laptop {
+  @media (min-width: #{$breakpoint-laptop-min}) and (max-width: #{$breakpoint-laptop-max}) {
+    @content;
+  }
+}
+
+/// Laptop and above: 1025px and up.
+@mixin laptop-up {
+  @media (min-width: #{$breakpoint-laptop-min}) {
+    @content;
+  }
+}
+
+/// Desktop: above 1440px. Capped at 1440px and centered.
+@mixin desktop {
+  @media (min-width: #{$breakpoint-desktop-min}) {
+    @content;
+  }
+}
+
+// --- Accessibility Mixins ---
+
+/// Handcrafted visible focus ring for keyboard navigation.
+/// Meets WCAG 2.1 AA non-text contrast requirements (3:1 minimum against background).
+@mixin focus-visible {
+  &:focus-visible {
+    outline: 2px solid $color-navy;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba($color-navy, 0.18);
+  }
+}
+
+/// Alternative focus ring with green accent for confirmed/success actions.
+@mixin focus-visible-green {
+  &:focus-visible {
+    outline: 2px solid $color-green;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba($color-green, 0.2);
+  }
+}
+
+/// Visually hidden but accessible to assistive technologies (screen readers).
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// --- Layout & Utility Mixins ---
+
+/// Max-width container capped at 1440px and centered (Brief §12).
+@mixin container-centered {
+  width: 100%;
+  max-width: $container-max-width;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: $space-4;
+  padding-right: $space-4;
+
+  @include tablet-up {
+    padding-left: $space-6;
+    padding-right: $space-6;
+  }
+
+  @include laptop-up {
+    padding-left: $space-8;
+    padding-right: $space-8;
+  }
+}
+
+/// Ellipsis truncation for single-line text.
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/// Multi-line clamp with ellipsis.
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/// Subtle skeleton shimmer effect for loading states.
+@mixin skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    $color-slate-200 0%,
+    $color-slate-100 50%,
+    $color-slate-200 100%
+  );
+  background-size: 200% 100%;
+  animation: rr-shimmer 1.5s infinite ease-in-out;
+}
+
+@keyframes rr-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

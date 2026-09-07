@@ -1,0 +1,60 @@
+<section class="compare-page container-centered" aria-labelledby="compare-title">
+  <h1 class="compare-title" id="compare-title">Compare rooms</h1>
+  <p class="compare-lead">Up to {{ limit }} at a time, side by side.</p>
+
+  @if (!hasIds()) {
+    <div data-smoke="compare-empty">
+      <app-empty-state
+        title="Nothing to compare yet"
+        description="Save a few rooms while you browse, then compare them from your saved list."
+      />
+    </div>
+  } @else if (loading()) {
+    <p aria-busy="true">Loading…</p>
+  } @else if (error()) {
+    <p class="compare-error" role="alert" data-smoke="compare-error">{{ error() }}</p>
+  } @else if (listings().length === 0) {
+    <p class="compare-error" role="alert" data-smoke="compare-error">
+      None of those rooms are available any more.
+    </p>
+  } @else {
+    <div class="compare-scroll">
+      <table class="compare-table" data-smoke="compare-table">
+        <caption class="sr-only">
+          The rooms you chose, compared row by row
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">
+              <span class="sr-only">What is being compared</span>
+            </th>
+            @for (item of listings(); track item.id) {
+              <th scope="col" class="compare-head">
+                @if (item.primaryThumbnailUrl) {
+                  <img class="compare-thumb" [src]="item.primaryThumbnailUrl" alt="" />
+                }
+                <a class="compare-name" [routerLink]="['/property', item.id]">{{ item.title }}</a>
+                @if (item.hasInspectionBadge) {
+                  <app-badge variant="inspection" size="sm">Inspected</app-badge>
+                }
+                <button type="button" class="compare-remove" (click)="remove(item.id)">
+                  Remove
+                </button>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows; track row.label) {
+            <tr>
+              <th scope="row">{{ row.label }}</th>
+              @for (item of listings(); track item.id) {
+                <td>{{ row.get(item) }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

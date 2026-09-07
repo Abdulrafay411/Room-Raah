@@ -1,0 +1,17 @@
+@use '../admin-common';
+
+.panel-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.report-decision {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.report-decision h3 { margin: 0; }

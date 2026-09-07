@@ -1,0 +1,156 @@
+.admin-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.panel-card {
+  background: #fff;
+  border: 1px solid #dbe3e8;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.panel-head,
+.filter-row,
+.action-row,
+.row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.panel-head h2,
+.panel-head h3,
+.row-head h3,
+.row-head p {
+  margin: 0;
+}
+
+.filter-row label,
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+input,
+select,
+textarea {
+  min-height: 42px;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+}
+
+textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.queue {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.queue-row {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  color: #52606d;
+  font-size: 0.9rem;
+}
+
+.status {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #eef2f6;
+  color: #123b5d;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+.status[data-state='Published'],
+.status[data-state='Approved'],
+.status[data-state='Checked'],
+.status[data-state='Passed'],
+.status[data-state='Active'] {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status[data-state='Rejected'],
+.status[data-state='Failed'],
+.status[data-state='Hidden'],
+.status[data-state='Inactive'] {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.notice,
+.error {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin: 0;
+}
+
+.notice {
+  border: 1px solid #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.detail-grid,
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.empty-copy {
+  margin: 0;
+  padding: 1.25rem;
+  text-align: center;
+  color: #64748b;
+}
+
+@media (max-width: 720px) {
+  .detail-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wide {
+    grid-column: auto;
+  }
+}

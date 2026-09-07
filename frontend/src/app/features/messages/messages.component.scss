@@ -1,0 +1,270 @@
+// Layout and behaviour only. The two things here that are not decoration: the thread is
+// its own scroll container so the composer stays put while a long thread moves under it,
+// and the two-column grid collapses to one below 860px because a 300px list beside a
+// thread is unreadable on a phone.
+
+.messages-page {
+  padding: 1.5rem 1rem 3rem;
+  max-width: 1100px;
+}
+
+.messages-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.messages-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+}
+
+.messages-lead {
+  margin: 0;
+  color: #475569;
+}
+
+.live-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #15803d;
+}
+
+.live-note.is-polling {
+  color: #64748b;
+}
+
+.live-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #16a34a;
+}
+
+.messages-error {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.messages-hint {
+  margin: 0.75rem 0 0.5rem;
+  color: #475569;
+}
+
+.messages-cta {
+  display: inline-block;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #fff;
+  text-decoration: none;
+}
+
+.messages-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) 1fr;
+  gap: 1rem;
+  align-items: stretch;
+  // A fixed height rather than a growing page: the thread scrolls inside itself, so the
+  // composer is always reachable without scrolling the whole window to find it.
+  height: min(70vh, 640px);
+}
+
+.thread-list {
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.thread-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.thread-item {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 0;
+  border-bottom: 1px solid #f1f5f9;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.thread-item:hover {
+  background: #f8fafc;
+}
+
+.thread-item.is-active {
+  background: #eef6f4;
+  box-shadow: inset 3px 0 #16a36a;
+}
+
+.thread-item:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+.thread-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.thread-who {
+  font-weight: 600;
+}
+
+.thread-about,
+.thread-when {
+  font-size: 0.85rem;
+  color: #64748b;
+  // A long listing title must not widen the column and push the thread off screen.
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thread-panel {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  min-height: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.thread-head {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.thread-title {
+  margin: 0 0 0.15rem;
+  font-size: 1.05rem;
+}
+
+.thread-listing {
+  font-size: 0.85rem;
+  color: #2563eb;
+}
+
+.thread-scroll {
+  overflow-y: auto;
+  min-height: 0;
+  padding: 1rem;
+  background: #f7f9fa;
+}
+
+.thread-empty,
+.thread-none {
+  margin: 0;
+  color: #64748b;
+}
+
+.thread-none {
+  padding: 1rem;
+}
+
+.bubbles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.bubble-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.bubble-row.is-mine {
+  justify-content: flex-end;
+}
+
+.bubble {
+  max-width: min(78%, 520px);
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.bubble-row.is-mine .bubble {
+  border-color: #c7e5d9;
+  background: #eaf7f1;
+}
+
+.bubble-body {
+  margin: 0 0 0.3rem;
+  // Somebody will paste a URL with no spaces in it, and it must not widen the column.
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.bubble-meta {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.composer-input {
+  flex: 1;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.composer-side {
+  display: grid;
+  justify-items: end;
+  gap: 0.25rem;
+}
+
+.composer-count {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+@media (max-width: 860px) {
+  .messages-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .thread-list {
+    max-height: 220px;
+  }
+
+  .thread-scroll {
+    max-height: 50vh;
+  }
+}

@@ -1,0 +1,11 @@
+.map-pin-canvas {
+  height: 260px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.map-pin-readout {
+  margin: 0.35rem 0 0;
+  font-variant-numeric: tabular-nums;
+}

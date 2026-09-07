@@ -1,0 +1,213 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: $color-background;
+}
+
+.map-page {
+  @include container-centered;
+  padding-top: $space-6;
+  padding-bottom: $space-12;
+}
+
+.map-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-4;
+
+  h1,
+  p {
+    margin: 0;
+  }
+
+  p {
+    margin-top: $space-2;
+    color: $color-slate-600;
+  }
+
+  @include phone {
+    flex-direction: column;
+  }
+}
+
+.view-switch,
+.map-guidance a,
+.map-error a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: $space-2 $space-4;
+  border: 1px solid $color-navy;
+  border-radius: $radius-md;
+  color: $color-navy;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.map-guidance,
+.map-error {
+  max-width: 680px;
+  margin-bottom: $space-5;
+  padding: $space-6;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+  background: $color-surface;
+
+  h2,
+  p {
+    margin-top: 0;
+  }
+}
+
+.map-error {
+  border-color: $color-danger-border;
+  background: $color-danger-light;
+}
+
+.map-summary,
+.map-help {
+  color: $color-slate-600;
+  font-size: $font-size-sm;
+}
+
+.map-layout {
+  display: grid;
+  gap: $space-5;
+
+  @include desktop {
+    grid-template-columns: minmax(0, 1.25fr) minmax(380px, 0.75fr);
+    align-items: start;
+  }
+}
+
+.map-panel {
+  min-width: 0;
+
+  @include desktop {
+    position: sticky;
+    top: 84px;
+  }
+}
+
+.map-canvas {
+  height: clamp(360px, 62vh, 680px);
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background: $color-slate-100;
+  box-shadow: $shadow-md;
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.map-help {
+  margin: $space-2 0 0;
+}
+
+.map-list {
+  min-width: 0;
+
+  ol {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $space-3;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+
+    @include tablet {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include laptop {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @include desktop {
+    max-height: clamp(560px, 72vh, 760px);
+    overflow-y: auto;
+    padding-right: $space-2;
+  }
+}
+
+.map-loading,
+.map-listing {
+  box-shadow: $shadow-sm;
+  padding: $space-4;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+  background: $color-surface;
+}
+
+.map-listing {
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &.is-selected {
+    border-color: $color-green;
+    box-shadow: 0 0 0 2px $color-green-subtle;
+  }
+
+  p {
+    margin: $space-2 0 0;
+    color: $color-slate-600;
+    font-size: $font-size-sm;
+  }
+}
+
+.listing-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: $space-3;
+
+  a {
+    color: $color-navy;
+    font-weight: $font-weight-semibold;
+
+    &:focus-visible {
+      @include focus-visible;
+    }
+  }
+}
+
+.checked-badge {
+  align-self: flex-start;
+  padding: 2px $space-2;
+  border-radius: $radius-full;
+  background: $color-green-light;
+  color: $color-green-active;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+}
+
+.locate-button {
+  margin-top: $space-3;
+  padding: $space-2 $space-3;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-md;
+  background: $color-surface;
+  color: $color-navy;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    border-color: $color-green;
+    background: $color-green-light;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}

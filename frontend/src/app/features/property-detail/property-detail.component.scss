@@ -1,0 +1,433 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// Layout and behaviour only; the visual pass comes later and keeps these class names.
+
+:host {
+  display: block;
+  background: $color-background;
+  min-height: 100vh;
+}
+
+.detail-page {
+  @include container-centered;
+  padding-top: $space-6;
+  padding-bottom: $space-12;
+}
+
+.loading-note,
+.gallery-empty {
+  color: $color-slate-500;
+}
+
+.breadcrumb {
+  display: flex;
+  gap: $space-2;
+  font-size: $font-size-sm;
+  color: $color-slate-500;
+  margin-bottom: $space-4;
+
+  a {
+    color: $color-navy;
+  }
+}
+
+.detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $space-4;
+  margin-bottom: $space-5;
+}
+
+.detail-title {
+  margin: 0 0 $space-2;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-navy;
+}
+
+.detail-location {
+  margin: 0;
+  color: $color-slate-600;
+  font-size: $font-size-sm;
+}
+
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.gallery {
+  margin-bottom: $space-6;
+}
+
+.gallery-main {
+  position: relative;
+  margin: 0;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background: $color-slate-100;
+  aspect-ratio: 16 / 9;
+}
+
+.gallery-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: $radius-full;
+  background: rgba(255, 255, 255, 0.9);
+  color: $color-slate-900;
+  font-size: $font-size-xl;
+  line-height: 1;
+  cursor: pointer;
+
+  &.is-previous {
+    left: $space-3;
+  }
+
+  &.is-next {
+    right: $space-3;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.gallery-strip {
+  display: flex;
+  gap: $space-2;
+  overflow-x: auto;
+  list-style: none;
+  margin: $space-3 0 0;
+  padding: 0;
+}
+
+.gallery-thumb {
+  width: 84px;
+  height: 60px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &.is-active {
+    border-color: $color-navy;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.gallery-all,
+.review-all {
+  display: inline-block;
+  margin-top: $space-3;
+  color: $color-navy;
+  font-weight: $font-weight-medium;
+}
+
+.detail-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-6;
+
+  @include laptop-up {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+}
+
+.detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  min-width: 0;
+}
+
+.panel {
+  padding: $space-5;
+  background: $color-surface;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.panel-title {
+  margin: 0 0 $space-3;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-navy;
+}
+
+.panel-text {
+  margin: 0;
+  color: $color-slate-700;
+  line-height: $line-height-relaxed;
+  white-space: pre-line;
+}
+
+.facility-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: $space-2;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.facility {
+  padding: $space-2 $space-3;
+  background: $color-navy-light;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  color: $color-slate-800;
+}
+
+.check-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  padding: $space-2 0;
+  border-bottom: 1px solid $color-slate-100;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.check-name {
+  color: $color-slate-700;
+  font-size: $font-size-sm;
+}
+
+.review-summary {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-slate-600;
+}
+
+.review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.review-head {
+  display: flex;
+  justify-content: space-between;
+  gap: $space-3;
+  margin: 0 0 $space-1;
+  color: $color-slate-900;
+}
+
+.review-rating {
+  color: $color-slate-600;
+  font-size: $font-size-sm;
+}
+
+.review-body {
+  margin: 0;
+  color: $color-slate-700;
+  line-height: $line-height-relaxed;
+}
+
+.detail-side {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+
+  @include laptop-up {
+    position: sticky;
+    top: $space-4;
+  }
+}
+
+.cost-card,
+.owner-card {
+  padding: $space-5;
+  background: $color-surface;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+}
+
+.cost-rent {
+  margin: 0 0 $space-3;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-navy;
+
+  span {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-regular;
+    color: $color-slate-500;
+  }
+}
+
+.cost-breakdown {
+  margin: 0;
+}
+
+.cost-row {
+  display: flex;
+  justify-content: space-between;
+  gap: $space-3;
+  padding: $space-2 0;
+  font-size: $font-size-sm;
+  color: $color-slate-700;
+
+  dt,
+  dd {
+    margin: 0;
+  }
+
+  &.is-total {
+    border-top: 1px solid $color-slate-200;
+    margin-top: $space-2;
+    padding-top: $space-3;
+    font-weight: $font-weight-semibold;
+    color: $color-slate-900;
+  }
+}
+
+.cost-note,
+.owner-note {
+  margin: $space-3 0 0;
+  font-size: $font-size-xs;
+  color: $color-slate-500;
+}
+
+.owner-title {
+  margin: 0 0 $space-2;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-slate-600;
+}
+
+.owner-name {
+  margin: 0 0 $space-2;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-slate-900;
+}
+
+.detail-error {
+  padding: $space-6;
+  background: $color-surface;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+  text-align: center;
+}
+
+.error-title {
+  margin: 0 0 $space-2;
+  font-size: $font-size-xl;
+  color: $color-navy;
+}
+
+.error-text {
+  margin: 0 0 $space-4;
+  color: $color-slate-600;
+}
+
+.error-action {
+  color: $color-navy;
+  font-weight: $font-weight-medium;
+}
+
+.action-card {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.action-primary {
+  display: block;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  background: #123b5d;
+  color: #fff;
+  text-decoration: none;
+}
+
+.action-report {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  justify-self: center;
+}
+
+.action-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #b91c1c;
+}
+
+// Sits under the compare button and only exists once a room is chosen, so it reads as the
+// next step rather than as another action competing with the two above it.
+.action-compare {
+  justify-self: center;
+  text-decoration: underline;
+}
+
+// Replaces the visit link when one is already open, so it keeps the same footprint in the
+// action card rather than the card jumping about.
+.action-open-visit {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 0.9rem;
+  text-align: center;
+}

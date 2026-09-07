@@ -1,0 +1,113 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+  background: $color-background;
+  min-height: 100vh;
+}
+
+.reviews-page {
+  @include container-centered;
+  padding-top: $space-6;
+  padding-bottom: $space-12;
+  max-width: 760px;
+}
+
+.back-link {
+  color: $color-navy;
+  font-weight: $font-weight-medium;
+}
+
+.reviews-header {
+  margin: $space-3 0 $space-5;
+}
+
+.reviews-title {
+  margin: 0 0 $space-1;
+  font-size: $font-size-2xl;
+  color: $color-navy;
+}
+
+.reviews-summary,
+.reviews-note {
+  margin: 0;
+  color: $color-slate-600;
+  line-height: $line-height-relaxed;
+}
+
+.review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+.review {
+  padding: $space-5;
+  background: $color-surface;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+}
+
+.review-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: $space-3;
+  margin: 0 0 $space-2;
+}
+
+.review-author {
+  color: $color-slate-900;
+}
+
+.review-stay {
+  font-size: $font-size-xs;
+  color: $color-slate-500;
+}
+
+.review-rating {
+  margin-left: auto;
+  color: $color-slate-600;
+  font-size: $font-size-sm;
+}
+
+.review-body {
+  margin: 0;
+  color: $color-slate-700;
+  line-height: $line-height-relaxed;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-4;
+  margin-top: $space-8;
+}
+
+.page-button {
+  padding: $space-2 $space-4;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-md;
+  background: $color-surface;
+  color: $color-slate-800;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.page-status {
+  font-size: $font-size-sm;
+  color: $color-slate-600;
+}

@@ -1,0 +1,195 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+  background: $color-background;
+}
+
+.hero {
+  background: radial-gradient(ellipse at 90% 10%, #225a72 0, transparent 55%), linear-gradient(120deg, #0b263e, $color-navy);
+  color: #fff;
+  padding: clamp(3rem, 7vw, 6rem) 0;
+}
+
+.hero-inner {
+  @include container-centered;
+  max-width: 820px;
+  text-align: center;
+}
+
+.hero-title {
+  color: #fff;
+  margin: 0 0 $space-3;
+  font-size: clamp(2.15rem, 4.6vw, 3.75rem);
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  font-weight: $font-weight-bold;
+  line-height: $line-height-tight;
+}
+
+.hero-lead {
+  margin: 0 auto $space-6;
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: $line-height-relaxed;
+}
+
+.hero-search {
+  position: relative;
+  text-align: left;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 20px;
+  background: rgb(255 255 255 / 7%);
+  box-shadow: 0 20px 48px rgb(0 0 0 / 12%);
+}
+
+.hero-label {
+  display: block;
+  margin-bottom: $space-2;
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hero-search-row {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+
+  @include tablet-up {
+    flex-direction: row;
+  }
+}
+
+.hero-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: $space-3 $space-4;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  border: 0;
+  border-radius: $radius-md;
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.hero-submit {
+  padding: $space-3 $space-6;
+  border: 0;
+  border-radius: $radius-md;
+  background: $color-green-hover;
+  color: #fff;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+
+  &:hover {
+    background: $color-green-hover;
+  }
+
+  &:focus-visible {
+    @include focus-visible-green;
+  }
+}
+
+.suggestion-list {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  margin: $space-1 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 300px;
+  overflow-y: auto;
+  background: $color-surface;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: $space-3 $space-4;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: $color-navy-light;
+  }
+}
+
+.suggestion-name {
+  font-weight: $font-weight-medium;
+  color: $color-slate-900;
+}
+
+.suggestion-meta {
+  font-size: $font-size-xs;
+  color: $color-slate-500;
+}
+
+.hero-links {
+  margin: $space-6 0 0;
+  display: flex;
+  justify-content: center;
+  gap: $space-3;
+  font-size: $font-size-sm;
+
+  a {
+    color: #fff;
+    text-decoration: underline;
+  }
+}
+
+.featured {
+  @include container-centered;
+  padding-top: $space-10;
+  padding-bottom: $space-12;
+}
+
+.featured-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-3;
+  margin-bottom: $space-5;
+}
+
+.featured-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  letter-spacing: -0.035em;
+  color: $color-navy;
+}
+
+.featured-link {
+  color: $color-navy;
+  font-weight: $font-weight-medium;
+}
+
+.featured-empty {
+  color: $color-slate-600;
+}
+
+.featured-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-5;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include laptop-up {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

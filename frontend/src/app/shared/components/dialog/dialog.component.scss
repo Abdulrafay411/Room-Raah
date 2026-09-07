@@ -1,0 +1,125 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-4;
+  animation: rr-fade-in $transition-fast ease-out;
+
+  @include phone {
+    padding: $space-2;
+    align-items: flex-end;
+  }
+}
+
+.dialog-panel {
+  position: relative;
+  width: 100%;
+  background-color: $color-surface;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xl;
+  border: 1px solid $color-slate-200;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 2 * $space-4);
+  overflow: hidden;
+  animation: rr-scale-in $transition-base cubic-bezier(0.16, 1, 0.3, 1);
+
+  @include focus-visible;
+
+  @include phone {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    max-height: calc(100vh - $space-8);
+  }
+}
+
+.dialog-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(1px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: $space-5 $space-6;
+  border-bottom: 1px solid $color-slate-100;
+  gap: $space-4;
+}
+
+.dialog-title-group {
+  flex: 1;
+}
+
+.dialog-title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-navy;
+  line-height: $line-height-tight;
+}
+
+.dialog-description {
+  font-size: $font-size-sm;
+  color: $color-slate-500;
+  margin-top: $space-1;
+  line-height: $line-height-normal;
+}
+
+.close-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.dialog-body {
+  padding: $space-6;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.dialog-footer {
+  padding: $space-4 $space-6;
+  background-color: $color-slate-50;
+  border-top: 1px solid $color-slate-200;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $space-3;
+
+  &:empty {
+    display: none;
+  }
+}
+
+@keyframes rr-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rr-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

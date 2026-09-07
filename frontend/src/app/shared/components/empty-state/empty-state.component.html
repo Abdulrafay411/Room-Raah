@@ -1,0 +1,111 @@
+<div class="empty-state-container" role="region" [attr.aria-label]="resolvedTitle">
+  <div class="illustration-wrapper" aria-hidden="true">
+    @switch (type) {
+      @case ('shortlist') {
+        <!-- Heart Bookmark illustration -->
+        <svg class="empty-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="36" fill="#eef4f8" />
+          <path
+            d="M40 54s-14-9-14-19a8 8 0 0114-5 8 8 0 0114 5c0 10-14 19-14 19z"
+            fill="#123B5D"
+            opacity="0.2"
+          />
+          <path
+            d="M40 50.5l-1.45-1.32C33.4 44.56 30 41.48 30 37.7a6.7 6.7 0 016.7-6.7c2.04 0 4 .95 5.3 2.45A7.17 7.17 0 0147.3 31a6.7 6.7 0 016.7 6.7c0 3.78-3.4 6.86-8.55 11.48L40 50.5z"
+            fill="#123B5D"
+          />
+        </svg>
+      }
+      @case ('inbox') {
+        <!-- Chat bubbles illustration -->
+        <svg class="empty-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="36" fill="#eef4f8" />
+          <path
+            d="M26 44v-14a4 4 0 014-4h20a4 4 0 014 4v14a4 4 0 01-4 4H34l-8 5v-5h0z"
+            fill="#123B5D"
+            opacity="0.2"
+          />
+          <path
+            d="M32 46v-10a3 3 0 013-3h16a3 3 0 013 3v10a3 3 0 01-3 3h-10l-6 4v-4h-3z"
+            fill="#123B5D"
+          />
+          <circle cx="39" cy="41" r="1.5" fill="#ffffff" />
+          <circle cx="44" cy="41" r="1.5" fill="#ffffff" />
+          <circle cx="49" cy="41" r="1.5" fill="#ffffff" />
+        </svg>
+      }
+      @case ('visits') {
+        <!-- Calendar / Visit Pin illustration -->
+        <svg class="empty-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="36" fill="#eaf7f1" />
+          <rect x="25" y="28" width="30" height="26" rx="4" fill="#16A36A" opacity="0.2" />
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M29 25a2 2 0 00-2 2v24a2 2 0 002 2h22a2 2 0 002-2V27a2 2 0 00-2-2H29zm0 8h22v18H29V33zm18-5a1 1 0 112 0v2a1 1 0 11-2 0v-2zm-16 0a1 1 0 112 0v2a1 1 0 11-2 0v-2z"
+            fill="#16A36A"
+          />
+          <circle cx="36" cy="38" r="2" fill="#16A36A" />
+          <circle cx="44" cy="38" r="2" fill="#16A36A" />
+          <circle cx="36" cy="45" r="2" fill="#16A36A" />
+          <circle cx="44" cy="45" r="2" fill="#16A36A" />
+        </svg>
+      }
+      @case ('search') {
+        <!-- Search filter illustration -->
+        <svg class="empty-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="36" fill="#eef4f8" />
+          <circle cx="38" cy="38" r="14" stroke="#123B5D" stroke-width="4" fill="none" />
+          <path d="M48 48l12 12" stroke="#123B5D" stroke-width="4" stroke-linecap="round" />
+          <path d="M34 38h8m-4-4v8" stroke="#16A36A" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+      }
+      @default {
+        <!-- General folder empty -->
+        <svg class="empty-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="36" fill="#f1f5f9" />
+          <path
+            d="M26 31a2 2 0 012-2h8l3 3h15a2 2 0 012 2v18a2 2 0 01-2 2H28a2 2 0 01-2-2V31z"
+            fill="#64748b"
+            opacity="0.3"
+          />
+          <path
+            d="M29 37h22a2 2 0 012 2v15a2 2 0 01-2 2H29a2 2 0 01-2-2V39a2 2 0 012-2z"
+            fill="#123B5D"
+          />
+        </svg>
+      }
+    }
+  </div>
+
+  <h3 class="empty-title">{{ resolvedTitle }}</h3>
+  <p class="empty-description">{{ resolvedDescription }}</p>
+
+  @if (resolvedActionText || secondaryActionText) {
+    <div class="empty-actions">
+      @if (resolvedActionText) {
+        <app-button
+          [variant]="actionVariant"
+          size="md"
+          (clicked)="actionClicked.emit()"
+        >
+          {{ resolvedActionText }}
+        </app-button>
+      }
+
+      @if (secondaryActionText) {
+        <app-button
+          variant="secondary"
+          size="md"
+          (clicked)="secondaryActionClicked.emit()"
+        >
+          {{ secondaryActionText }}
+        </app-button>
+      }
+    </div>
+  }
+
+  <div class="empty-extra-content">
+    <ng-content></ng-content>
+  </div>
+</div>

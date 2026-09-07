@@ -1,0 +1,33 @@
+<button
+  [type]="type"
+  class="btn"
+  [class.btn-primary]="variant === 'primary'"
+  [class.btn-success]="variant === 'success'"
+  [class.btn-secondary]="variant === 'secondary'"
+  [class.btn-outline]="variant === 'outline'"
+  [class.btn-outline-green]="variant === 'outline-green'"
+  [class.btn-ghost]="variant === 'ghost'"
+  [class.btn-danger]="variant === 'danger'"
+  [class.btn-sm]="size === 'sm'"
+  [class.btn-md]="size === 'md'"
+  [class.btn-lg]="size === 'lg'"
+  [class.btn-loading]="loading"
+  [class.btn-icon-only]="isIconOnly"
+  [class.btn-full-width]="fullWidth"
+  [disabled]="disabled || loading"
+  [attr.aria-disabled]="disabled || loading"
+  [attr.aria-busy]="loading"
+  [attr.aria-label]="computedAriaLabel"
+  [attr.aria-pressed]="pressed !== null ? pressed : null"
+  (click)="handleClick($event)"
+>
+  @if (loading) {
+    <span class="btn-spinner-slot" aria-hidden="true">
+      <app-spinner [size]="size === 'lg' ? 'md' : 'sm'" [color]="spinnerColor" [label]="'Loading'"></app-spinner>
+    </span>
+  }
+
+  <span class="btn-content" [class.btn-content-hidden]="loading">
+    <ng-content></ng-content>
+  </span>
+</button>

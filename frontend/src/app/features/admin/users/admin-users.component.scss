@@ -1,0 +1,11 @@
+@use '../admin-common';
+
+.filters,
+.user-detail {
+  display: grid;
+  gap: 1rem;
+}
+
+.filters h2,
+.filters p,
+.user-detail h2 { margin: 0; }

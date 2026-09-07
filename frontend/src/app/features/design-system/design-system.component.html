@@ -1,0 +1,332 @@
+<main class="container-centered showcase-content">
+  <!-- Design Tokens Section -->
+  <section class="showcase-section" aria-labelledby="tokens-title">
+    <h2 id="tokens-title" class="section-title">Design Tokens (§12)</h2>
+    <p class="section-desc">Primary brand colors, soft background, Inter typography, and four responsive breakpoints.</p>
+
+    <div class="tokens-grid">
+      <div class="token-card navy">
+        <div class="token-swatch" style="background-color: #123B5D;"></div>
+        <div class="token-info">
+          <span class="token-name">Deep Navy (Trust)</span>
+          <code class="token-value">#123B5D</code>
+        </div>
+      </div>
+
+      <div class="token-card green">
+        <div class="token-swatch" style="background-color: #16A36A;"></div>
+        <div class="token-info">
+          <span class="token-name">Green (Confirmed)</span>
+          <code class="token-value">#16A36A</code>
+        </div>
+      </div>
+
+      <div class="token-card bg">
+        <div class="token-swatch" style="background-color: #F7F9FA; border: 1px solid #e2e8f0;"></div>
+        <div class="token-info">
+          <span class="token-name">Soft Background</span>
+          <code class="token-value">#F7F9FA</code>
+        </div>
+      </div>
+
+      <div class="token-card font">
+        <div class="token-swatch font-swatch">Ag</div>
+        <div class="token-info">
+          <span class="token-name">Typeface</span>
+          <code class="token-value">Inter (400, 500, 600, 700)</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="breakpoints-summary">
+      <span class="breakpoint-chip">Phone &le; 640px</span>
+      <span class="breakpoint-chip">Tablet 641&ndash;1024px</span>
+      <span class="breakpoint-chip">Laptop 1025&ndash;1440px</span>
+      <span class="breakpoint-chip">Desktop &gt; 1440px (Capped at 1440px)</span>
+    </div>
+  </section>
+
+  <!-- Buttons Section -->
+  <section class="showcase-section" aria-labelledby="buttons-title">
+    <h2 id="buttons-title" class="section-title">Buttons (<code>app-button</code>)</h2>
+    <p class="section-desc">Variants, sizes, loading, disabled, pressed, and accessible icon-only button states.</p>
+
+    <div class="demo-group">
+      <h3 class="group-title">Variants &amp; Hover States</h3>
+      <div class="button-row">
+        <app-button variant="primary">Primary Navy</app-button>
+        <app-button variant="success">Confirmed Green</app-button>
+        <app-button variant="secondary">Secondary</app-button>
+        <app-button variant="outline">Outline Navy</app-button>
+        <app-button variant="outline-green">Outline Green</app-button>
+        <app-button variant="ghost">Ghost Action</app-button>
+        <app-button variant="danger">Danger</app-button>
+      </div>
+    </div>
+
+    <div class="demo-group">
+      <h3 class="group-title">Sizes</h3>
+      <div class="button-row items-center">
+        <app-button variant="primary" size="sm">Small (32px)</app-button>
+        <app-button variant="primary" size="md">Medium (40px)</app-button>
+        <app-button variant="primary" size="lg">Large (48px)</app-button>
+      </div>
+    </div>
+
+    <div class="demo-group">
+      <h3 class="group-title">Interactive States: Loading, Disabled &amp; Icon-only (with aria-label)</h3>
+      <div class="button-row items-center">
+        <app-button variant="primary" [loading]="isButtonLoading()" (clicked)="toggleButtonLoading()">
+          Click to trigger Loading State
+        </app-button>
+
+        <app-button variant="success" [loading]="true">
+          Saving
+        </app-button>
+
+        <app-button variant="primary" [disabled]="true">
+          Disabled State
+        </app-button>
+
+        <!-- Icon-only button strictly requiring and having aria-label -->
+        <app-button
+          variant="outline"
+          [isIconOnly]="true"
+          ariaLabel="Search accommodation"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18" aria-hidden="true">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+        </app-button>
+
+        <!-- Filter icon-only button with aria-label -->
+        <app-button
+          variant="secondary"
+          [isIconOnly]="true"
+          ariaLabel="Open filters panel"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18" aria-hidden="true">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+          </svg>
+        </app-button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Badges Section -->
+  <section class="showcase-section" aria-labelledby="badges-title">
+    <h2 id="badges-title" class="section-title">Badges &amp; Status Indicators (<code>app-badge</code>)</h2>
+    <p class="section-desc">RoomRaah Inspected badge, confirmed availability, pending review, danger, and neutral tags.</p>
+
+    <div class="badge-row">
+      <app-badge variant="inspection" size="md">RoomRaah Inspected</app-badge>
+      <app-badge variant="confirmed" size="md" [showDot]="true">Availability Confirmed</app-badge>
+      <app-badge variant="navy" size="md">Private Room</app-badge>
+      <app-badge variant="warning" size="md" [showDot]="true">Revision Pending</app-badge>
+      <app-badge variant="danger" size="md" [showDot]="true">Full (0 beds free)</app-badge>
+      <app-badge variant="neutral" size="md">Girls Hostel</app-badge>
+    </div>
+  </section>
+
+  <!-- Loading Indicators & Skeletons Section -->
+  <section class="showcase-section" aria-labelledby="loading-title">
+    <h2 id="loading-title" class="section-title">Loading Indicators &amp; Skeletons (<code>app-spinner</code> &amp; <code>app-skeleton</code>)</h2>
+    <p class="section-desc">Accessible SVG spinners with polite live regions and pulse shimmers for loading states.</p>
+
+    <div class="demo-group">
+      <h3 class="group-title">Spinners (sizes and color tokens)</h3>
+      <div class="button-row items-center">
+        <app-spinner size="sm" color="navy" label="Loading small"></app-spinner>
+        <app-spinner size="md" color="green" label="Loading medium"></app-spinner>
+        <app-spinner size="lg" color="navy" label="Loading large"></app-spinner>
+      </div>
+    </div>
+
+    <div class="demo-group">
+      <h3 class="group-title">Skeletons (text and shape placeholders)</h3>
+      <div style="max-width: 400px; display: flex; flex-direction: column; gap: 8px;">
+        <app-skeleton variant="text" width="70%"></app-skeleton>
+        <app-skeleton variant="text" width="100%"></app-skeleton>
+        <app-skeleton variant="rectangular" height="40px"></app-skeleton>
+      </div>
+    </div>
+  </section>
+
+  <!-- Form Fields Section -->
+  <section class="showcase-section" aria-labelledby="fields-title">
+    <h2 id="fields-title" class="section-title">Form Fields (<code>app-form-field</code> &amp; <code>[appInput]</code>)</h2>
+    <p class="section-desc">Labels, helper hints, live validation errors (role="alert"), loading, and disabled states.</p>
+
+    <div class="form-grid">
+      <app-form-field
+        label="Search Area or Landmark"
+        fieldId="demo-area"
+        hint="e.g. Clifton, Gulberg, F-7, FAST, LUMS"
+        [required]="true"
+      >
+        <input
+          appInput
+          id="demo-area"
+          type="text"
+          placeholder="Enter location"
+        />
+      </app-form-field>
+
+      <app-form-field
+        label="Email address"
+        fieldId="demo-email"
+        [error]="hasFormError() ? formErrorMessage() : ''"
+        [required]="true"
+      >
+        <input
+          appInput
+          id="demo-email"
+          type="email"
+          placeholder="you@example.com"
+          [hasError]="hasFormError()"
+        />
+      </app-form-field>
+
+      <app-form-field
+        label="Room Type Selection"
+        fieldId="demo-room-type"
+        hint="Choose preferred accommodation style"
+      >
+        <select appInput id="demo-room-type">
+          <option value="all">Any Room Type</option>
+          <option value="private">Private Room</option>
+          <option value="shared">Shared Bed / Hostel</option>
+        </select>
+      </app-form-field>
+
+      <app-form-field
+        label="Disabled Field Example"
+        fieldId="demo-disabled"
+        hint="This field cannot be edited"
+        [disabled]="true"
+      >
+        <input
+          appInput
+          id="demo-disabled"
+          type="text"
+          value="Fixed system value"
+          disabled
+        />
+      </app-form-field>
+    </div>
+
+    <div class="field-toggle-row">
+      <app-button
+        variant="secondary"
+        size="sm"
+        (clicked)="toggleErrorState()"
+      >
+        Toggle Form Error State
+      </app-button>
+    </div>
+  </section>
+
+  <!-- Property Card Section -->
+  <section class="showcase-section" aria-labelledby="cards-title">
+    <h2 id="cards-title" class="section-title">Property Card (<code>app-property-card</code>)</h2>
+    <p class="section-desc">
+      Renders the exact <code>GET /properties</code> DTO with verified inspection badge, straight-line distance,
+      PKR rent, availability, shortlist toggle, and loading skeleton. Zero contact details rendered.
+    </p>
+
+    <div class="cards-grid">
+      <!-- Live Verified Listing Card -->
+      <div class="card-col">
+        <span class="card-label">Available Inspected Listing</span>
+        <app-property-card
+          [property]="sampleProperty"
+          [isSaved]="isShortlistSaved()"
+          (saveToggled)="togglePropertySaved($event)"
+        ></app-property-card>
+      </div>
+
+      <!-- Full Listing Card (0 Beds Free) -->
+      <div class="card-col">
+        <span class="card-label">Full Listing (0 Beds Free)</span>
+        <app-property-card
+          [property]="sampleFullProperty"
+        ></app-property-card>
+      </div>
+
+      <!-- Skeleton Loading Card -->
+      <div class="card-col">
+        <span class="card-label">Skeleton Loading State</span>
+        <app-property-card
+          [loading]="true"
+        ></app-property-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal Dialog Section -->
+  <section class="showcase-section" aria-labelledby="dialog-title-sec">
+    <h2 id="dialog-title-sec" class="section-title">Accessible Dialog (<code>app-dialog</code>)</h2>
+    <p class="section-desc">
+      Hand-rolled accessibility: complete focus trap, Escape key dismiss, backdrop click handling, ARIA dialog roles,
+      loading overlay, and focus restoration to the trigger button.
+    </p>
+
+    <div class="dialog-demo-row">
+      <app-button variant="primary" (clicked)="openDialog()">
+        Open Demo Dialog
+      </app-button>
+    </div>
+
+    <app-dialog
+      [isOpen]="isDialogOpen()"
+      (isOpenChange)="isDialogOpen.set($event)"
+      title="Schedule Property Visit"
+      description="Select your preferred time slot for viewing this accommodation in person."
+      [loading]="isDialogLoading()"
+    >
+      <div class="dialog-content-body">
+        <app-form-field label="Preferred Visit Date & Time" fieldId="visit-time" [required]="true" hint="Must be in the future (within 60 days)">
+          <input appInput id="visit-time" type="datetime-local" />
+        </app-form-field>
+
+        <app-form-field label="Notes for the visit" fieldId="visit-notes" hint="Optional details about your schedule">
+          <textarea appInput id="visit-notes" rows="3" placeholder="I am available between 3 PM and 6 PM..."></textarea>
+        </app-form-field>
+      </div>
+
+      <div dialog-actions>
+        <app-button variant="ghost" (clicked)="closeDialog()">
+          Cancel
+        </app-button>
+        <app-button variant="primary" (clicked)="toggleDialogLoading()">
+          Confirm Visit Request
+        </app-button>
+      </div>
+    </app-dialog>
+  </section>
+
+  <!-- Empty States Section -->
+  <section class="showcase-section" aria-labelledby="empty-title">
+    <h2 id="empty-title" class="section-title">First-Class Empty States (<code>app-empty-state</code>)</h2>
+    <p class="section-desc">
+      First impressions matter: empty shortlist, empty messaging inbox, and empty visit requests with distinct illustrations and actions.
+    </p>
+
+    <div class="empty-states-grid">
+      <app-empty-state
+        type="shortlist"
+        (actionClicked)="openDialog()"
+      ></app-empty-state>
+
+      <app-empty-state
+        type="inbox"
+        (actionClicked)="openDialog()"
+      ></app-empty-state>
+
+      <app-empty-state
+        type="visits"
+        (actionClicked)="openDialog()"
+      ></app-empty-state>
+    </div>
+  </section>
+</main>

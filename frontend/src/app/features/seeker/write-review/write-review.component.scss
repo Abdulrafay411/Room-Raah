@@ -1,0 +1,63 @@
+.review-page {
+  padding: 1.5rem 1rem 3rem;
+  max-width: 560px;
+}
+
+.review-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+}
+
+.review-subject,
+.review-lead {
+  margin: 0 0 0.75rem;
+}
+
+.review-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-items: stretch;
+}
+
+.review-form app-button {
+  justify-self: start;
+}
+
+.review-rating {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.review-rating legend {
+  padding: 0;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.rating-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.rating-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.review-done-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.review-error {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}

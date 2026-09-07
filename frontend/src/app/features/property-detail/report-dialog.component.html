@@ -1,0 +1,67 @@
+<app-dialog
+  [isOpen]="isOpen"
+  title="Report this listing"
+  description="Somebody on the RoomRaah team reads every report."
+  [loading]="submitting()"
+  (closed)="close()"
+>
+  @if (sent()) {
+    <div data-smoke="report-sent">
+      <p>
+        Thank you — this is now with the review team. Reporting a listing does not take it
+        down on its own; that is a separate decision somebody makes after looking at it.
+      </p>
+    </div>
+  } @else {
+    @if (error()) {
+      <p class="report-error" role="alert" data-smoke="report-error">{{ error() }}</p>
+    }
+
+    <app-form-field label="What is the problem?" forId="reportReason" [required]="true">
+      <select
+        appInput
+        id="reportReason"
+        name="reportReason"
+        [ngModel]="reason()"
+        (ngModelChange)="reason.set($event)"
+      >
+        @for (option of reasons; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </app-form-field>
+
+    <app-form-field
+      label="Tell us more"
+      forId="reportDetails"
+      [required]="true"
+      [hint]="details().length + ' of ' + detailsMax + ' characters'"
+    >
+      <textarea
+        appInput
+        id="reportDetails"
+        name="reportDetails"
+        rows="4"
+        [maxlength]="detailsMax"
+        [ngModel]="details()"
+        (ngModelChange)="details.set($event)"
+      ></textarea>
+    </app-form-field>
+  }
+
+  <div dialog-actions class="report-actions">
+    @if (sent()) {
+      <app-button variant="primary" (clicked)="close()">Close</app-button>
+    } @else {
+      <app-button variant="ghost" (clicked)="close()">Cancel</app-button>
+      <app-button
+        variant="danger"
+        [loading]="submitting()"
+        [disabled]="!details().trim()"
+        (clicked)="submit()"
+      >
+        Send report
+      </app-button>
+    }
+  </div>
+</app-dialog>

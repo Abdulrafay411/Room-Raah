@@ -1,0 +1,105 @@
+@use 'tokens' as *;
+
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  font-family: $font-family-base;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-full;
+  line-height: 1;
+  white-space: nowrap;
+
+  // --- Sizes ---
+  &.badge-sm {
+    padding: 2px $space-2;
+    font-size: $font-size-xs;
+  }
+
+  &.badge-md {
+    padding: 4px $space-3;
+    font-size: $font-size-sm;
+  }
+
+  // --- Variants ---
+  &.badge-inspection {
+    background-color: $color-navy;
+    color: #ffffff;
+    box-shadow: $shadow-xs;
+    letter-spacing: 0.02em;
+
+    .inspection-icon {
+      color: #38bdf8;
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  &.badge-confirmed {
+    background-color: $color-green-light;
+    color: $color-green-active;
+    border: 1px solid $color-green-subtle;
+
+    .status-dot {
+      background-color: $color-green;
+    }
+  }
+
+  &.badge-navy {
+    background-color: $color-navy-light;
+    color: $color-navy;
+    border: 1px solid $color-navy-subtle;
+
+    .status-dot {
+      background-color: $color-navy;
+    }
+  }
+
+  &.badge-warning {
+    background-color: $color-warning-light;
+    color: $color-warning-hover;
+    border: 1px solid $color-warning-border;
+
+    .status-dot {
+      background-color: $color-warning;
+    }
+  }
+
+  &.badge-danger {
+    background-color: $color-danger-light;
+    color: $color-danger-hover;
+    border: 1px solid $color-danger-border;
+
+    .status-dot {
+      background-color: $color-danger;
+    }
+  }
+
+  &.badge-neutral {
+    background-color: $color-slate-100;
+    color: $color-slate-700;
+    border: 1px solid $color-slate-200;
+
+    .status-dot {
+      background-color: $color-slate-400;
+    }
+  }
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+}
+
+.badge-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}

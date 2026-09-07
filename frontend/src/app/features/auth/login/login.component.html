@@ -1,0 +1,104 @@
+<div class="auth-page-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">Welcome back to RoomRaah</h1>
+      <p class="auth-subtitle">Sign in to manage your visits, messages, and saved properties.</p>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="auth-alert error" role="alert">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
+      <app-form-field
+        label="Email address"
+        fieldId="login-email"
+        [required]="true"
+        [error]="getFieldError('email')"
+      >
+        <input
+          appInput
+          id="login-email"
+          type="email"
+          formControlName="email"
+          placeholder="name@example.com"
+          autocomplete="email"
+        />
+      </app-form-field>
+
+      <app-form-field
+        label="Password"
+        fieldId="login-password"
+        [required]="true"
+        [error]="getFieldError('password')"
+      >
+        <input
+          appInput
+          id="login-password"
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+        />
+      </app-form-field>
+
+      <div class="forgot-row">
+        <a routerLink="/reset-password" class="auth-link-sm">Forgot password?</a>
+      </div>
+
+      <div class="form-action-row">
+        <app-button
+          variant="primary"
+          size="lg"
+          type="submit"
+          [fullWidth]="true"
+          [loading]="isLoading()"
+        >
+          Sign In
+        </app-button>
+      </div>
+    </form>
+
+    <!-- Seed accounts helper for rapid manual verification (§3) -->
+    <div class="seed-accounts-box">
+      <span class="seed-title">Quick test sign-in (Seed Accounts):</span>
+      <div class="seed-chips-row">
+        <button
+          type="button"
+          class="seed-chip"
+          (click)="fillSeedAccount('seeker1@roomraah.local')"
+        >
+          Seeker 1
+        </button>
+        <button
+          type="button"
+          class="seed-chip"
+          (click)="fillSeedAccount('seeker.unverified@roomraah.local')"
+        >
+          Seeker (Unverified)
+        </button>
+        <button
+          type="button"
+          class="seed-chip"
+          (click)="fillSeedAccount('owner.checked@roomraah.local')"
+        >
+          Owner (Checked)
+        </button>
+        <button
+          type="button"
+          class="seed-chip"
+          (click)="fillSeedAccount('admin@roomraah.local')"
+        >
+          Admin (Can Inspect)
+        </button>
+      </div>
+    </div>
+
+    <div class="auth-footer">
+      <span>Don't have an account?</span>
+      <a routerLink="/signup" class="auth-link">Sign up</a>
+    </div>
+  </div>
+</div>

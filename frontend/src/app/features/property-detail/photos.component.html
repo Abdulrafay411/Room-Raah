@@ -1,0 +1,20 @@
+<div class="photos-page container-centered">
+  <a class="back-link" [routerLink]="['/property', propertyId()]">Back to the listing</a>
+  <h1 class="photos-title">Photographs</h1>
+
+  @if (loading()) {
+    <p class="photos-note" aria-busy="true">Loading photographs…</p>
+  } @else if (error()) {
+    <p class="photos-note" role="alert">{{ error() }}</p>
+  } @else if (photos().length === 0) {
+    <p class="photos-note">This listing has no photographs yet.</p>
+  } @else {
+    <ul class="photo-grid">
+      @for (photo of photos(); track photo.id; let i = $index) {
+        <li class="photo-item">
+          <img [src]="photo.url" [alt]="'Photograph ' + (i + 1)" loading="lazy" />
+        </li>
+      }
+    </ul>
+  }
+</div>

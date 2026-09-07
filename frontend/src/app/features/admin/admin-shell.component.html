@@ -1,0 +1,19 @@
+<main class="admin-shell container-centered" data-smoke="admin-shell">
+  <header class="admin-heading">
+    <div>
+      <p class="eyebrow">Admin workspace</p>
+      <h1>Review and operations</h1>
+    </div>
+    <p>Queues are oldest first so the next decision is always clear.</p>
+  </header>
+
+  <nav class="admin-tabs" aria-label="Admin sections">
+    <a routerLink="/admin/listings" routerLinkActive="is-active">Listings</a>
+    <a routerLink="/admin/revisions" routerLinkActive="is-active">Revisions</a>
+    <a routerLink="/admin/reports" routerLinkActive="is-active">Reports &amp; reviews</a>
+    <a routerLink="/admin/inspections" routerLinkActive="is-active">Inspections</a>
+    <a routerLink="/admin/users" routerLinkActive="is-active">Users</a>
+  </nav>
+
+  <router-outlet />
+</main>

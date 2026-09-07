@@ -1,0 +1,99 @@
+<section class="review-page container-centered" aria-labelledby="review-title">
+  @if (created(); as review) {
+    <div class="review-done" data-smoke="review-created">
+      <h1 class="review-title" id="review-title">Thank you — your review has been sent</h1>
+      <!-- Rule 41: it is Pending until an admin approves it. Saying so here is the whole
+           reason this screen is not just a redirect back to the listing. -->
+      <p>
+        It will not appear on the listing until someone on the RoomRaah team has read it,
+        so do not worry when you cannot see it yet.
+      </p>
+      <div class="review-done-actions">
+        <a class="review-link" [routerLink]="['/property', review.propertyId]">
+          Back to the listing
+        </a>
+        <a class="review-link" routerLink="/visits">My visits</a>
+      </div>
+    </div>
+  } @else {
+    <h1 class="review-title" id="review-title">Write a review</h1>
+
+    @if (listing(); as listing) {
+      <p class="review-subject">
+        <a [routerLink]="['/property', listing.id]">{{ listing.title }}</a>
+        — {{ listing.areaName }}, {{ listing.cityName }}
+      </p>
+    }
+
+    <p class="review-lead">
+      You can review a room once a visit to it has been marked done. Reviews are read by the
+      RoomRaah team before they appear.
+    </p>
+
+    @if (error()) {
+      <p class="review-error" role="alert" data-smoke="review-error">{{ error() }}</p>
+    }
+
+    <form class="review-form" (ngSubmit)="submit()">
+      <fieldset class="review-rating">
+        <legend>How was it?</legend>
+        <div class="rating-row">
+          @for (star of stars; track star) {
+            <label class="rating-choice">
+              <input
+                type="radio"
+                name="rating"
+                [value]="star"
+                [checked]="rating() === star"
+                (change)="rating.set(star)"
+              />
+              <span>{{ star }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <app-form-field label="Were you staying there?" forId="stayStatus" [required]="true">
+        <select
+          appInput
+          id="stayStatus"
+          name="stayStatus"
+          [ngModel]="stayStatus()"
+          (ngModelChange)="stayStatus.set($event)"
+        >
+          @for (option of stayOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </app-form-field>
+
+      <app-form-field
+        label="What should other people know?"
+        forId="comment"
+        [required]="true"
+        [hint]="comment().length + ' of ' + commentMax + ' characters'"
+        [error]="fieldErrors()['comment'] ?? ''"
+      >
+        <textarea
+          appInput
+          id="comment"
+          name="comment"
+          rows="5"
+          [maxlength]="commentMax"
+          [ngModel]="comment()"
+          (ngModelChange)="comment.set($event)"
+          required
+        ></textarea>
+      </app-form-field>
+
+      <app-button
+        type="submit"
+        variant="primary"
+        [loading]="submitting()"
+        [disabled]="!comment().trim()"
+      >
+        Send the review
+      </app-button>
+    </form>
+  }
+</section>

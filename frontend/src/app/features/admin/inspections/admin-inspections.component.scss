@@ -1,0 +1,9 @@
+@use '../admin-common';
+
+.form-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-section h2,
+.form-section p { margin: 0; }

@@ -1,0 +1,43 @@
+@use '../admin-common';
+
+.queue-tabs {
+  display: flex;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.queue-tabs button {
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  padding: 0.6rem 0.85rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.queue-tabs button.is-active {
+  background: #123b5d;
+  color: #fff;
+}
+
+.revision-detail {
+  display: grid;
+  gap: 1rem;
+}
+
+.diff {
+  overflow-x: auto;
+}
+
+.diff-head,
+.diff-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.6fr) repeat(2, minmax(220px, 1fr));
+  gap: 0.75rem;
+  min-width: 620px;
+  padding: 0.7rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.diff-head { background: #f1f5f9; }

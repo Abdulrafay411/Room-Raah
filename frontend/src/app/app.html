@@ -1,0 +1,95 @@
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="app-shell">
+  <header class="app-header">
+    <div class="container-centered header-inner">
+      <a routerLink="/" class="brand-link">
+        <span class="brand-title">RoomRaah</span>
+      </a>
+
+      <nav class="header-nav" aria-label="Main">
+        <a routerLink="/search" routerLinkActive="is-active" class="nav-link">Search</a>
+        <a routerLink="/how-it-works" routerLinkActive="is-active" class="nav-link">
+          How it works
+        </a>
+        <!-- A seeker's own two lists. They are behind the verified guard, so they are only
+             offered to somebody the guard will let through - a nav link that bounces you to
+             a sign-in screen is the same bug as a dead button. -->
+        @if (auth.isAuthenticated() && auth.userRole() === 'Seeker') {
+          <a routerLink="/saved" routerLinkActive="is-active" class="nav-link">Saved</a>
+          <a routerLink="/visits" routerLinkActive="is-active" class="nav-link">My visits</a>
+        }
+        <!-- Messaging is behind the verified guard, so it is offered only to somebody the
+             guard will let through - for anyone else this link is a bounce, which is the
+             same bug as a dead button. -->
+        @if (auth.isAuthenticated() && auth.isEmailVerified()) {
+          <a routerLink="/messages" routerLinkActive="is-active" class="nav-link">Messages</a>
+        }
+        @if (auth.userRole() === 'Owner') {
+          <a routerLink="/owner" routerLinkActive="is-active" class="nav-link">My listings</a>
+        }
+        @if (auth.userRole() === 'Admin') {
+          <a routerLink="/admin/listings" routerLinkActive="is-active" class="nav-link">Admin</a>
+        }
+      </nav>
+
+      <!-- Absent over plain http, where the browser withholds geolocation entirely. Hiding
+           the control there is deliberate: a button that can never work is a dead button. -->
+      @if (geo.state() !== 'unavailable') {
+        @if (geo.hasPosition()) {
+          <button
+            type="button"
+            class="location-chip is-on"
+            data-smoke="location-chip"
+            (click)="geo.forget()"
+          >
+            Distances from you
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="location-chip"
+            data-smoke="location-chip"
+            [disabled]="geo.state() === 'asking'"
+            (click)="geo.request()"
+          >
+            {{ geo.state() === 'asking' ? 'Locating…' : 'Use my location' }}
+          </button>
+        }
+      }
+
+      <div class="header-account">
+        @if (auth.isAuthenticated()) {
+          <!-- An unverified account may browse but not act, so it is told once, here,
+               rather than discovering it at the moment it tries to do something. -->
+          @if (!auth.isEmailVerified()) {
+            <a routerLink="/verify" class="verify-nudge">Verify your email</a>
+          }
+          <a routerLink="/profile" routerLinkActive="is-active" class="account-name">
+            {{ auth.currentUser()?.fullName }}
+          </a>
+          <app-button variant="outline" size="sm" (clicked)="auth.logout().subscribe()">
+            Sign out
+          </app-button>
+        } @else {
+          <a routerLink="/login" class="nav-link">Sign in</a>
+          <a routerLink="/signup" class="signup-link">Create account</a>
+        }
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="app-main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="app-footer">
+    <div class="container-centered footer-inner">
+      <p class="footer-note">RoomRaah — rooms and hostels across Pakistan.</p>
+      <nav class="footer-nav" aria-label="Footer">
+        <a routerLink="/how-it-works">How it works</a>
+        <a routerLink="/search">Search</a>
+      </nav>
+    </div>
+  </footer>
+</div>

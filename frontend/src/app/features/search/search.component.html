@@ -1,0 +1,334 @@
+<div class="search-page container-centered">
+  <header class="search-header">
+    <h1 class="search-title">Find a room</h1>
+
+    <div class="search-place">
+      <label class="place-label" for="place-search">City, area or a place you travel to</label>
+      <div class="place-input-wrap">
+        <input
+          id="place-search"
+          type="search"
+          class="place-input"
+          autocomplete="off"
+          placeholder="Try “University of the Punjab” or “Gulberg”"
+          [value]="landmarkLabel()"
+          (input)="onLandmarkQuery($any($event.target).value)"
+        />
+        @if (filters().landmarkId) {
+          <button type="button" class="place-clear" (click)="clearLandmark()">
+            Clear place
+          </button>
+        }
+      </div>
+
+      @if (suggestions().length) {
+        <ul class="suggestion-list" role="listbox" aria-label="Place suggestions">
+          @for (suggestion of suggestions(); track suggestion.type + suggestion.id) {
+            <li role="option" [attr.aria-selected]="false">
+              <button type="button" class="suggestion" (click)="chooseSuggestion(suggestion)">
+                <span class="suggestion-name">{{ suggestion.name }}</span>
+                <span class="suggestion-meta">
+                  {{ suggestion.type }}@if (suggestion.city) { · {{ suggestion.city }} }
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <div class="search-toolbar">
+      <button
+        type="button"
+        class="filters-toggle"
+        [attr.aria-expanded]="filtersOpen()"
+        aria-controls="filter-panel"
+        (click)="filtersOpen.set(!filtersOpen())"
+      >
+        Filters
+        @if (activeCount()) {
+          <app-badge variant="navy" size="sm">{{ activeCount() }}</app-badge>
+        }
+      </button>
+
+      <a
+        class="map-view-link"
+        routerLink="/search/map"
+        [queryParams]="mapQuery()"
+      >
+        Map view
+      </a>
+
+      <label class="sort-control">
+        <span class="sort-label">Sort</span>
+        <select
+          class="sort-select"
+          [value]="filters().sort ?? 'Recent'"
+          (change)="apply({ sort: $any($event.target).value })"
+        >
+          @for (option of sortOptions; track option.value) {
+            <option
+              [value]="option.value"
+              [disabled]="option.value === 'Distance' && !filters().landmarkId"
+            >
+              {{ option.label }}
+            </option>
+          }
+        </select>
+      </label>
+
+      <p class="result-count" aria-live="polite">
+        @if (loading()) { Searching… } @else { {{ total() }} {{ total() === 1 ? 'room' : 'rooms' }} }
+      </p>
+    </div>
+  </header>
+
+  <div class="search-body">
+    <!-- Filter panel. A sidebar from tablet up; a slide-over on a phone, where it is
+         hidden until asked for so the results are the first thing you see. -->
+    <aside
+      id="filter-panel"
+      class="filter-panel"
+      [class.is-open]="filtersOpen()"
+      aria-label="Filters"
+    >
+      <div class="filter-panel-head">
+        <h2 class="filter-heading">Filters</h2>
+        <button type="button" class="filter-close" (click)="filtersOpen.set(false)">
+          Close filters
+        </button>
+      </div>
+
+      <fieldset class="filter-group">
+        <legend class="filter-legend">City</legend>
+        <select
+          class="filter-select"
+          aria-label="City"
+          [value]="filters().cityId ?? ''"
+          (change)="onCityChange($any($event.target).value)"
+        >
+          <option value="">Any city</option>
+          @for (city of cities(); track city.id) {
+            <option [value]="city.id">{{ city.name }}</option>
+          }
+        </select>
+      </fieldset>
+
+      @if (areas().length) {
+        <fieldset class="filter-group">
+          <legend class="filter-legend">Area</legend>
+          <select
+            class="filter-select"
+            aria-label="Area"
+            [value]="filters().areaId ?? ''"
+            (change)="apply({ areaId: asNumber($any($event.target).value) })"
+          >
+            <option value="">Any area</option>
+            @for (area of areas(); track area.id) {
+              <option [value]="area.id">{{ area.name }}</option>
+            }
+          </select>
+        </fieldset>
+      }
+
+      @if (filters().landmarkId) {
+        <fieldset class="filter-group">
+          <legend class="filter-legend">Within</legend>
+          <select
+            class="filter-select"
+            aria-label="Maximum straight-line distance"
+            [value]="filters().maxDistanceKm ?? ''"
+            (change)="apply({ maxDistanceKm: asNumber($any($event.target).value) })"
+          >
+            <option value="">Any distance</option>
+            <option value="1">1 km</option>
+            <option value="3">3 km</option>
+            <option value="5">5 km</option>
+            <option value="10">10 km</option>
+          </select>
+          <!-- Rule 13: it is straight-line distance and the product says so on purpose. -->
+          <p class="filter-note">Measured in a straight line, not by road.</p>
+        </fieldset>
+      }
+
+      <fieldset class="filter-group">
+        <legend class="filter-legend">Monthly rent (PKR)</legend>
+        <div class="rent-row">
+          <label class="rent-field">
+            <span class="rent-label">Lowest</span>
+            <input
+              type="number"
+              min="0"
+              class="filter-input"
+              [value]="filters().minRent ?? ''"
+              (change)="apply({ minRent: asNumber($any($event.target).value) })"
+            />
+          </label>
+          <label class="rent-field">
+            <span class="rent-label">Highest</span>
+            <input
+              type="number"
+              min="0"
+              class="filter-input"
+              [value]="filters().maxRent ?? ''"
+              (change)="apply({ maxRent: asNumber($any($event.target).value) })"
+            />
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="filter-group">
+        <legend class="filter-legend">Room</legend>
+        <div class="chip-row">
+          @for (type of roomTypes; track type) {
+            <button
+              type="button"
+              class="chip"
+              [class.is-on]="filters().roomType === type"
+              [attr.aria-pressed]="filters().roomType === type"
+              (click)="apply({ roomType: filters().roomType === type ? undefined : type })"
+            >
+              {{ type }}
+            </button>
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="filter-group">
+        <legend class="filter-legend">For</legend>
+        <div class="chip-row">
+          @for (policy of genderPolicies; track policy) {
+            <button
+              type="button"
+              class="chip"
+              [class.is-on]="filters().genderPolicy === policy"
+              [attr.aria-pressed]="filters().genderPolicy === policy"
+              (click)="apply({ genderPolicy: filters().genderPolicy === policy ? undefined : policy })"
+            >
+              {{ policy }}
+            </button>
+          }
+        </div>
+      </fieldset>
+
+      @if (facilities().length) {
+        <fieldset class="filter-group">
+          <legend class="filter-legend">Facilities</legend>
+          <div class="checkbox-list">
+            @for (facility of facilities(); track facility.id) {
+              <label class="checkbox-row">
+                <input
+                  type="checkbox"
+                  [checked]="isFacilityOn(facility.id)"
+                  (change)="toggleFacility(facility.id)"
+                />
+                <span>{{ facility.name }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
+      }
+
+      <fieldset class="filter-group">
+        <legend class="filter-legend">Availability</legend>
+        <label class="checkbox-row">
+          <input
+            type="checkbox"
+            [checked]="filters().availableOnly === true"
+            (change)="apply({ availableOnly: $any($event.target).checked ? true : undefined })"
+          />
+          <!-- Rule 12: this means beds greater than zero, so say that rather than "not full". -->
+          <span>Only rooms with a free bed</span>
+        </label>
+      </fieldset>
+
+      @if (hasFilters()) {
+        <app-button variant="outline" size="sm" (clicked)="clearAll()">
+          Clear all filters
+        </app-button>
+      }
+    </aside>
+
+    <section class="results" aria-label="Search results">
+      @if (error()) {
+        <!-- A 422 sentence is copy written to be read, so it is shown as it arrived. -->
+        <div class="results-error" role="alert" data-smoke="search-error">
+          <p class="results-error-text">{{ error() }}</p>
+          <app-button variant="outline" size="sm" (clicked)="clearAll()">
+            Start again
+          </app-button>
+        </div>
+      } @else if (loading()) {
+        <div class="results-grid" aria-busy="true">
+          @for (placeholder of skeletons(); track $index) {
+            <app-property-card [loading]="true" />
+          }
+        </div>
+      } @else if (results().length === 0) {
+        <app-empty-state
+          type="search"
+          [actionText]="hasFilters() ? 'Clear all filters' : ''"
+          (actionClicked)="clearAll()"
+        />
+      } @else {
+        <div class="results-grid" data-smoke="results">
+          @for (property of results(); track property.id) {
+            <app-property-card
+              [property]="property"
+              [isSaved]="isSaved(property.id)"
+              [comparable]="true"
+              [isCompared]="compare.has(property.id)"
+              [compareFull]="compare.full()"
+              (saveToggled)="toggleSave($event)"
+              (compareToggled)="compare.toggle($event)"
+            />
+          }
+        </div>
+
+        @if (lastPage() > 1) {
+          <nav class="pagination" aria-label="Search result pages">
+            <button
+              type="button"
+              class="page-button"
+              [disabled]="page() <= 1"
+              (click)="goToPage(page() - 1)"
+            >
+              Previous
+            </button>
+            <span class="page-status" aria-live="polite">
+              Page {{ page() }} of {{ lastPage() }}
+            </span>
+            <button
+              type="button"
+              class="page-button"
+              [disabled]="page() >= lastPage()"
+              (click)="goToPage(page() + 1)"
+            >
+              Next
+            </button>
+          </nav>
+        }
+      }
+    </section>
+  </div>
+
+  <!-- The way into the compare page. It only exists once something is ticked, which is
+       also what tells somebody that ticking did anything at all. -->
+  @if (compare.count() > 0) {
+    <div class="compare-bar" role="region" aria-label="Rooms chosen to compare" data-smoke="compare-bar">
+      <p class="compare-bar-count">
+        {{ compare.count() }} of {{ compare.limit }} chosen
+      </p>
+      <div class="compare-bar-actions">
+        <button type="button" class="compare-bar-clear" (click)="compare.clear()">Clear</button>
+        <a
+          class="compare-bar-go"
+          routerLink="/compare"
+          [queryParams]="{ ids: compare.query(), landmarkId: filters().landmarkId ?? null }"
+        >
+          Compare {{ compare.count() === 1 ? 'this room' : 'these rooms' }}
+        </a>
+      </div>
+    </div>
+  }
+</div>

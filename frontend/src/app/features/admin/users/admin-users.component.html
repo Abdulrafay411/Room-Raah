@@ -1,0 +1,74 @@
+<section class="admin-panel" data-smoke="admin-users">
+  <form class="panel-card filters" (submit)="$event.preventDefault(); load()">
+    <div><h2>User accounts</h2><p class="muted">Search by name or email. Inactive accounts remain visible by default.</p></div>
+    <div class="filter-row">
+      <label>Search
+        <input type="search" minlength="2" maxlength="200" [ngModel]="query()" (ngModelChange)="query.set($event)" name="q">
+      </label>
+      <label>Role
+        <select [ngModel]="role()" (ngModelChange)="role.set($event)" name="role"><option value="">All roles</option><option value="Seeker">Seeker</option><option value="Owner">Owner</option><option value="Admin">Admin</option></select>
+      </label>
+      <label>Account state
+        <select [ngModel]="active()" (ngModelChange)="active.set($event)" name="active"><option value="">Active and inactive</option><option value="true">Active</option><option value="false">Inactive</option></select>
+      </label>
+      <app-button type="submit" size="sm">Apply filters</app-button>
+      <app-button type="button" size="sm" variant="ghost" (clicked)="clear()">Clear</app-button>
+    </div>
+  </form>
+
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+
+  <div class="panel-card">
+    @if (loading()) {
+      <p>Loading accounts…</p>
+    } @else if (items().length === 0) {
+      <p class="empty-copy" data-smoke="admin-users-empty">No accounts match these filters.</p>
+    } @else {
+      <ul class="queue" data-smoke="admin-users-list">
+        @for (user of items(); track user.id) {
+          <li class="queue-row" data-smoke="admin-user-row">
+            <div class="row-head"><h3>{{ user.fullName }}</h3><span class="status" [attr.data-state]="user.isActive ? 'Active' : 'Inactive'">{{ user.isActive ? 'Active' : 'Inactive' }}</span></div>
+            <div class="meta"><span>{{ user.email }}</span><span>{{ user.role }}</span><span>{{ user.isEmailVerified ? 'Email verified' : 'Email not verified' }}</span><span>Joined {{ user.createdAt | date:'mediumDate' }}</span></div>
+            <div><app-button size="sm" variant="outline" (clicked)="open(user)">View account</app-button></div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (detailLoading()) {
+    <div class="panel-card"><p>Loading account…</p></div>
+  } @else if (selected(); as user) {
+    <article class="panel-card user-detail" data-smoke="admin-user-detail">
+      <div class="row-head"><h2>{{ user.fullName }}</h2><span class="status" [attr.data-state]="user.isActive ? 'Active' : 'Inactive'">{{ user.isActive ? 'Active' : 'Inactive' }}</span></div>
+      <div class="detail-grid">
+        <p><strong>Email</strong><br>{{ user.email }}</p>
+        <p><strong>Role</strong><br>{{ user.role }}</p>
+        <p data-smoke="admin-user-phone"><strong>Phone</strong><br>{{ user.phoneNumber || 'Not provided' }}</p>
+        @if (user.cnicNumber) {
+          <p data-smoke="admin-user-cnic"><strong>CNIC</strong><br>{{ user.cnicNumber }}</p>
+        }
+        @if (user.role === 'Owner') {
+          <p><strong>Identity check</strong><br>{{ user.identityStatus || 'Not checked' }}</p>
+        }
+        @if (user.role === 'Admin') {
+          <p><strong>Inspection permission</strong><br>{{ user.canInspect ? 'Can record inspections' : 'Cannot record inspections' }}</p>
+        }
+      </div>
+
+      @if (canChange(user)) {
+        <label class="field">Reason
+          <textarea [ngModel]="reason()" (ngModelChange)="reason.set($event)" maxlength="1000"></textarea>
+        </label>
+        @if (user.isActive) {
+          <app-button variant="danger" [loading]="saving()" (clicked)="changeActive(false)">Deactivate account</app-button>
+        } @else {
+          <app-button variant="success" [loading]="saving()" (clicked)="changeActive(true)">Reactivate account</app-button>
+        }
+      } @else {
+        <p class="muted">Admin accounts cannot be changed here.</p>
+      }
+    </article>
+  }
+</section>

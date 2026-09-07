@@ -1,0 +1,123 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+  width: 100%;
+  margin-bottom: $space-4;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.field-container {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  width: 100%;
+}
+
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.field-label {
+  display: inline-block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-slate-800;
+  cursor: pointer;
+}
+
+.required-indicator {
+  color: $color-danger;
+  margin-left: 2px;
+}
+
+.field-control-wrapper {
+  position: relative;
+  width: 100%;
+
+  // Global styles projected into the control slot
+  ::ng-deep input.form-control,
+  ::ng-deep textarea.form-control,
+  ::ng-deep select.form-control {
+    width: 100%;
+    border: 1px solid $color-slate-300;
+    border-radius: $radius-md;
+    padding: $space-2 $space-3;
+    font-size: $font-size-sm;
+    color: $color-slate-900;
+    background-color: $color-surface;
+    transition: border-color $transition-fast, box-shadow $transition-fast;
+
+    &::placeholder {
+      color: $color-slate-500;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $color-navy;
+      box-shadow: 0 0 0 3px rgba($color-navy, 0.15);
+    }
+
+    &:disabled {
+      background-color: $color-slate-100;
+      color: $color-slate-500;
+      cursor: not-allowed;
+      border-color: $color-slate-200;
+    }
+  }
+
+  ::ng-deep input.form-control,
+  ::ng-deep select.form-control {
+    height: 44px;
+  }
+
+  ::ng-deep textarea.form-control {
+    min-height: 88px;
+    resize: vertical;
+  }
+}
+
+// Error state
+.has-error {
+  .field-label {
+    color: $color-danger;
+  }
+
+  ::ng-deep input.form-control,
+  ::ng-deep textarea.form-control,
+  ::ng-deep select.form-control {
+    border-color: $color-danger !important;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba($color-danger, 0.15) !important;
+    }
+  }
+}
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+  font-size: $font-size-xs;
+  color: $color-danger;
+  font-weight: $font-weight-medium;
+  margin-top: 2px;
+}
+
+.error-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.field-hint {
+  font-size: $font-size-xs;
+  color: $color-slate-500;
+  margin-top: 2px;
+}

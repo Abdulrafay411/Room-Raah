@@ -1,0 +1,84 @@
+<section class="visit-page container-centered" aria-labelledby="visit-title">
+  @if (created(); as visit) {
+    <div class="visit-done" data-smoke="visit-created">
+      <h1 class="visit-title" id="visit-title">Request sent</h1>
+      <p>
+        The owner has been asked for a
+        {{ visit.visitType === 'Video' ? 'video call' : 'visit' }} on
+        {{ visit.preferredAt | date: 'EEEE d MMMM, h:mm a' }}. You will see their answer on
+        your visits page.
+      </p>
+      <div class="visit-done-actions">
+        <a class="visit-link" routerLink="/visits">Go to my visits</a>
+        <a class="visit-link" [routerLink]="['/property', propertyId()]">Back to the listing</a>
+      </div>
+    </div>
+  } @else {
+    <h1 class="visit-title" id="visit-title">Request a visit</h1>
+
+    @if (listing(); as listing) {
+      <p class="visit-subject">
+        <a [routerLink]="['/property', listing.id]">{{ listing.title }}</a>
+        — {{ listing.areaName }}, {{ listing.cityName }}
+      </p>
+    } @else if (loading()) {
+      <p aria-busy="true">Loading the listing…</p>
+    }
+
+    <p class="visit-lead">
+      The owner answers through RoomRaah, so there is a record of what was agreed. Once the
+      visit has happened, either of you can mark it done — that is what lets you review it.
+    </p>
+
+    @if (error()) {
+      <p class="visit-error" role="alert" data-smoke="visit-error">{{ error() }}</p>
+    }
+
+    <form class="visit-form" (ngSubmit)="submit()">
+      <fieldset class="visit-types">
+        <legend>How would you like to visit?</legend>
+        @for (type of types; track type.value) {
+          <label class="visit-type">
+            <input
+              type="radio"
+              name="visitType"
+              [value]="type.value"
+              [checked]="visitType() === type.value"
+              (change)="visitType.set(type.value)"
+            />
+            <span>{{ type.label }}</span>
+          </label>
+        }
+      </fieldset>
+
+      <app-form-field
+        label="When suits you?"
+        forId="preferredAt"
+        [required]="true"
+        hint="Any time from an hour from now up to 60 days ahead."
+        [error]="dateProblem() ?? fieldErrors()['preferredAt'] ?? ''"
+      >
+        <input
+          appInput
+          id="preferredAt"
+          name="preferredAt"
+          type="datetime-local"
+          [min]="window.min"
+          [max]="window.max"
+          [ngModel]="preferredAt()"
+          (ngModelChange)="preferredAt.set($event)"
+          required
+        />
+      </app-form-field>
+
+      <app-button
+        type="submit"
+        variant="primary"
+        [loading]="submitting()"
+        [disabled]="!!dateProblem()"
+      >
+        Send the request
+      </app-button>
+    </form>
+  }
+</section>

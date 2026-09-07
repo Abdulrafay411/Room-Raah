@@ -1,0 +1,79 @@
+<section class="profile-page container-centered" aria-labelledby="profile-title">
+  <h1 class="profile-title" id="profile-title">Your account</h1>
+
+  @if (user(); as account) {
+    <div class="profile-card" data-smoke="profile-card">
+      <dl class="profile-facts">
+        <div class="fact">
+          <dt>Name</dt>
+          <dd data-smoke="profile-name">{{ account.fullName }}</dd>
+        </div>
+        <div class="fact">
+          <dt>Sign-in address</dt>
+          <dd>{{ account.email }}</dd>
+        </div>
+        <div class="fact">
+          <dt>Account type</dt>
+          <dd>
+            <app-badge variant="neutral" size="sm">{{ account.role }}</app-badge>
+          </dd>
+        </div>
+        <div class="fact">
+          <dt>Email</dt>
+          <dd>
+            @if (verified()) {
+              <app-badge variant="confirmed" size="sm">Verified</app-badge>
+            } @else {
+              <app-badge variant="warning" size="sm">Not verified</app-badge>
+            }
+          </dd>
+        </div>
+      </dl>
+
+      <p class="profile-role">{{ roleLabel() }}</p>
+    </div>
+
+    <!-- An unverified account may browse but not act, so it is told here plainly rather
+         than at the moment something is refused. -->
+    @if (!verified()) {
+      <div class="profile-verify" data-smoke="profile-unverified">
+        <p class="verify-copy">
+          Until your email is verified you can look around, but you cannot save a room,
+          ask for a visit or send a message.
+        </p>
+        <a class="verify-link" routerLink="/verify">Verify your email</a>
+      </div>
+    }
+
+    @if (notice()) {
+      <p class="profile-notice" role="status" data-smoke="profile-notice">{{ notice() }}</p>
+    }
+    @if (error()) {
+      <p class="profile-error" role="alert" data-smoke="profile-error">{{ error() }}</p>
+    }
+
+    <div class="profile-actions">
+      <app-button variant="outline" [loading]="sending()" (clicked)="changePassword()">
+        Change your password
+      </app-button>
+      <app-button variant="ghost" (clicked)="signOut()">Sign out</app-button>
+    </div>
+
+    <h2 class="profile-subtitle">Your things</h2>
+    <nav class="profile-links" aria-label="Your pages">
+      <a routerLink="/messages">Messages</a>
+      @if (role() === 'Seeker') {
+        <a routerLink="/saved">Saved rooms</a>
+        <a routerLink="/visits">My visits</a>
+      }
+      @if (role() === 'Owner') {
+        <a routerLink="/owner">My listings</a>
+      }
+      @if (role() === 'Admin') {
+        <a routerLink="/admin/listings">Admin panel</a>
+      }
+    </nav>
+  } @else {
+    <p>You are not signed in.</p>
+  }
+</section>

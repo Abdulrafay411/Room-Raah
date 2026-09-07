@@ -1,0 +1,53 @@
+<div class="reviews-page container-centered">
+  <a class="back-link" [routerLink]="['/property', propertyId()]">Back to the listing</a>
+
+  <header class="reviews-header">
+    <h1 class="reviews-title">Reviews</h1>
+    @if (total()) {
+      <p class="reviews-summary">
+        {{ average() }} out of 5 · {{ total() }} {{ total() === 1 ? 'review' : 'reviews' }}
+      </p>
+    }
+  </header>
+
+  @if (loading()) {
+    <p class="reviews-note" aria-busy="true">Loading reviews…</p>
+  } @else if (error()) {
+    <p class="reviews-note" role="alert">{{ error() }}</p>
+  } @else if (reviews().length === 0) {
+    <p class="reviews-note">
+      No reviews yet. A review can only be written after a visit has been completed, so the
+      first one usually appears a little while after a listing goes up.
+    </p>
+  } @else {
+    <ul class="review-list">
+      @for (review of reviews(); track review.id) {
+        <li class="review">
+          <p class="review-head">
+            <strong class="review-author">{{ review.authorDisplayName }}</strong>
+            <span class="review-stay">{{ stayLabel(review.stayStatus) }}</span>
+            <span class="review-rating">{{ review.rating }}/5</span>
+          </p>
+          <p class="review-body">{{ review.comment }}</p>
+        </li>
+      }
+    </ul>
+
+    @if (lastPage() > 1) {
+      <nav class="pagination" aria-label="Review pages">
+        <button type="button" class="page-button" [disabled]="page() <= 1" (click)="load(page() - 1)">
+          Previous
+        </button>
+        <span class="page-status" aria-live="polite">Page {{ page() }} of {{ lastPage() }}</span>
+        <button
+          type="button"
+          class="page-button"
+          [disabled]="page() >= lastPage()"
+          (click)="load(page() + 1)"
+        >
+          Next
+        </button>
+      </nav>
+    }
+  }
+</div>

@@ -1,0 +1,11 @@
+**/bin
+**/obj
+**/logs
+**/.vs
+**/.git
+**/.github
+lms-frontend-test
+*.md
+.env
+.env.*
+!.env.example

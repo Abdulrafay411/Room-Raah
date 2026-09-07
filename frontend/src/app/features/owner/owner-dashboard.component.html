@@ -1,0 +1,190 @@
+<section class="owner-page container-centered" aria-labelledby="owner-title">
+  <header class="owner-head">
+    <div>
+      <h1 class="owner-title" id="owner-title">My listings</h1>
+      <p class="owner-lead">
+        Changes to a published listing are sent for review — your live listing stays as it is
+        until somebody approves them.
+      </p>
+    </div>
+    <a class="owner-new" routerLink="/owner/listing/new">Add a listing</a>
+  </header>
+
+  @if (notice()) {
+    <p class="owner-notice" role="status" data-smoke="owner-notice">{{ notice() }}</p>
+  }
+  @if (error()) {
+    <p class="owner-error" role="alert" data-smoke="owner-error">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <p aria-busy="true">Loading your listings…</p>
+  } @else if (listings().length === 0) {
+    <div data-smoke="owner-empty">
+      <app-empty-state
+        title="You have not listed a room yet"
+        description="Add your first listing, put three photographs on it, and send it for review."
+        actionText=""
+      />
+    </div>
+  } @else {
+    <ul class="listing-list" data-smoke="owner-listings">
+      @for (listing of listings(); track listing.id) {
+        <li class="listing">
+          <div class="listing-head">
+            <a class="listing-name" [routerLink]="['/owner/listing', listing.id]">
+              {{ listing.title }}
+            </a>
+            <app-badge [variant]="statusVariant(listing.status)" size="sm">
+              {{ statusLabel(listing.status) }}
+            </app-badge>
+          </div>
+
+          <p class="listing-where">{{ listing.areaName }}, {{ listing.cityName }}</p>
+          <p class="listing-facts">
+            {{ listing.availableBeds }} of {{ listing.totalBeds }} beds free ·
+            {{ listing.photoCount }} photograph{{ listing.photoCount === 1 ? '' : 's' }}
+            @if (listing.availabilityConfirmedAt) {
+              · beds confirmed {{ listing.availabilityConfirmedAt | date: 'd MMM' }}
+            }
+          </p>
+
+          @if (listing.hasInspectionBadge) {
+            <p class="listing-inspected">This listing carries the RoomRaah inspection badge.</p>
+          }
+
+          <!-- Only the actions the lifecycle actually allows from here. A submit button on a
+               listing already with the review team can only ever produce a 422. -->
+          <div class="listing-actions">
+            <a class="listing-edit" [routerLink]="['/owner/listing', listing.id]">
+              {{ listing.status === 'Published' ? 'Propose changes' : 'Edit' }}
+            </a>
+
+            @if (canSubmit(listing.status)) {
+              <app-button
+                variant="primary"
+                size="sm"
+                [loading]="busyId() === listing.id"
+                [disabled]="!!blockedBy(listing)"
+                (clicked)="submit(listing)"
+              >
+                Send for review
+              </app-button>
+              @if (blockedBy(listing); as why) {
+                <span class="listing-blocked">{{ why }}</span>
+              }
+            }
+
+            @if (listing.status === 'Published') {
+              <app-button
+                variant="outline"
+                size="sm"
+                [loading]="busyId() === listing.id"
+                (clicked)="confirmBeds(listing)"
+              >
+                Beds are still right
+              </app-button>
+
+              @if (!listing.hasInspectionBadge) {
+                <app-button
+                  variant="ghost"
+                  size="sm"
+                  [loading]="busyId() === listing.id"
+                  (clicked)="requestInspection(listing)"
+                >
+                  Ask for an inspection
+                </app-button>
+              }
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+
+  <h2 class="owner-subtitle" id="owner-visits">Visit requests</h2>
+
+  @if (visits().length === 0) {
+    <div data-smoke="owner-visits-empty">
+      <app-empty-state type="visits" />
+    </div>
+  } @else {
+    <ul class="visit-list" data-smoke="owner-visits">
+      @for (visit of visits(); track visit.id) {
+        <li class="owner-visit">
+          <div class="listing-head">
+            <span class="listing-name">{{ visit.propertyTitle }}</span>
+            <app-badge size="sm" variant="neutral">{{ visit.status }}</app-badge>
+          </div>
+
+          <!-- Rule 93: the seeker is a display name, and there is nothing here to reach
+               them with off the site. The answer goes back through the request. -->
+          <p class="visit-who">{{ visit.seekerDisplayName }}</p>
+          <p class="visit-when">
+            {{ visit.visitType === 'Video' ? 'Video call' : 'In person' }} ·
+            {{ visit.preferredAt | date: 'EEEE d MMMM, h:mm a' }}
+          </p>
+
+          @if (visit.ownerResponseNote) {
+            <p class="visit-note">You wrote: {{ visit.ownerResponseNote }}</p>
+          }
+
+          @if (decliningId() === visit.id) {
+            <div class="decline-box">
+              <label class="decline-label" [attr.for]="'decline-' + visit.id">
+                Why are you declining? The seeker sees this.
+              </label>
+              <textarea
+                class="decline-input"
+                [id]="'decline-' + visit.id"
+                rows="2"
+                maxlength="1000"
+                [ngModel]="declineNote()"
+                (ngModelChange)="declineNote.set($event)"
+              ></textarea>
+              <div class="decline-actions">
+                <app-button variant="ghost" size="sm" (clicked)="cancelDecline()">
+                  Never mind
+                </app-button>
+                <app-button
+                  variant="danger"
+                  size="sm"
+                  [disabled]="!declineNote().trim()"
+                  (clicked)="confirmDecline(visit)"
+                >
+                  Decline the visit
+                </app-button>
+              </div>
+            </div>
+          } @else {
+            <div class="listing-actions">
+              @if (visit.status === 'Requested') {
+                <app-button
+                  variant="success"
+                  size="sm"
+                  [loading]="busyId() === visit.id"
+                  (clicked)="accept(visit)"
+                >
+                  Accept
+                </app-button>
+                <app-button variant="outline" size="sm" (clicked)="startDecline(visit)">
+                  Decline
+                </app-button>
+              }
+              @if (canComplete(visit)) {
+                <app-button
+                  variant="outline-green"
+                  size="sm"
+                  [loading]="busyId() === visit.id"
+                  (clicked)="completeVisit(visit)"
+                >
+                  Mark visit done
+                </app-button>
+              }
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>

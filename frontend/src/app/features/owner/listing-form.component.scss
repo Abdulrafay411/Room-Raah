@@ -1,0 +1,170 @@
+.form-page {
+  padding: 1.5rem 1rem 3rem;
+  max-width: 760px;
+}
+
+.form-breadcrumb {
+  margin-bottom: 0.5rem;
+}
+
+.form-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.form-title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.listing-form {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.form-section {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 1.1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.form-legend {
+  padding: 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.form-row {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .form-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.form-hint {
+  margin: 0;
+}
+
+.facility-grid {
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+}
+
+.facility-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.form-banner,
+.form-notice,
+.form-error {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin: 0 0 1rem;
+}
+
+.form-banner.is-revision {
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.form-banner.is-locked {
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+}
+
+.form-notice {
+  border: 1px solid #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.form-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.photo-section {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  margin-top: 1.75rem;
+  padding: 1.1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.photo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  width: 100%;
+}
+
+.photo {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+/* A proposal is visibly not the same thing as a live photograph. */
+.photo.is-pending {
+  border-style: dashed;
+  opacity: 0.85;
+}
+
+.photo-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.photo-tags,
+.photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.photo-actions button {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0.15rem 0.45rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.photo-add {
+  display: grid;
+  gap: 0.35rem;
+}

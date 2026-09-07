@@ -1,0 +1,102 @@
+<div class="auth-page-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="header-icon-circle" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0017.25 4.5h-10.5A2.25 2.25 0 004.5 6.75m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+        </svg>
+      </div>
+      <h1 class="auth-title">Verify your email</h1>
+      <p class="auth-subtitle">Enter the 6-digit verification code sent to your email address.</p>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="auth-alert error" role="alert">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    @if (infoMessage()) {
+      <div class="auth-alert success" role="status">
+        {{ infoMessage() }}
+      </div>
+    }
+
+    <form [formGroup]="verifyForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
+      <app-form-field
+        label="Email address"
+        fieldId="verify-email"
+        [required]="true"
+        [error]="getFieldError('email')"
+      >
+        <input
+          appInput
+          id="verify-email"
+          type="email"
+          formControlName="email"
+          placeholder="name@example.com"
+          autocomplete="email"
+        />
+      </app-form-field>
+
+      <app-form-field
+        label="6-Digit Verification Code"
+        fieldId="verify-code"
+        hint="Single-use code valid for 10 minutes"
+        [required]="true"
+        [error]="getFieldError('code')"
+      >
+        <input
+          appInput
+          id="verify-code"
+          type="text"
+          formControlName="code"
+          placeholder="123456"
+          maxlength="6"
+          autocomplete="one-time-code"
+          class="otp-input"
+        />
+      </app-form-field>
+
+      <div class="form-action-row">
+        <app-button
+          variant="primary"
+          size="lg"
+          type="submit"
+          [fullWidth]="true"
+          [loading]="isLoading()"
+        >
+          Verify &amp; Continue
+        </app-button>
+      </div>
+
+      <div class="resend-row">
+        @if (resendCooldownSeconds() > 0) {
+          <span class="cooldown-text">
+            Resend available in {{ resendCooldownSeconds() }}s
+          </span>
+        } @else {
+          <button
+            type="button"
+            class="resend-button"
+            (click)="resendCode()"
+            [disabled]="isResending()"
+          >
+            {{ isResending() ? 'Sending...' : 'Didn\'t receive code? Resend' }}
+          </button>
+        }
+      </div>
+    </form>
+
+    <div class="mailpit-tip-box">
+      <span class="tip-title">Testing Environment Note:</span>
+      <p class="tip-text">
+        All outgoing OTP emails are delivered to Mailpit at <code>http://52.72.119.254:8025</code>.
+      </p>
+    </div>
+
+    <div class="auth-footer">
+      <a routerLink="/login" class="auth-link">Back to sign in</a>
+    </div>
+  </div>
+</div>

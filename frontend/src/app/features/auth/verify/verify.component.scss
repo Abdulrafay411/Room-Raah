@@ -1,0 +1,183 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+  min-height: calc(100vh - 80px);
+  background-color: $color-background;
+  padding: $space-8 $space-4;
+
+  @include phone {
+    padding: $space-4 $space-3;
+  }
+}
+
+.auth-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 480px;
+  background-color: $color-surface;
+  border-radius: $radius-lg;
+  border: 1px solid $color-slate-200;
+  box-shadow: $shadow-md;
+  padding: $space-8;
+
+  @include phone {
+    padding: $space-5;
+    border-radius: $radius-md;
+  }
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: $space-6;
+}
+
+.header-icon-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: $radius-full;
+  background-color: $color-navy-light;
+  color: $color-navy;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto $space-3;
+}
+
+.auth-title {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-navy;
+  margin-bottom: $space-2;
+  letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+  font-size: $font-size-sm;
+  color: $color-slate-500;
+  line-height: $line-height-normal;
+}
+
+.auth-alert {
+  padding: $space-3 $space-4;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  margin-bottom: $space-4;
+
+  &.error {
+    background-color: $color-danger-light;
+    border: 1px solid $color-danger-border;
+    color: $color-danger;
+  }
+
+  &.success {
+    background-color: $color-green-light;
+    border: 1px solid $color-green-subtle;
+    color: $color-green-hover;
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.otp-input {
+  letter-spacing: 0.35em;
+  font-size: $font-size-xl !important;
+  font-weight: $font-weight-bold;
+  text-align: center;
+}
+
+.form-action-row {
+  margin-top: $space-2;
+}
+
+.resend-row {
+  display: flex;
+  justify-content: center;
+  margin-top: $space-4;
+}
+
+.resend-button {
+  background: none;
+  border: none;
+  color: $color-navy;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+
+  @include focus-visible;
+
+  &:hover:not(:disabled) {
+    color: $color-green;
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.cooldown-text {
+  font-size: $font-size-sm;
+  color: $color-slate-500;
+}
+
+.mailpit-tip-box {
+  margin-top: $space-6;
+  padding: $space-3 $space-4;
+  border-radius: $radius-md;
+  background-color: $color-slate-100;
+  border: 1px dashed $color-slate-300;
+}
+
+.tip-title {
+  display: block;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-slate-700;
+  margin-bottom: 2px;
+}
+
+.tip-text {
+  font-size: $font-size-xs;
+  color: $color-slate-600;
+  line-height: 1.4;
+
+  code {
+    font-family: monospace;
+    background-color: #ffffff;
+    padding: 1px 4px;
+    border-radius: 3px;
+    border: 1px solid $color-slate-200;
+  }
+}
+
+.auth-footer {
+  margin-top: $space-6;
+  padding-top: $space-4;
+  border-top: 1px solid $color-slate-100;
+  text-align: center;
+  font-size: $font-size-sm;
+}
+
+.auth-link {
+  color: $color-navy;
+  font-weight: $font-weight-semibold;
+
+  @include focus-visible;
+
+  &:hover {
+    color: $color-green;
+    text-decoration: underline;
+  }
+}

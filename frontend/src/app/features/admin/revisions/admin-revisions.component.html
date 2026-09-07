@@ -1,0 +1,76 @@
+<section class="admin-panel" data-smoke="admin-revisions">
+  <div class="panel-card panel-head">
+    <div>
+      <h2>Revision queues</h2>
+      <p class="muted">Content changes need a diff review; availability confirmations stay quick.</p>
+    </div>
+    <div class="queue-tabs" role="group" aria-label="Revision queue">
+      <button type="button" [class.is-active]="kind() === 'Content'" (click)="choose('Content')">Content</button>
+      <button type="button" [class.is-active]="kind() === 'Availability'" (click)="choose('Availability')">Availability</button>
+    </div>
+  </div>
+
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+
+  <div class="panel-card" [attr.data-loaded-kind]="loading() ? null : kind()">
+    @if (loading()) {
+      <p>Loading revisions…</p>
+    } @else if (items().length === 0) {
+      <p class="empty-copy" data-smoke="admin-revisions-empty">No {{ kind().toLowerCase() }} revisions waiting.</p>
+    } @else {
+      <ul class="queue" data-smoke="admin-revisions-list">
+        @for (row of items(); track row.id) {
+          <li class="queue-row">
+            <div class="row-head"><h3>{{ row.propertyTitle }}</h3><span class="status">{{ row.kind }}</span></div>
+            <div class="meta">
+              <span>{{ row.areaName }}, {{ row.cityName }}</span>
+              <span>Owner: {{ row.ownerName }}</span>
+              <span>Submitted {{ row.submittedAt | date:'mediumDate' }}</span>
+            </div>
+            @if (row.kind === 'Availability') {
+              <p><strong>{{ row.currentAvailableBeds }}</strong> → <strong>{{ row.proposedAvailableBeds }}</strong> available of {{ row.totalBeds }}</p>
+              <div class="action-row">
+                <app-button size="sm" variant="success" [loading]="saving()" (clicked)="decide(row.id, 'approve')">Approve</app-button>
+                <app-button size="sm" variant="outline" (clicked)="open(row)">Review rejection</app-button>
+              </div>
+            } @else {
+              <p>{{ row.changedFields.length }} fields changed: {{ row.changedFields.join(', ') }}</p>
+              <app-button size="sm" variant="outline" (clicked)="open(row)">Open diff</app-button>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (selected(); as revision) {
+    <article class="panel-card revision-detail" data-smoke="admin-revision-detail">
+      <div class="row-head"><h2>{{ revision.propertyTitle }}</h2><span class="status">{{ revision.kind }}</span></div>
+      @if (revision.kind === 'Content') {
+        <div class="diff" role="table" aria-label="Proposed changes">
+          <div class="diff-head" role="row"><strong>Field</strong><strong>Current</strong><strong>Proposed</strong></div>
+          @for (change of revision.changes; track change.field) {
+            <div class="diff-row" role="row">
+              <strong>{{ change.field }}</strong><span>{{ change.current || '—' }}</span><span>{{ change.proposed || '—' }}</span>
+            </div>
+          }
+        </div>
+        @if (revision.photosToAdd.length || revision.photosToRemove.length) {
+          <p>{{ revision.photosToAdd.length }} photos to add · {{ revision.photosToRemove.length }} to remove</p>
+        }
+      } @else {
+        <p>This is a bed-count confirmation and can be approved without a field-by-field review.</p>
+      }
+      @if (revision.reviewStatus === 'Pending') {
+        <label class="field">Reason (required only when rejecting)
+          <textarea [ngModel]="note()" (ngModelChange)="note.set($event)" maxlength="1000"></textarea>
+        </label>
+        <div class="action-row">
+          <app-button variant="success" [loading]="saving()" (clicked)="decide(revision.id, 'approve')">Approve revision</app-button>
+          <app-button variant="danger" [loading]="saving()" (clicked)="decide(revision.id, 'reject')">Reject revision</app-button>
+        </div>
+      }
+    </article>
+  }
+</section>

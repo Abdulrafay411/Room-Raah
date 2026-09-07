@@ -1,0 +1,62 @@
+.visits-page {
+  padding: 1.5rem 1rem 3rem;
+  max-width: 780px;
+}
+
+.visits-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+}
+
+.visits-lead {
+  margin: 0 0 1.25rem;
+}
+
+.visit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.visit {
+  display: grid;
+  gap: 0.3rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.visit-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.visit-listing {
+  font-weight: 600;
+}
+
+.visit-note-label {
+  font-weight: 600;
+}
+
+.visit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.visits-error {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}

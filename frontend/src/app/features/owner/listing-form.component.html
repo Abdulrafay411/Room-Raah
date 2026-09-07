@@ -1,0 +1,386 @@
+<section class="form-page container-centered" aria-labelledby="form-title">
+  <nav class="form-breadcrumb" aria-label="Breadcrumb">
+    <a routerLink="/owner">My listings</a>
+  </nav>
+
+  <header class="form-head">
+    <h1 class="form-title" id="form-title">
+      {{ isNew() ? 'Add a listing' : 'Edit listing' }}
+    </h1>
+    @if (listing(); as listing) {
+      <app-badge [variant]="statusVariant(listing.status)" size="sm">
+        {{ statusLabel(listing.status) }}
+      </app-badge>
+    }
+  </header>
+
+  <!-- Said before anything is typed, not after it is submitted. An owner who does not know
+       a save becomes a revision will think the change went live and it did not. -->
+  @if (locked()) {
+    <p class="form-banner is-locked" data-smoke="form-locked">
+      Somebody is reviewing this listing right now, so it cannot be changed until they are
+      done. You will see the result on your listings page.
+    </p>
+  } @else if (makesRevision()) {
+    <p class="form-banner is-revision" data-smoke="form-revision">
+      This listing is live. Anything you change here is sent for review — your live listing
+      stays exactly as it is until somebody approves it.
+    </p>
+  }
+
+  @if (notice()) {
+    <p class="form-notice" role="status" data-smoke="form-notice">{{ notice() }}</p>
+  }
+  @if (error()) {
+    <p class="form-error" role="alert" data-smoke="form-error">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <p aria-busy="true">Loading…</p>
+  } @else {
+    <form class="listing-form" (ngSubmit)="save()">
+      <fieldset class="form-section" [disabled]="locked()">
+        <legend class="form-legend">The room</legend>
+
+        <app-form-field
+          label="Title"
+          forId="title"
+          [required]="true"
+          hint="What somebody would call it — where it is, and what kind of room."
+          [error]="fieldErrors()['title'] ?? ''"
+        >
+          <input
+            appInput
+            id="title"
+            name="title"
+            type="text"
+            maxlength="150"
+            [ngModel]="draft().title"
+            (ngModelChange)="patch({ title: $event })"
+          />
+        </app-form-field>
+
+        <app-form-field
+          label="Description"
+          forId="description"
+          [required]="true"
+          [error]="fieldErrors()['description'] ?? ''"
+        >
+          <textarea
+            appInput
+            id="description"
+            name="description"
+            rows="5"
+            maxlength="4000"
+            [ngModel]="draft().description"
+            (ngModelChange)="patch({ description: $event })"
+          ></textarea>
+        </app-form-field>
+
+        <div class="form-row">
+          <app-form-field label="Room type" forId="roomType" [required]="true">
+            <select
+              appInput
+              id="roomType"
+              name="roomType"
+              [ngModel]="draft().roomType"
+              (ngModelChange)="patch({ roomType: $event })"
+            >
+              @for (type of roomTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+          </app-form-field>
+
+          <app-form-field label="Who it is for" forId="genderPolicy" [required]="true">
+            <select
+              appInput
+              id="genderPolicy"
+              name="genderPolicy"
+              [ngModel]="draft().genderPolicy"
+              (ngModelChange)="patch({ genderPolicy: $event })"
+            >
+              @for (policy of genderPolicies; track policy) {
+                <option [value]="policy">{{ policy }}</option>
+              }
+            </select>
+          </app-form-field>
+        </div>
+
+        <div class="form-row">
+          <app-form-field label="Beds in the room" forId="totalBeds" [required]="true">
+            <input
+              appInput
+              id="totalBeds"
+              name="totalBeds"
+              type="number"
+              min="1"
+              max="100"
+              [ngModel]="draft().totalBeds"
+              (ngModelChange)="patch({ totalBeds: +$event })"
+            />
+          </app-form-field>
+
+          <app-form-field
+            label="Beds free right now"
+            forId="availableBeds"
+            [required]="true"
+            [error]="draft().availableBeds > draft().totalBeds ? 'That is more than the room has.' : ''"
+          >
+            <input
+              appInput
+              id="availableBeds"
+              name="availableBeds"
+              type="number"
+              min="0"
+              [max]="draft().totalBeds"
+              [ngModel]="draft().availableBeds"
+              (ngModelChange)="patch({ availableBeds: +$event })"
+            />
+          </app-form-field>
+        </div>
+
+        <app-form-field label="House rules" forId="houseRules" hint="Optional.">
+          <textarea
+            appInput
+            id="houseRules"
+            name="houseRules"
+            rows="3"
+            maxlength="2000"
+            [ngModel]="draft().houseRules"
+            (ngModelChange)="patch({ houseRules: $event })"
+          ></textarea>
+        </app-form-field>
+      </fieldset>
+
+      <fieldset class="form-section" [disabled]="locked()">
+        <legend class="form-legend">What it costs</legend>
+
+        <div class="form-row">
+          <app-form-field label="Monthly rent (PKR)" forId="monthlyRent" [required]="true">
+            <input
+              appInput
+              id="monthlyRent"
+              name="monthlyRent"
+              type="number"
+              min="1"
+              [ngModel]="draft().monthlyRent"
+              (ngModelChange)="patch({ monthlyRent: +$event })"
+            />
+          </app-form-field>
+
+          <app-form-field label="Security deposit (PKR)" forId="securityDeposit">
+            <input
+              appInput
+              id="securityDeposit"
+              name="securityDeposit"
+              type="number"
+              min="0"
+              [ngModel]="draft().securityDeposit"
+              (ngModelChange)="patch({ securityDeposit: +$event })"
+            />
+          </app-form-field>
+        </div>
+
+        <div class="form-row">
+          <app-form-field label="Utilities a month (PKR)" forId="utilitiesCharge">
+            <input
+              appInput
+              id="utilitiesCharge"
+              name="utilitiesCharge"
+              type="number"
+              min="0"
+              [ngModel]="draft().utilitiesCharge"
+              (ngModelChange)="patch({ utilitiesCharge: +$event })"
+            />
+          </app-form-field>
+
+          <app-form-field label="Mess a month (PKR)" forId="messCharge">
+            <input
+              appInput
+              id="messCharge"
+              name="messCharge"
+              type="number"
+              min="0"
+              [ngModel]="draft().messCharge"
+              (ngModelChange)="patch({ messCharge: +$event })"
+            />
+          </app-form-field>
+        </div>
+      </fieldset>
+
+      <fieldset class="form-section" [disabled]="locked()">
+        <legend class="form-legend">Where it is</legend>
+
+        <div class="form-row">
+          <app-form-field label="City" forId="cityId" [required]="true">
+            <select
+              appInput
+              id="cityId"
+              name="cityId"
+              [ngModel]="cityId()"
+              (ngModelChange)="onCity(+$event)"
+            >
+              <option [ngValue]="null">Choose a city</option>
+              @for (city of cities(); track city.id) {
+                <option [ngValue]="city.id">{{ city.name }}</option>
+              }
+            </select>
+          </app-form-field>
+
+          <app-form-field
+            label="Area"
+            forId="areaId"
+            [required]="true"
+            [error]="fieldErrors()['areaId'] ?? ''"
+          >
+            <select
+              appInput
+              id="areaId"
+              name="areaId"
+              [disabled]="areas().length === 0"
+              [ngModel]="draft().areaId"
+              (ngModelChange)="patch({ areaId: +$event })"
+            >
+              <option [ngValue]="0">Choose an area</option>
+              @for (area of areas(); track area.id) {
+                <option [ngValue]="area.id">{{ area.name }}</option>
+              }
+            </select>
+          </app-form-field>
+        </div>
+
+        <app-form-field
+          label="Address"
+          forId="addressLine"
+          [required]="true"
+          [error]="fieldErrors()['addressLine'] ?? ''"
+        >
+          <input
+            appInput
+            id="addressLine"
+            name="addressLine"
+            type="text"
+            maxlength="300"
+            [ngModel]="draft().addressLine"
+            (ngModelChange)="patch({ addressLine: $event })"
+          />
+        </app-form-field>
+
+        <!-- There is no geocoder in this product. The address is typed, the pin is dropped,
+             and an admin checks the two agree. -->
+        <p class="form-hint">Drag the pin — or tap the map — to where the room actually is.</p>
+        <app-map-pin
+          [latitude]="draft().latitude"
+          [longitude]="draft().longitude"
+          [draggable]="!locked()"
+          (moved)="onPin($event)"
+        />
+      </fieldset>
+
+      <fieldset class="form-section" [disabled]="locked()">
+        <legend class="form-legend">Facilities</legend>
+        <div class="facility-grid">
+          @for (facility of facilities(); track facility.id) {
+            <label class="facility-choice">
+              <input
+                type="checkbox"
+                [checked]="hasFacility(facility.id)"
+                (change)="toggleFacility(facility.id, $any($event.target).checked)"
+              />
+              <span>{{ facility.name }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      @if (!locked()) {
+        <div class="form-actions">
+          <app-button type="submit" variant="primary" [loading]="saving()">
+            {{ saveLabel() }}
+          </app-button>
+        </div>
+      }
+    </form>
+
+    @if (listing(); as listing) {
+      <section class="photo-section" aria-labelledby="photos-title">
+        <h2 class="form-legend" id="photos-title">Photographs</h2>
+        <p class="form-hint">
+          {{ liveCount() }} of {{ photosMax }} live. A listing needs at least
+          {{ photosMin }} before it can be sent for review.
+          @if (makesRevision()) {
+            Adding or removing one on a live listing is a proposal, not an immediate change.
+          }
+        </p>
+
+        @if (photoError()) {
+          <p class="form-error" role="alert" data-smoke="photo-error">{{ photoError() }}</p>
+        }
+
+        @if (photos().length === 0) {
+          <p class="form-hint" data-smoke="photos-empty">No photographs yet.</p>
+        } @else {
+          <ul class="photo-list" data-smoke="photo-list">
+            @for (photo of photos(); track photo.id) {
+              <li class="photo" [class.is-pending]="photo.status !== 'Live'">
+                <img class="photo-thumb" [src]="photo.thumbnailUrl" alt="" />
+
+                <div class="photo-tags">
+                  @if (photo.isPrimary) {
+                    <app-badge variant="navy" size="sm">Main</app-badge>
+                  }
+                  @if (photo.status !== 'Live') {
+                    <app-badge variant="warning" size="sm">
+                      {{ photo.status === 'PendingAdd' ? 'Waiting for review' : 'Removal pending' }}
+                    </app-badge>
+                  }
+                </div>
+
+                <div class="photo-actions">
+                  <button type="button" (click)="movePhoto(photo, -1)" aria-label="Move earlier">
+                    ↑
+                  </button>
+                  <button type="button" (click)="movePhoto(photo, 1)" aria-label="Move later">
+                    ↓
+                  </button>
+                  @if (!photo.isPrimary && photo.status === 'Live') {
+                    <button type="button" (click)="makePrimary(photo)">Make main</button>
+                  }
+                  @if (photo.status !== 'PendingRemove') {
+                    <button type="button" class="photo-remove" (click)="removePhoto(photo)">
+                      Remove
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (!locked() && photos().length < photosMax) {
+          <label class="photo-add">
+            <span>Add a photograph</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              [disabled]="photoBusy()"
+              (change)="onFile($event)"
+            />
+          </label>
+          <p class="form-hint">JPEG, PNG or WebP, up to 5 MB.</p>
+        }
+
+        @if (submitBlockedBy(); as why) {
+          <p class="form-hint" data-smoke="submit-blocked">{{ why }}</p>
+        } @else {
+          <app-button variant="primary" [loading]="photoBusy()" (clicked)="submitForReview()">
+            Send for review
+          </app-button>
+        }
+      </section>
+    } @else {
+      <p class="form-hint">Photographs can be added once the listing exists.</p>
+    }
+  }
+</section>

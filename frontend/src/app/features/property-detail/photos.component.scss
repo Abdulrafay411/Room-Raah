@@ -1,0 +1,54 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+  background: $color-background;
+  min-height: 100vh;
+}
+
+.photos-page {
+  @include container-centered;
+  padding-top: $space-6;
+  padding-bottom: $space-12;
+}
+
+.back-link {
+  color: $color-navy;
+  font-weight: $font-weight-medium;
+}
+
+.photos-title {
+  margin: $space-3 0 $space-5;
+  font-size: $font-size-2xl;
+  color: $color-navy;
+}
+
+.photos-note {
+  color: $color-slate-600;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-4;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include laptop-up {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.photo-item img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: $radius-lg;
+  display: block;
+}

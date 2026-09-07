@@ -1,0 +1,120 @@
+.owner-page {
+  padding: 1.5rem 1rem 3rem;
+  max-width: 880px;
+}
+
+.owner-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.owner-title {
+  margin: 0 0 0.3rem;
+  font-size: 1.5rem;
+}
+
+.owner-lead {
+  margin: 0;
+  max-width: 52ch;
+}
+
+.owner-subtitle {
+  margin: 2rem 0 0.75rem;
+  font-size: 1.2rem;
+}
+
+.owner-new {
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  background: #123b5d;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.listing-list,
+.visit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.listing,
+.owner-visit {
+  display: grid;
+  gap: 0.3rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.listing-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.listing-name {
+  font-weight: 600;
+}
+
+.listing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.listing-blocked {
+  flex-basis: 100%;
+}
+
+.decline-box {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.decline-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.decline-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.owner-notice,
+.owner-error {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin: 0 0 1rem;
+}
+
+.owner-notice {
+  border: 1px solid #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.owner-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}

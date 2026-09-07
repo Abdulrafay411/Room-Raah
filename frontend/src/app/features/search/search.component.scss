@@ -1,0 +1,502 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// Layout and behaviour only. Visual refinement is a later pass by somebody else, and the
+// class names are the contract that pass has to keep.
+
+:host {
+  display: block;
+  background: $color-background;
+  min-height: 100vh;
+}
+
+.search-page {
+  @include container-centered;
+  padding-top: $space-6;
+  padding-bottom: $space-12;
+}
+
+.search-title {
+  font-size: clamp(1.75rem, 3vw, 2.4rem);
+  letter-spacing: -0.04em;
+  font-weight: $font-weight-bold;
+  color: $color-navy;
+  margin: 0 0 $space-4;
+}
+
+.search-place {
+  position: relative;
+  margin-bottom: $space-4;
+}
+
+.place-label {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-slate-700;
+  margin-bottom: $space-2;
+}
+
+.place-input-wrap {
+  display: flex;
+  gap: $space-2;
+}
+
+.place-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: $space-3 $space-4;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-md;
+  background: $color-surface;
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.place-clear {
+  flex: 0 0 auto;
+  padding: 0 $space-4;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-md;
+  background: $color-surface;
+  color: $color-slate-700;
+  cursor: pointer;
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+// Overlays rather than pushing the page down, so results do not jump while somebody types.
+.suggestion-list {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  margin: $space-1 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 320px;
+  overflow-y: auto;
+  background: $color-surface;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: $space-3 $space-4;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: $color-navy-light;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.suggestion-name {
+  font-weight: $font-weight-medium;
+  color: $color-slate-900;
+}
+
+.suggestion-meta {
+  font-size: $font-size-xs;
+  color: $color-slate-500;
+}
+
+.search-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-3;
+  margin-bottom: $space-5;
+  padding: $space-3;
+  background: $color-surface;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+}
+
+.filters-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-4;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-md;
+  background: $color-surface;
+  font-weight: $font-weight-medium;
+  color: $color-slate-800;
+  cursor: pointer;
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+
+  // Phone and tablet both collapse the filters; laptop up gets the persistent sidebar.
+  @include laptop-up {
+    display: none;
+  }
+}
+
+.sort-control {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.map-view-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: $space-2 $space-4;
+  border: 1px solid $color-navy;
+  border-radius: $radius-md;
+  color: $color-navy;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+
+  &:hover {
+    background: $color-navy-light;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.sort-label {
+  font-size: $font-size-sm;
+  color: $color-slate-600;
+}
+
+.sort-select,
+.filter-select,
+.filter-input {
+  padding: $space-2 $space-3;
+  font-family: $font-family-base;
+  font-size: $font-size-sm;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-md;
+  background: $color-surface;
+  color: $color-slate-900;
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.result-count {
+  margin: 0;
+  margin-left: auto;
+  font-size: $font-size-sm;
+  color: $color-slate-600;
+}
+
+.search-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-6;
+
+  // Laptop up gets a persistent sidebar; tablet gets the panel above the grid.
+  @include laptop-up {
+    grid-template-columns: 260px 1fr;
+    align-items: start;
+  }
+}
+
+.filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  padding: $space-5;
+  background: $color-surface;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+
+  // Tablet gets the brief's collapsible panel above its two-column result grid.
+  @include tablet {
+    display: none;
+
+    &.is-open {
+      display: flex;
+    }
+  }
+
+  @include laptop-up {
+    position: sticky;
+    top: $space-4;
+    max-height: calc(100vh - #{$space-8});
+    overflow-y: auto;
+  }
+
+  // Phone: a full-height slide-over rather than a squeezed sidebar.
+  @include phone {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    border-radius: 0;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform $transition-base;
+
+    &.is-open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.filter-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  padding-bottom: $space-3;
+  border-bottom: 1px solid $color-slate-200;
+}
+
+.filter-heading {
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-navy;
+}
+
+.filter-close {
+  border: 0;
+  background: transparent;
+  color: $color-slate-600;
+  cursor: pointer;
+  padding: $space-2;
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+
+  // Phone and tablet panels are collapsible; only the persistent sidebar has no close.
+  @include laptop-up {
+    display: none;
+  }
+}
+
+.filter-group {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.filter-legend {
+  padding: 0;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-slate-700;
+}
+
+.filter-note {
+  margin: 0;
+  font-size: $font-size-xs;
+  color: $color-slate-500;
+}
+
+.rent-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-2;
+}
+
+.rent-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+}
+
+.rent-field .filter-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.rent-label {
+  font-size: $font-size-xs;
+  color: $color-slate-500;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.chip {
+  padding: $space-2 $space-3;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-full;
+  background: $color-surface;
+  font-size: $font-size-sm;
+  color: $color-slate-700;
+  cursor: pointer;
+
+  &.is-on {
+    background: $color-navy;
+    border-color: $color-navy;
+    color: #fff;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $font-size-sm;
+  color: $color-slate-700;
+  cursor: pointer;
+
+  input:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.results {
+  min-width: 0;
+}
+
+// One column on a phone, two on a tablet, three from laptop up - the brief's four
+// breakpoints, each a shape rather than a squeeze.
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-5;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include laptop-up {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.results-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $space-3;
+  padding: $space-5;
+  background: $color-danger-light;
+  border: 1px solid $color-danger-border;
+  border-radius: $radius-lg;
+}
+
+.results-error-text {
+  margin: 0;
+  color: $color-danger-hover;
+  font-weight: $font-weight-medium;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-4;
+  margin-top: $space-8;
+}
+
+.page-button {
+  padding: $space-2 $space-4;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-md;
+  background: $color-surface;
+  color: $color-slate-800;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.page-status {
+  font-size: $font-size-sm;
+  color: $color-slate-600;
+}
+
+// The compare bar sits over the results at the bottom of the window so it stays reachable
+// while scrolling a long list - the whole point of it is that it is visible without
+// hunting. Centred with a max width so it does not stretch across a desktop screen.
+.compare-bar {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: min(100%, 640px);
+  margin: 1.5rem auto 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.compare-bar-count {
+  margin: 0;
+  font-weight: 600;
+}
+
+.compare-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.compare-bar-clear {
+  border: 0;
+  background: none;
+  font: inherit;
+  color: #475569;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.compare-bar-go {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: #123b5d;
+  color: #ffffff;
+  text-decoration: none;
+}

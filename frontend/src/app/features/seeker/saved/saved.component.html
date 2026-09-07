@@ -1,0 +1,36 @@
+<section class="saved-page container-centered" aria-labelledby="saved-title">
+  <header class="saved-head">
+    <h1 class="saved-title" id="saved-title">Saved rooms</h1>
+    @if (items().length > 1) {
+      <a
+        class="saved-compare"
+        [routerLink]="compareLink()"
+        [queryParams]="{ ids: compareIds() }"
+      >
+        Compare the first {{ items().length > 3 ? 3 : items().length }}
+      </a>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="saved-grid" aria-busy="true">
+      @for (placeholder of skeletons; track $index) {
+        <app-property-card [loading]="true" />
+      }
+    </div>
+  } @else if (error()) {
+    <p class="saved-error" role="alert" data-smoke="saved-error">{{ error() }}</p>
+  } @else if (items().length === 0) {
+    <app-empty-state type="shortlist" data-smoke="saved-empty" />
+  } @else {
+    <div class="saved-grid" data-smoke="saved-results">
+      @for (item of items(); track item.id) {
+        <app-property-card
+          [property]="item"
+          [isSaved]="true"
+          (saveToggled)="remove($event)"
+        />
+      }
+    </div>
+  }
+</section>
