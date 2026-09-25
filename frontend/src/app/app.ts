@@ -5,6 +5,7 @@ import { AuthService } from './core/auth/auth.service';
 import { GeolocationService } from './core/services/geolocation.service';
 import { RealtimeService } from './core/services/realtime.service';
 import { ButtonComponent } from './shared/components';
+import { AssistantWidgetComponent } from './features/assistant/assistant-widget.component';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +16,7 @@ import { ButtonComponent } from './shared/components';
     RouterLink,
     RouterLinkActive,
     ButtonComponent,
+    AssistantWidgetComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',

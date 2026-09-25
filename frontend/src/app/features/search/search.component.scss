@@ -452,51 +452,5 @@
   color: $color-slate-600;
 }
 
-// The compare bar sits over the results at the bottom of the window so it stays reachable
-// while scrolling a long list - the whole point of it is that it is visible without
-// hunting. Centred with a max width so it does not stretch across a desktop screen.
-.compare-bar {
-  position: sticky;
-  bottom: 1rem;
-  z-index: 20;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  width: min(100%, 640px);
-  margin: 1.5rem auto 0;
-  padding: 0.75rem 1rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-}
-
-.compare-bar-count {
-  margin: 0;
-  font-weight: 600;
-}
-
-.compare-bar-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.compare-bar-clear {
-  border: 0;
-  background: none;
-  font: inherit;
-  color: #475569;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.compare-bar-go {
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  background: #123b5d;
-  color: #ffffff;
-  text-decoration: none;
-}
+// The compare bar itself now lives in shared/components/compare-bar - search,
+// property-detail and the compare page all show the same one.

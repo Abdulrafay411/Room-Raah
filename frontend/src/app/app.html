@@ -83,6 +83,11 @@
     <router-outlet></router-outlet>
   </main>
 
+  <!-- Deferred so the assistant costs the first page load nothing. -->
+  @defer (on idle) {
+    <app-assistant-widget />
+  }
+
   <footer class="app-footer">
     <div class="container-centered footer-inner">
       <p class="footer-note">RoomRaah — rooms and hostels across Pakistan.</p>

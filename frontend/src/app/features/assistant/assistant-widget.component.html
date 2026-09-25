@@ -1,0 +1,209 @@
+<button
+  type="button"
+  class="assistant-launcher"
+  data-smoke="assistant-launcher"
+  [attr.aria-expanded]="open()"
+  aria-controls="assistant-panel"
+  (click)="toggle()"
+>
+  @if (open()) {
+    <span aria-hidden="true">✕</span>
+    <span class="sr-only">Close the assistant</span>
+  } @else {
+    <span class="launcher-icon" aria-hidden="true">✦</span>
+    <span class="launcher-label">Ask RoomRaah</span>
+  }
+</button>
+
+@if (open()) {
+  <section
+    id="assistant-panel"
+    class="assistant-panel"
+    role="dialog"
+    aria-label="RoomRaah Assistant"
+    data-smoke="assistant-panel"
+  >
+    <header class="panel-head">
+      <div>
+        <h2 class="panel-title">RoomRaah Assistant</h2>
+        <p class="panel-sub">
+          @if (agent.online() === false) {
+            Offline
+          } @else {
+            Finds rooms, measures distance, and acts for you
+          }
+        </p>
+      </div>
+      <div class="panel-actions">
+        @if (agent.entries().length) {
+          <button type="button" class="head-btn" (click)="agent.clear()">New chat</button>
+        }
+        <button type="button" class="head-btn" aria-label="Close the assistant" (click)="toggle()">✕</button>
+      </div>
+    </header>
+
+    <div class="panel-log" #log aria-live="polite" data-smoke="assistant-log">
+      @if (!agent.entries().length) {
+        <div class="welcome">
+          @if (role() === 'Admin') {
+            <p>
+              Assalam o alaikum! I can work the admin queues with you - listings to review,
+              revisions, reports, reviews, inspections and users. Every decision waits for
+              your confirm.
+            </p>
+          } @else if (role() === 'Owner') {
+            <p>
+              Assalam o alaikum! I can show your listings and visit requests, update details
+              and free beds, answer visits and reply to messages - in English or Roman Urdu.
+              Nothing changes until you confirm.
+            </p>
+          } @else {
+            <p>
+              Assalam o alaikum! Tell me what you are looking for - area, budget, boys or girls,
+              facilities - in English or Roman Urdu. I can also save rooms, request visits and
+              message owners for you, once you confirm.
+            </p>
+          }
+          <div class="starters">
+            @for (starter of starters(); track starter) {
+              <button type="button" class="starter" (click)="submit(starter)">{{ starter }}</button>
+            }
+          </div>
+        </div>
+      }
+
+      @for (item of view(); track trackEntry($index, item)) {
+        @switch (item.entry.kind) {
+          @case ('user') {
+            <p class="bubble bubble-user">{{ $any(item.entry).text }}</p>
+          }
+          @case ('assistant') {
+            <div class="bubble bubble-bot" data-smoke="assistant-reply">
+              @for (line of item.lines; track $index) {
+                <p class="reply-line" [class.is-bullet]="line.bullet">
+                  @for (part of line.parts; track $index) {
+                    @if (part.bold) {
+                      <strong>{{ part.text }}</strong>
+                    } @else {
+                      {{ part.text }}
+                    }
+                  }
+                </p>
+              }
+            </div>
+          }
+          @case ('cards') {
+            <ul class="cards" data-smoke="assistant-cards">
+              @for (card of $any(item.entry).cards; track card.id) {
+                <li class="card">
+                  @if (card.thumbnailUrl) {
+                    <img class="card-thumb" [src]="card.thumbnailUrl" alt="" loading="lazy" />
+                  }
+                  <div class="card-body">
+                    <a class="card-title" [routerLink]="['/property', card.id]">{{ card.title }}</a>
+                    <p class="card-meta">{{ card.location }} · {{ card.genderPolicy }} · {{ card.roomType }}</p>
+                    <p class="card-rent">{{ rupees(card.monthlyRent) }}/month</p>
+                    <p class="card-meta">{{ card.distanceLabel ?? 'Distance not known' }}</p>
+                    <p class="card-meta">
+                      {{ card.availableBeds }} of {{ card.totalBeds }} beds free
+                      @if (card.averageRating !== null) {
+                        · ★ {{ card.averageRating | number: '1.1-1' }}
+                      }
+                      @if (card.inspected) {
+                        · <span class="card-badge">Inspected</span>
+                      }
+                    </p>
+                    <div class="card-actions">
+                      <a class="card-btn" [routerLink]="['/property', card.id]">Open</a>
+                      <button
+                        type="button"
+                        class="card-btn"
+                        [disabled]="!compare.has(card.id) && compare.full()"
+                        (click)="compare.toggle(card.id)"
+                      >
+                        {{ compare.has(card.id) ? 'Remove from compare' : 'Compare' }}
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+          @case ('links') {
+            <div class="links">
+              @for (link of $any(item.entry).links; track link.label) {
+                <a class="link-chip" [routerLink]="link.commands" [queryParams]="link.queryParams ?? null">
+                  {{ link.label }}
+                </a>
+              }
+            </div>
+          }
+          @case ('confirm') {
+            <div class="confirm" data-smoke="assistant-confirm">
+              <p class="confirm-text">{{ $any(item.entry).summary }}</p>
+              @switch ($any(item.entry).state) {
+                @case ('waiting') {
+                  <div class="confirm-actions">
+                    <button type="button" class="confirm-yes" (click)="agent.confirm($any(item.entry).id, true)">
+                      Confirm
+                    </button>
+                    <button type="button" class="confirm-no" (click)="agent.confirm($any(item.entry).id, false)">
+                      Cancel
+                    </button>
+                  </div>
+                }
+                @case ('done') {
+                  <p class="confirm-state">Confirmed</p>
+                }
+                @default {
+                  <p class="confirm-state">Not done</p>
+                }
+              }
+            </div>
+          }
+          @case ('choices') {
+            <!-- Only the latest question's buttons are live; an answered one is just history. -->
+            @if ($last && !agent.busy()) {
+              <div class="links" data-smoke="assistant-choices">
+                @for (option of $any(item.entry).options; track option) {
+                  <button type="button" class="starter" (click)="submit(option)">{{ option }}</button>
+                }
+              </div>
+            }
+          }
+          @case ('error') {
+            <p class="bubble bubble-error" role="alert">{{ $any(item.entry).text }}</p>
+          }
+        }
+      }
+
+      @if (agent.busy()) {
+        <p class="typing" aria-busy="true">Working on it…</p>
+      }
+    </div>
+
+    <form class="panel-input" (ngSubmit)="submit()">
+      <label class="sr-only" for="assistant-input">Message the assistant</label>
+      <textarea
+        #input
+        id="assistant-input"
+        rows="1"
+        maxlength="2000"
+        placeholder="Ask about rooms, rent or distance…"
+        data-smoke="assistant-input"
+        name="draft"
+        [ngModel]="draft()"
+        (ngModelChange)="draft.set($event)"
+        (keydown)="onKey($event)"
+      ></textarea>
+      <button
+        type="submit"
+        class="send"
+        data-smoke="assistant-send"
+        [disabled]="!draft().trim() || (agent.busy() && !waiting())"
+      >
+        Send
+      </button>
+    </form>
+  </section>
+}

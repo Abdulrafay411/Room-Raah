@@ -11,6 +11,24 @@
   margin: 0 0 1.25rem;
 }
 
+.compare-browse {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #123b5d;
+  border-radius: 8px;
+  color: #123b5d;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.compare-browse:hover,
+.compare-browse:focus-visible {
+  background: #123b5d;
+  color: #ffffff;
+}
+
 /* The table is the one thing on this page that legitimately gets wider than the viewport,
    so it scrolls inside its own box rather than making the whole page scroll sideways. */
 .compare-scroll {
@@ -52,12 +70,22 @@
 }
 
 .compare-remove {
-  margin-top: 0.4rem;
-  border: 0;
-  background: none;
-  padding: 0;
+  margin-top: 0.6rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #991b1b;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  text-decoration: underline;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.compare-remove:hover,
+.compare-remove:focus-visible {
+  background: #fef2f2;
+  border-color: #fecaca;
 }
 
 .compare-error {

@@ -1,0 +1,17 @@
+@if (compare.count() > 0) {
+  <div class="compare-bar" role="region" aria-label="Rooms chosen to compare" data-smoke="compare-bar">
+    <p class="compare-bar-count">
+      {{ compare.count() }} of {{ compare.limit }} chosen
+    </p>
+    <div class="compare-bar-actions">
+      <button type="button" class="compare-bar-clear" (click)="compare.clear()">Clear</button>
+      <a
+        class="compare-bar-go"
+        routerLink="/compare"
+        [queryParams]="{ ids: compare.query(), landmarkId: landmarkId ?? null }"
+      >
+        Compare {{ compare.count() === 1 ? 'this room' : 'these rooms' }}
+      </a>
+    </div>
+  </div>
+}

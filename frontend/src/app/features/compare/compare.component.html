@@ -2,6 +2,11 @@
   <h1 class="compare-title" id="compare-title">Compare rooms</h1>
   <p class="compare-lead">Up to {{ limit }} at a time, side by side.</p>
 
+  <!-- The way back to pick more, or swap one out, without leaving the flow. -->
+  <a class="compare-browse" routerLink="/search" [queryParams]="{ landmarkId: landmarkId() ?? null }">
+    Browse more rooms
+  </a>
+
   @if (!hasIds()) {
     <div data-smoke="compare-empty">
       <app-empty-state

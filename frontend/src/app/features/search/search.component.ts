@@ -7,6 +7,7 @@ import { map } from 'rxjs/operators';
 import {
   BadgeComponent,
   ButtonComponent,
+  CompareBarComponent,
   EmptyStateComponent,
   PropertyCardComponent,
 } from '../../shared/components';
@@ -51,6 +52,7 @@ import {
     ButtonComponent,
     BadgeComponent,
     EmptyStateComponent,
+    CompareBarComponent,
     RouterLink,
   ],
   templateUrl: './search.component.html',
