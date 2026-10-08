@@ -67,7 +67,7 @@ describe('AuthService', () => {
       expect(session).toEqual(mockSession);
     });
 
-    const req = httpMock.expectOne('http://52.72.119.254:8080/api/v1/auth/login');
+    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/auth/login');
     expect(req.request.method).toBe('POST');
     req.flush(mockSession);
 
@@ -84,7 +84,7 @@ describe('AuthService', () => {
       expect(session).toEqual(mockSession);
     });
 
-    const req = httpMock.expectOne('http://52.72.119.254:8080/api/v1/auth/verify-otp');
+    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/auth/verify-otp');
     expect(req.request.method).toBe('POST');
     req.flush(mockSession);
 
@@ -105,7 +105,7 @@ describe('AuthService', () => {
       expect(res.refreshToken).toBe('rotated-refresh-token-456');
     });
 
-    const req = httpMock.expectOne('http://52.72.119.254:8080/api/v1/auth/refresh');
+    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/auth/refresh');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ refreshToken: 'refresh-token-123' });
     req.flush(rotatedSession);
@@ -120,7 +120,7 @@ describe('AuthService', () => {
 
     service.logout().subscribe();
 
-    const req = httpMock.expectOne('http://52.72.119.254:8080/api/v1/auth/logout');
+    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/auth/logout');
     expect(req.request.method).toBe('POST');
     req.flush({});
 
