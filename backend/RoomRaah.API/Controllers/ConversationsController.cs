@@ -113,6 +113,26 @@ public class ConversationsController : ControllerBase
         }));
     }
 
+    /// <summary>
+    /// Removes the thread from the caller's inbox only. Rule 129: the other participant
+    /// keeps their copy and no row is deleted; rule 131: a new message brings it back,
+    /// holding only what came after.
+    /// </summary>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await _mediator.Send(new DeleteConversationCommand
+        {
+            ConversationId = id,
+            UserId = CurrentUserId()
+        });
+
+        return NoContent();
+    }
+
     private int CurrentUserId()
     {
         return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

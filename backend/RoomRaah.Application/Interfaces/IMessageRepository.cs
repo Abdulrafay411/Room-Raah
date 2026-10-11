@@ -6,10 +6,15 @@ public interface IMessageRepository
 {
     Task CreateAsync(Message message);
 
-    /// <summary>A page of one thread, oldest first — the order a conversation is read in.</summary>
-    Task<List<Message>> GetForConversationAsync(int conversationId, int page, int pageSize);
+    /// <summary>
+    /// A page of one thread, oldest first — the order a conversation is read in. With
+    /// <paramref name="sentAfter"/>, only what was sent after it: rule 130's line for a
+    /// participant who deleted the thread.
+    /// </summary>
+    Task<List<Message>> GetForConversationAsync(
+        int conversationId, int page, int pageSize, DateTime? sentAfter = null);
 
-    Task<int> CountForConversationAsync(int conversationId);
+    Task<int> CountForConversationAsync(int conversationId, DateTime? sentAfter = null);
 
     /// <summary>
     /// Rule 104. Marks every message in the thread the caller did not send and has not

@@ -32,8 +32,12 @@ public class GetMessagesQueryHandler : IRequestHandler<GetMessagesQuery, PagedRe
         // Rule 102. Asked before a single message is read, not after.
         ConversationAccess.RequireParticipant(conversation, request.UserId);
 
+        // Rule 130. A participant who deleted the thread sees only what came after; the
+        // other participant's line is their own, usually none at all.
+        var deletedAt = ConversationAccess.DeletedAt(conversation, request.UserId);
+
         var messages = await _messages.GetForConversationAsync(
-            conversation.Id, request.Page, request.PageSize);
+            conversation.Id, request.Page, request.PageSize, deletedAt);
 
         var items = messages.Select(message =>
         {
@@ -47,7 +51,7 @@ public class GetMessagesQueryHandler : IRequestHandler<GetMessagesQuery, PagedRe
         return new PagedResult<MessageDto>
         {
             Items = items,
-            TotalCount = await _messages.CountForConversationAsync(conversation.Id),
+            TotalCount = await _messages.CountForConversationAsync(conversation.Id, deletedAt),
             Page = request.Page,
             PageSize = request.PageSize
         };

@@ -3,7 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BadgeComponent, ButtonComponent, EmptyStateComponent } from '../../shared/components';
+import {
+  BadgeComponent,
+  ButtonComponent,
+  ConfirmDialogComponent,
+  ConfirmRequest,
+  EmptyStateComponent,
+} from '../../shared/components';
 import { MessagingService } from '../../core/services/messaging.service';
 import { RealtimeService } from '../../core/services/realtime.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -16,6 +22,7 @@ import {
   bumpConversation,
   markRead,
   messageProblem,
+  removeConversation,
   sentLabel,
   totalUnread,
   upsertMessage,
@@ -37,7 +44,15 @@ import {
 @Component({
   selector: 'app-messages',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BadgeComponent, ButtonComponent, EmptyStateComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    BadgeComponent,
+    ButtonComponent,
+    ConfirmDialogComponent,
+    EmptyStateComponent,
+  ],
   templateUrl: './messages.component.html',
   styleUrls: ['./messages.component.scss'],
 })
@@ -62,6 +77,9 @@ export class MessagesComponent {
   readonly sendError = signal<string | null>(null);
 
   readonly draft = signal('');
+
+  readonly confirm = signal<ConfirmRequest | null>(null);
+  readonly deleting = signal(false);
 
   readonly maxLength = MESSAGE_MAX;
   readonly sentLabel = sentLabel;
@@ -261,6 +279,47 @@ export class MessagesComponent {
       const element = this.scroller()?.nativeElement;
       if (element) element.scrollTop = element.scrollHeight;
     }, 0);
+  }
+
+  /**
+   * Deleting a chat is the caller's alone - the other person keeps theirs, and a new
+   * message brings it back with only what came after - so the dialog says exactly that.
+   */
+  askDelete(conversation: Conversation): void {
+    this.confirm.set({
+      title: 'Delete this chat?',
+      description:
+        `It is removed from your messages only. ${conversation.otherParticipantDisplayName} keeps ` +
+        'their copy, and if either of you writes again it comes back with just the new messages.',
+      confirmLabel: 'Delete chat',
+      variant: 'danger',
+      run: () => this.delete(conversation.id),
+    });
+  }
+
+  private delete(id: number): void {
+    this.deleting.set(true);
+    this.api.delete(id).subscribe({
+      next: () => {
+        const { conversations, next } = removeConversation(this.conversations(), id);
+        this.conversations.set(conversations);
+        this.deleting.set(false);
+        this.confirm.set(null);
+        if (this.activeId() === id) {
+          this.messages.set([]);
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { c: next?.id ?? null },
+            queryParamsHandling: 'merge',
+          });
+        }
+      },
+      error: (err) => {
+        this.deleting.set(false);
+        this.confirm.set(null);
+        this.error.set(toFailure(err).message);
+      },
+    });
   }
 
   openEmptyAction(): void {

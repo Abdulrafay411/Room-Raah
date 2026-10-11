@@ -20,14 +20,14 @@ public class MessageRepository : IMessageRepository
         return Task.CompletedTask;
     }
 
-    public Task<List<Message>> GetForConversationAsync(int conversationId, int page, int pageSize)
+    public Task<List<Message>> GetForConversationAsync(
+        int conversationId, int page, int pageSize, DateTime? sentAfter = null)
     {
         // Oldest first, which is the order a conversation is read in — and broken by
         // the id for the reason rule 77 gives about search: two messages sent in the
         // same millisecond are otherwise free to swap places between pages.
-        return _context.Messages
+        return InThread(conversationId, sentAfter)
             .Include(m => m.Sender)
-            .Where(m => m.ConversationId == conversationId)
             .OrderBy(m => m.SentAt)
             .ThenBy(m => m.Id)
             .Skip((page - 1) * pageSize)
@@ -35,9 +35,21 @@ public class MessageRepository : IMessageRepository
             .ToListAsync();
     }
 
-    public Task<int> CountForConversationAsync(int conversationId)
+    public Task<int> CountForConversationAsync(int conversationId, DateTime? sentAfter = null)
     {
-        return _context.Messages.CountAsync(m => m.ConversationId == conversationId);
+        return InThread(conversationId, sentAfter).CountAsync();
+    }
+
+    /// <summary>
+    /// One thread, cut at rule 130's line when there is one. The page and its count go
+    /// through the same filter, so a deleted history can never show up as a page that
+    /// claims more messages than it holds.
+    /// </summary>
+    private IQueryable<Message> InThread(int conversationId, DateTime? sentAfter)
+    {
+        var messages = _context.Messages.Where(m => m.ConversationId == conversationId);
+
+        return sentAfter is null ? messages : messages.Where(m => m.SentAt > sentAfter);
     }
 
     /// <summary>

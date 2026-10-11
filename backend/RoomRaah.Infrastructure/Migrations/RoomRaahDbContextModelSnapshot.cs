@@ -203,7 +203,16 @@ namespace RoomRaah.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("HiddenFromOwner")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HiddenFromSeeker")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("LastMessageAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("OwnerDeletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("OwnerId")
@@ -211,6 +220,9 @@ namespace RoomRaah.Infrastructure.Migrations
 
                     b.Property<int>("PropertyId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("SeekerDeletedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("SeekerId")
                         .HasColumnType("int");

@@ -52,6 +52,14 @@ public class StartConversationCommandHandler
 
         if (existing is not null)
         {
+            // Rule 131. A seeker who deleted this thread and asks for it again gets it back
+            // in their inbox, still without what they deleted.
+            if (existing.HiddenFromSeeker)
+            {
+                ConversationAccess.Reveal(existing, request.SeekerId);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
             // A thread handed back is not a thread nobody has written in. Counting here
             // rather than answering zero is the difference between a client that shows
             // an unread badge and one that hides messages the seeker has not read.

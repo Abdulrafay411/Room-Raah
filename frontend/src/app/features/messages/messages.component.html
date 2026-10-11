@@ -76,6 +76,14 @@
                 {{ conversation.propertyTitle }}
               </a>
             </div>
+            <app-button
+              variant="ghost"
+              size="sm"
+              data-smoke="delete-chat"
+              (clicked)="askDelete(conversation)"
+            >
+              Delete chat
+            </app-button>
           </header>
 
           <div class="thread-scroll" #thread data-smoke="messages-thread">
@@ -137,4 +145,6 @@
       </div>
     </div>
   }
+
+  <app-confirm-dialog [request]="confirm()" [busy]="deleting()" (cancelled)="confirm.set(null)" />
 </section>

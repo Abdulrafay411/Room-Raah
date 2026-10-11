@@ -64,6 +64,12 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Mes
         // inbox does not mean a subquery over every thread's messages.
         conversation.LastMessageAt = message.SentAt;
 
+        // Rule 131. A message brings the thread back for whichever side deleted it —
+        // the recipient so the message is not lost in a thread they cannot see, and the
+        // sender because they are plainly using it again.
+        ConversationAccess.Reveal(conversation, conversation.SeekerId);
+        ConversationAccess.Reveal(conversation, conversation.OwnerId);
+
         await _unitOfWork.SaveChangesAsync();
 
         // §4.2: the body is on the never-log list. What was sent, in which thread, by

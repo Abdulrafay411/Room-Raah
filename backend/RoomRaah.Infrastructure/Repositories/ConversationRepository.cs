@@ -54,17 +54,20 @@ public class ConversationRepository : IConversationRepository
 
     public Task<int> CountForUserAsync(int userId)
     {
-        return _context.Conversations
-            .CountAsync(c => c.SeekerId == userId || c.OwnerId == userId);
+        return Visible(userId).CountAsync();
     }
 
     /// <summary>
-    /// The caller's own threads and nobody else's. Held in one place so the page and
-    /// the count can never answer different questions.
+    /// The caller's own threads and nobody else's, less any the caller has deleted and
+    /// nobody has written in since — rules 129 and 131, decided by the caller's own side
+    /// of each thread. Held in one place so the page and the count can never answer
+    /// different questions.
     /// </summary>
     private IQueryable<Conversation> Visible(int userId)
     {
-        return WithContext().Where(c => c.SeekerId == userId || c.OwnerId == userId);
+        return WithContext().Where(c =>
+            (c.SeekerId == userId && !c.HiddenFromSeeker) ||
+            (c.OwnerId == userId && !c.HiddenFromOwner));
     }
 
     private IQueryable<Conversation> WithContext()

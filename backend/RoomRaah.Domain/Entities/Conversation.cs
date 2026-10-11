@@ -31,6 +31,26 @@ public class Conversation
     /// </summary>
     public DateTime LastMessageAt { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// Rule 130. When the seeker last deleted this thread: they are shown only what was
+    /// sent after it. Kept per participant because a delete is one person's, and the other
+    /// person's copy — the record §Contact Stays On the Site keeps — is never touched.
+    /// </summary>
+    public DateTime? SeekerDeletedAt { get; set; }
+
+    /// <summary>Rule 130, for the owner's side of the same thread.</summary>
+    public DateTime? OwnerDeletedAt { get; set; }
+
+    /// <summary>
+    /// Rules 129 and 131. Whether the thread is out of the seeker's inbox. Separate from
+    /// the moment above because a thread comes back without that moment moving: a new
+    /// message returns it holding only what came after the delete.
+    /// </summary>
+    public bool HiddenFromSeeker { get; set; }
+
+    /// <summary>Rules 129 and 131, for the owner's inbox.</summary>
+    public bool HiddenFromOwner { get; set; }
+
     public Property Property { get; set; } = null!;
     public AppUser Seeker { get; set; } = null!;
     public AppUser Owner { get; set; } = null!;

@@ -43,8 +43,8 @@ public class SwaggerContractTests
         var operations = paths.EnumerateObject()
             .Sum(p => p.Value.EnumerateObject().Count(o => IsVerb(o.Name)));
 
-        // The same 68 the Postman collection covers and the controllers declare.
-        operations.ShouldBe(68);
+        // The same 69 the Postman collection covers and the controllers declare.
+        operations.ShouldBe(69);
     }
 
     /// <summary>

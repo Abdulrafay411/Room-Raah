@@ -116,6 +116,21 @@ export function markRead(conversations: Conversation[], id: number): Conversatio
 }
 
 /**
+ * A thread the caller has just deleted, taken off their list, and the one to open in its
+ * place: the next row down, or the one above when it was the last, or none when it was
+ * the only one. Deleting is the caller's alone - the other person keeps their copy.
+ */
+export function removeConversation(
+  conversations: Conversation[],
+  id: number,
+): { conversations: Conversation[]; next: Conversation | null } {
+  const index = conversations.findIndex((c) => c.id === id);
+  const rest = conversations.filter((c) => c.id !== id);
+  if (index < 0) return { conversations: rest, next: null };
+  return { conversations: rest, next: rest[index] ?? rest[index - 1] ?? null };
+}
+
+/**
  * The stamp above a bubble. Same day gives a time, this week gives a weekday, older gives
  * a date - a wall of identical full timestamps is unreadable in a thread.
  */

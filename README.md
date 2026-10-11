@@ -8,7 +8,9 @@ listings and communication inside the platform.
 - Public search by location, rent, facilities and availability; photos, maps and room comparison.
 - Seeker accounts with saved listings, visit requests, reviews and reports, plus Google Maps
   directions once an in-person visit is accepted.
-- Live messaging through SignalR, with polling when the connection is unavailable.
+- Live messaging through SignalR, with polling when the connection is unavailable. Either
+  person can delete a chat from their own inbox; the other keeps their copy, and a new message
+  brings it back with only what came after.
 - Owner listing and photo management, availability confirmation and visit responses.
 - Admin listing/revision approval, review/report moderation, inspections and account management.
 - Email verification, JWT sessions and role permissions. Published edits need admin approval.
@@ -182,7 +184,7 @@ npm test -- --watch=false
 ```
 
 Integration tests require Docker. Test source is included. The latest frontend validation
-passed 257 unit tests, including the AI assistant's. An earlier packaging also passed 50 live
+passed 260 unit tests, including the AI assistant's. An earlier packaging also passed 50 live
 browser checks, including the assistant for seekers, owners and admins. The original browser
 automation harness and generated reports are excluded from this source-only submission.
 

@@ -430,4 +430,113 @@ public class ConversationEndpointTests
         _factory.Logs.Mentioning($"sent a message in conversation {conversation.Id}")
             .ShouldNotBeEmpty();
     }
+
+    // ---------------------------------------------------------------- delete
+
+    private static async Task<PagedResult<ConversationDto>> InboxAsync(HttpClient client) =>
+        await (await client.GetAsync("/api/v1/conversations")).ReadAsync<PagedResult<ConversationDto>>();
+
+    private static async Task<PagedResult<MessageDto>> ThreadAsync(HttpClient client, int conversationId) =>
+        await (await client.GetAsync($"/api/v1/conversations/{conversationId}/messages"))
+            .ReadAsync<PagedResult<MessageDto>>();
+
+    /// <summary>
+    /// Rule 129. The thread leaves the deleter's inbox and nobody else's: the owner's
+    /// copy, every message in it, is the record §Contact Stays On the Site keeps.
+    /// </summary>
+    [Fact]
+    public async Task A_deleted_thread_leaves_the_caller_s_inbox_and_stays_in_the_other_s()
+    {
+        var (seeker, owner, listing) = await PublishedAsync("chat-delete");
+        var conversation = await StartAsync(seeker, listing.Id);
+        await SendAsync(seeker.Client, conversation.Id, "Is the room still free?");
+        await SendAsync(owner.Client, conversation.Id, "Yes, from the 1st.");
+
+        var response = await seeker.Client.DeleteAsync($"/api/v1/conversations/{conversation.Id}");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var seekerInbox = await InboxAsync(seeker.Client);
+        seekerInbox.Items.Select(c => c.Id).ShouldNotContain(conversation.Id);
+        seekerInbox.TotalCount.ShouldBe(seekerInbox.Items.Count);
+
+        var ownerInbox = await InboxAsync(owner.Client);
+        ownerInbox.Items.Select(c => c.Id).ShouldContain(conversation.Id);
+        (await ThreadAsync(owner.Client, conversation.Id)).Items.Count.ShouldBe(2);
+    }
+
+    /// <summary>
+    /// Rules 130, 131 and 132. A reply brings the thread back to the seeker, holding only
+    /// the reply, and the message they had not read before deleting no longer counts.
+    /// </summary>
+    [Fact]
+    public async Task A_new_message_brings_a_deleted_thread_back_with_only_what_came_after()
+    {
+        var (seeker, owner, listing) = await PublishedAsync("chat-delete-back");
+        var conversation = await StartAsync(seeker, listing.Id);
+        await SendAsync(owner.Client, conversation.Id, "Unread before the delete.");
+
+        (await seeker.Client.DeleteAsync($"/api/v1/conversations/{conversation.Id}"))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        await SendAsync(owner.Client, conversation.Id, "Are you still looking?");
+
+        var inbox = await InboxAsync(seeker.Client);
+        inbox.Items.Single(c => c.Id == conversation.Id).UnreadCount.ShouldBe(1);
+
+        var thread = await ThreadAsync(seeker.Client, conversation.Id);
+        thread.TotalCount.ShouldBe(1);
+        thread.Items.Single().Body.ShouldBe("Are you still looking?");
+    }
+
+    /// <summary>Rule 131, for a seeker who opens the same listing's thread again.</summary>
+    [Fact]
+    public async Task Opening_a_deleted_thread_again_brings_it_back_empty()
+    {
+        var (seeker, _, listing) = await PublishedAsync("chat-delete-reopen");
+        var conversation = await StartAsync(seeker, listing.Id);
+        await SendAsync(seeker.Client, conversation.Id, "First question.");
+
+        await seeker.Client.DeleteAsync($"/api/v1/conversations/{conversation.Id}");
+
+        var again = await seeker.Client.PostJsonAsync(
+            "/api/v1/conversations", new { PropertyId = listing.Id });
+
+        again.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await again.ReadAsync<ConversationDto>()).Id.ShouldBe(conversation.Id);
+
+        (await InboxAsync(seeker.Client)).Items.Select(c => c.Id).ShouldContain(conversation.Id);
+        (await ThreadAsync(seeker.Client, conversation.Id)).Items.ShouldBeEmpty();
+    }
+
+    /// <summary>Rule 130: deleting twice is not a refusal.</summary>
+    [Fact]
+    public async Task Deleting_a_thread_twice_succeeds_both_times()
+    {
+        var (seeker, _, listing) = await PublishedAsync("chat-delete-twice");
+        var conversation = await StartAsync(seeker, listing.Id);
+
+        (await seeker.Client.DeleteAsync($"/api/v1/conversations/{conversation.Id}"))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await seeker.Client.DeleteAsync($"/api/v1/conversations/{conversation.Id}"))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    /// <summary>Rule 129: only the two participants, and only a thread that exists.</summary>
+    [Fact]
+    public async Task A_stranger_cannot_delete_a_thread_and_a_missing_one_is_a_404()
+    {
+        var (seeker, owner, listing) = await PublishedAsync("chat-delete-stranger");
+        var conversation = await StartAsync(seeker, listing.Id);
+        var stranger = await SeekerWorkspace.CreateAsync(_factory, "chat-delete-outsider");
+
+        (await stranger.Client.DeleteAsync($"/api/v1/conversations/{conversation.Id}"))
+            .StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
+        (await InboxAsync(seeker.Client)).Items.Select(c => c.Id).ShouldContain(conversation.Id);
+        (await InboxAsync(owner.Client)).Items.Select(c => c.Id).ShouldContain(conversation.Id);
+
+        (await seeker.Client.DeleteAsync("/api/v1/conversations/987654"))
+            .StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
 }

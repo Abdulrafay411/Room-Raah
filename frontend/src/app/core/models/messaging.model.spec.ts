@@ -6,6 +6,7 @@ import {
   bumpConversation,
   markRead,
   messageProblem,
+  removeConversation,
   sentLabel,
   totalUnread,
   upsertMessage,
@@ -130,6 +131,28 @@ describe('the unread badge', () => {
 
     expect(after[0].unreadCount).toBe(2);
     expect(after[1].unreadCount).toBe(0);
+  });
+});
+
+describe('removeConversation', () => {
+  const list = [conversation({ id: 1 }), conversation({ id: 2 }), conversation({ id: 3 })];
+
+  it('takes the thread off the list and opens the next one down', () => {
+    const after = removeConversation(list, 2);
+
+    expect(after.conversations.map((c) => c.id)).toEqual([1, 3]);
+    expect(after.next?.id).toBe(3);
+  });
+
+  it('opens the one above when the last thread goes', () => {
+    expect(removeConversation(list, 3).next?.id).toBe(2);
+  });
+
+  it('opens nothing when the only thread goes', () => {
+    const after = removeConversation([conversation({ id: 1 })], 1);
+
+    expect(after.conversations).toEqual([]);
+    expect(after.next).toBeNull();
   });
 });
 

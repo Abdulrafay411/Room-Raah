@@ -53,4 +53,9 @@ export class MessagingService {
   markRead(conversationId: number): Observable<ReadReceipt> {
     return this.http.patch<ReadReceipt>(`${this.base}/${conversationId}/read`, {});
   }
+
+  /** Off the caller's inbox only; the other participant keeps the thread. 204, no body. */
+  delete(conversationId: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${conversationId}`);
+  }
 }

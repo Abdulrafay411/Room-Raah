@@ -46,6 +46,10 @@ public class MessagingHandlerTests
     private GetMessagesQueryHandler Thread() =>
         new(_conversations, _messages, _mapper);
 
+    private DeleteConversationCommandHandler Delete() =>
+        new(_conversations, _messages, _unitOfWork,
+            NullLogger<DeleteConversationCommandHandler>.Instance);
+
     // ------------------------------------------------------------------- start
 
     [Fact]
@@ -370,7 +374,7 @@ public class MessagingHandlerTests
             new GetMessagesQuery { ConversationId = 1, UserId = Stranger }, default));
 
         await _messages.DidNotReceive().GetForConversationAsync(
-            Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>());
+            Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<DateTime?>());
     }
 
     [Fact]
@@ -398,5 +402,153 @@ public class MessagingHandlerTests
 
         await Should.ThrowAsync<NotFoundException>(() => Thread().Handle(
             new GetMessagesQuery { ConversationId = 1, UserId = SeekerId }, default));
+    }
+
+    // ------------------------------------------------------------------ delete
+
+    /// <summary>
+    /// Rule 129. The caller's side moves and the other side does not: the other
+    /// participant's copy is the record §Contact Stays On the Site keeps.
+    /// </summary>
+    [Theory]
+    [InlineData(SeekerId)]
+    [InlineData(OwnerId)]
+    public async Task Deleting_a_thread_hides_it_from_the_caller_only(int caller)
+    {
+        var conversation = TestData.Conversation(seekerId: SeekerId, ownerId: OwnerId);
+        _conversations.GetByIdAsync(1).Returns(conversation);
+
+        await Delete().Handle(new DeleteConversationCommand { ConversationId = 1, UserId = caller }, default);
+
+        var mine = caller == SeekerId
+            ? (conversation.HiddenFromSeeker, conversation.SeekerDeletedAt)
+            : (conversation.HiddenFromOwner, conversation.OwnerDeletedAt);
+        var theirs = caller == SeekerId
+            ? (conversation.HiddenFromOwner, conversation.OwnerDeletedAt)
+            : (conversation.HiddenFromSeeker, conversation.SeekerDeletedAt);
+
+        mine.Item1.ShouldBeTrue();
+        mine.Item2.ShouldNotBeNull();
+        theirs.Item1.ShouldBeFalse();
+        theirs.Item2.ShouldBeNull();
+
+        await _unitOfWork.Received(1).SaveChangesAsync();
+    }
+
+    /// <summary>Rule 132: nothing that was deleted is left counting as unread.</summary>
+    [Fact]
+    public async Task Deleting_a_thread_marks_it_read_for_the_caller()
+    {
+        _conversations.GetByIdAsync(1)
+            .Returns(TestData.Conversation(seekerId: SeekerId, ownerId: OwnerId));
+
+        await Delete().Handle(new DeleteConversationCommand { ConversationId = 1, UserId = SeekerId }, default);
+
+        await _messages.Received(1).MarkReadAsync(1, SeekerId, Arg.Any<DateTime>());
+    }
+
+    /// <summary>Rule 130: a second delete moves the line forward rather than refusing.</summary>
+    [Fact]
+    public async Task Deleting_a_thread_again_moves_the_line_forward()
+    {
+        var earlier = DateTime.UtcNow.AddDays(-1);
+        var conversation = TestData.Conversation(seekerId: SeekerId, ownerId: OwnerId);
+        conversation.SeekerDeletedAt = earlier;
+        _conversations.GetByIdAsync(1).Returns(conversation);
+
+        await Delete().Handle(new DeleteConversationCommand { ConversationId = 1, UserId = SeekerId }, default);
+
+        conversation.SeekerDeletedAt.ShouldNotBeNull();
+        conversation.SeekerDeletedAt.Value.ShouldBeGreaterThan(earlier);
+    }
+
+    [Fact]
+    public async Task A_stranger_cannot_delete_a_thread()
+    {
+        var conversation = TestData.Conversation(seekerId: SeekerId, ownerId: OwnerId);
+        _conversations.GetByIdAsync(1).Returns(conversation);
+
+        await Should.ThrowAsync<UnauthorizedAccessException>(() => Delete().Handle(
+            new DeleteConversationCommand { ConversationId = 1, UserId = Stranger }, default));
+
+        conversation.HiddenFromSeeker.ShouldBeFalse();
+        conversation.HiddenFromOwner.ShouldBeFalse();
+        await _unitOfWork.DidNotReceive().SaveChangesAsync();
+    }
+
+    [Fact]
+    public async Task Deleting_a_thread_that_does_not_exist_is_a_404()
+    {
+        _conversations.GetByIdAsync(1).Returns((Conversation?)null);
+
+        await Should.ThrowAsync<NotFoundException>(() => Delete().Handle(
+            new DeleteConversationCommand { ConversationId = 1, UserId = SeekerId }, default));
+    }
+
+    /// <summary>
+    /// Rule 130 on the read path: the deleter is shown only what came after, and the
+    /// other participant, who deleted nothing, is shown everything.
+    /// </summary>
+    [Fact]
+    public async Task A_deleted_thread_shows_the_deleter_only_what_came_after()
+    {
+        var deletedAt = DateTime.UtcNow.AddHours(-2);
+        var conversation = TestData.Conversation(seekerId: SeekerId, ownerId: OwnerId);
+        conversation.SeekerDeletedAt = deletedAt;
+        _conversations.GetByIdAsync(1).Returns(conversation);
+        _messages.GetForConversationAsync(1, 1, 30, Arg.Any<DateTime?>()).Returns([]);
+
+        await Thread().Handle(new GetMessagesQuery { ConversationId = 1, UserId = SeekerId }, default);
+        await Thread().Handle(new GetMessagesQuery { ConversationId = 1, UserId = OwnerId }, default);
+
+        await _messages.Received(1).GetForConversationAsync(1, 1, 30, deletedAt);
+        await _messages.Received(1).CountForConversationAsync(1, deletedAt);
+        await _messages.Received(1).GetForConversationAsync(1, 1, 30, null);
+    }
+
+    /// <summary>
+    /// Rule 131. A message brings the thread back for whoever deleted it, and the line
+    /// stays where it was, so what they deleted stays deleted.
+    /// </summary>
+    [Fact]
+    public async Task A_message_brings_a_deleted_thread_back_without_its_history()
+    {
+        var deletedAt = DateTime.UtcNow.AddHours(-2);
+        var conversation = TestData.Conversation(seekerId: SeekerId, ownerId: OwnerId);
+        conversation.OwnerDeletedAt = deletedAt;
+        conversation.HiddenFromOwner = true;
+        _conversations.GetByIdAsync(1).Returns(conversation);
+        _realtime.IsOnlineAsync(OwnerId).Returns(true);
+
+        await Send().Handle(new SendMessageCommand
+        {
+            ConversationId = 1,
+            SenderId = SeekerId,
+            Body = "Is the room still free?"
+        }, default);
+
+        conversation.HiddenFromOwner.ShouldBeFalse();
+        conversation.OwnerDeletedAt.ShouldBe(deletedAt);
+    }
+
+    /// <summary>Rule 131, for a seeker who asks for the same listing's thread again.</summary>
+    [Fact]
+    public async Task Reopening_a_deleted_thread_brings_it_back_for_the_seeker()
+    {
+        var existing = TestData.Conversation(id: 7, seekerId: SeekerId, ownerId: OwnerId);
+        existing.SeekerDeletedAt = DateTime.UtcNow.AddHours(-2);
+        existing.HiddenFromSeeker = true;
+        _properties.GetPublishedWithOwnerAsync(1)
+            .Returns(TestData.ReviewableProperty(1, OwnerId, PropertyStatus.Published));
+        _conversations.GetForSeekerAndPropertyAsync(SeekerId, 1).Returns(existing);
+        _messages.GetUnreadCountsAsync(SeekerId, Arg.Any<IReadOnlyCollection<int>>())
+            .Returns(new Dictionary<int, int>());
+
+        var result = await Start().Handle(
+            new StartConversationCommand { SeekerId = SeekerId, PropertyId = 1 }, default);
+
+        result.WasCreated.ShouldBeFalse();
+        existing.HiddenFromSeeker.ShouldBeFalse();
+        await _unitOfWork.Received(1).SaveChangesAsync();
     }
 }

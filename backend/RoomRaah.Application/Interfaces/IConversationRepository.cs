@@ -20,7 +20,10 @@ public interface IConversationRepository
     /// </summary>
     Task<Conversation?> GetForSeekerAndPropertyAsync(int seekerId, int propertyId);
 
-    /// <summary>Rule 101: the caller's own threads, most recent message first.</summary>
+    /// <summary>
+    /// Rule 101: the caller's own threads, most recent message first — leaving out any
+    /// the caller has deleted and nobody has written in since (rules 129 and 131).
+    /// </summary>
     Task<List<Conversation>> GetForUserAsync(int userId, int page, int pageSize);
 
     Task<int> CountForUserAsync(int userId);
