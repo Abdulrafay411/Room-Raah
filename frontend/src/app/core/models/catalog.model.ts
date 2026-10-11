@@ -167,6 +167,14 @@ export interface PropertyFilters {
   genderPolicy?: GenderPolicy;
   facilityIds?: number[];
   availableOnly?: boolean;
+  /**
+   * The map box, rules 133-134: all four edges or none. Only the map view sends these; the
+   * list view's query string never carries them.
+   */
+  minLatitude?: number;
+  maxLatitude?: number;
+  minLongitude?: number;
+  maxLongitude?: number;
   sort?: PropertySort;
   page?: number;
   pageSize?: number;

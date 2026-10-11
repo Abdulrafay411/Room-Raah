@@ -53,10 +53,17 @@ public class SeekerValidatorTests
     }
 
     [Fact]
-    public void A_visit_in_the_past_is_refused()
+    public void A_visit_on_an_earlier_day_is_refused()
+    {
+        _visit.TestValidate(Visit(at: DateTime.UtcNow.AddDays(-2)))
+            .ShouldHaveValidationErrorFor(x => x.PreferredAt);
+    }
+
+    [Fact]
+    public void A_visit_earlier_today_is_accepted()
     {
         _visit.TestValidate(Visit(at: DateTime.UtcNow.AddHours(-1)))
-            .ShouldHaveValidationErrorFor(x => x.PreferredAt);
+            .ShouldNotHaveAnyValidationErrors();
     }
 
     /// <summary>

@@ -87,6 +87,10 @@ public class SearchPropertiesQueryHandlerTests
             GenderPolicy = "boys",
             FacilityIds = "1,2",
             AvailableOnly = true,
+            MinLatitude = 33.60,
+            MaxLatitude = 33.70,
+            MinLongitude = 72.90,
+            MaxLongitude = 73.10,
             Sort = "distance",
             Page = 2,
             PageSize = 24
@@ -103,6 +107,10 @@ public class SearchPropertiesQueryHandlerTests
             c.RoomType == RoomType.Shared &&
             c.GenderPolicy == GenderPolicy.Boys &&
             c.AvailableOnly &&
+            c.MinLatitude == 33.60 &&
+            c.MaxLatitude == 33.70 &&
+            c.MinLongitude == 72.90 &&
+            c.MaxLongitude == 73.10 &&
             c.Sort == PropertySort.Distance &&
             c.Page == 2 &&
             c.PageSize == 24));

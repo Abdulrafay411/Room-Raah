@@ -295,7 +295,7 @@ public class VisitEndpointTests
     }
 
     [Fact]
-    public async Task A_preferred_time_in_the_past_is_refused()
+    public async Task A_preferred_time_on_an_earlier_day_is_refused()
     {
         var (seeker, _, listing) = await PublishedAsync("visit-past");
 
@@ -303,7 +303,7 @@ public class VisitEndpointTests
         {
             PropertyId = listing.Id,
             VisitType = "Physical",
-            PreferredAt = DateTime.UtcNow.AddDays(-1)
+            PreferredAt = DateTime.UtcNow.AddDays(-2)
         });
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);

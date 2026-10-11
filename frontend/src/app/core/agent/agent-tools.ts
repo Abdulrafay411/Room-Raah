@@ -161,7 +161,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   tool('unsave_hostel', 'Remove a hostel from the shortlist.', { propertyId: id('Hostel') }, ['propertyId']),
   tool(
     'request_visit',
-    'Ask the owner for a visit. The time must be in the future and at most 60 days ahead.',
+    'Ask the owner for a visit. The time must be today or later and at most 60 days ahead.',
     {
       propertyId: id('Hostel'),
       visitType: { type: 'string', enum: ['Physical', 'Video'] },

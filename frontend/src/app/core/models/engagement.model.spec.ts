@@ -76,8 +76,14 @@ describe('the visit state machine', () => {
 });
 
 describe('the visit date window', () => {
-  it('refuses a time in the past', () => {
-    expect(visitProblem('2026-09-06T12:00', NOW)).toBe('Choose a time in the future.');
+  it('refuses an earlier day', () => {
+    expect(visitProblem('2026-09-05T12:00', NOW)).toBe('Choose today or a later date.');
+  });
+
+  it('accepts a time earlier today', () => {
+    const earlier = new Date(NOW.getTime());
+    earlier.setHours(0, 30, 0, 0);
+    expect(visitProblem(toLocalInputValue(earlier), NOW)).toBeNull();
   });
 
   it('refuses more than sixty days ahead', () => {

@@ -307,6 +307,19 @@ public class PropertyRepository : IPropertyRepository
             query = query.Where(_distance.Within(lat, lng, kilometres));
         }
 
+        // Rule 134: the part of the map the person is looking at, edges included. The
+        // validator has already made sure the four edges arrive together.
+        if (criteria is
+            {
+                MinLatitude: { } south, MaxLatitude: { } north,
+                MinLongitude: { } west, MaxLongitude: { } east
+            })
+        {
+            query = query.Where(p =>
+                p.Latitude >= south && p.Latitude <= north &&
+                p.Longitude >= west && p.Longitude <= east);
+        }
+
         return query;
     }
 

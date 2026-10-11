@@ -40,6 +40,21 @@ public class SearchPropertiesQuery : IRequest<PagedResult<ListingCardDto>>
     /// <summary>Rule 78: only listings with a bed free.</summary>
     public bool AvailableOnly { get; set; }
 
+    /// <summary>
+    /// Rule 133: the southern edge of the map box. The four edges come together or not
+    /// at all.
+    /// </summary>
+    public double? MinLatitude { get; set; }
+
+    /// <summary>Rule 133: the northern edge of the map box.</summary>
+    public double? MaxLatitude { get; set; }
+
+    /// <summary>Rule 133: the western edge of the map box.</summary>
+    public double? MinLongitude { get; set; }
+
+    /// <summary>Rule 133: the eastern edge of the map box.</summary>
+    public double? MaxLongitude { get; set; }
+
     /// <summary>Recent, PriceLowToHigh, PriceHighToLow or Distance. Defaults to Recent.</summary>
     public string? Sort { get; set; }
 

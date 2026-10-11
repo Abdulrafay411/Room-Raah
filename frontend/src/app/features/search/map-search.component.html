@@ -1,93 +1,82 @@
-<div class="map-page container-centered">
-  <header class="map-header">
-    <div>
-      <h1>Rooms on the map</h1>
-      @if (noLandmark()) {
-        <p>Every published room that matches the search.</p>
-      } @else {
-        <p>Distances are straight-line measurements from the place you selected.</p>
+<h1 class="sr-only">Rooms on the map</h1>
+
+<div #mapPage class="map-page" [class.is-fullscreen]="fullscreen()">
+  <div
+    #mapCanvas
+    class="map-canvas"
+    data-smoke="map-canvas"
+    role="region"
+    aria-label="Map of matching rooms"
+  ></div>
+
+  <div class="map-overlay map-overlay-top">
+    <form
+      class="map-search"
+      role="search"
+      (submit)="submitPlace(); $event.preventDefault()"
+      (keydown.escape)="closeSuggestions()"
+    >
+      <label class="sr-only" for="map-place">Search a city, an area or a university</label>
+      <input
+        id="map-place"
+        type="search"
+        class="map-search-input"
+        data-smoke="map-search-input"
+        autocomplete="off"
+        placeholder="Search a city, area or university"
+        [value]="query()"
+        (input)="onQuery($any($event.target).value)"
+      />
+
+      @if (suggestions().length) {
+        <ul class="map-suggestions" role="listbox" aria-label="Place suggestions">
+          @for (suggestion of suggestions(); track suggestion.type + suggestion.id) {
+            <li role="option" [attr.aria-selected]="false">
+              <button type="button" class="map-suggestion" (click)="choose(suggestion)">
+                <span class="map-suggestion-name">{{ suggestion.name }}</span>
+                <span class="map-suggestion-meta">
+                  {{ suggestion.type }}@if (suggestion.city) { · {{ suggestion.city }} }
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </form>
+
+    <div class="map-actions">
+      <a class="map-chip map-chip-link" routerLink="/search" [queryParams]="listQuery()">List view</a>
+      @if (fullscreenSupported) {
+        <button type="button" class="map-chip" data-smoke="map-fullscreen" (click)="toggleFullscreen()">
+          {{ fullscreen() ? 'Exit full screen' : 'Full screen' }}
+        </button>
       }
     </div>
-    <a class="view-switch" routerLink="/search" [queryParams]="listQuery()">List view</a>
-  </header>
+  </div>
 
-  @if (noLandmark()) {
-    <section class="map-guidance" data-smoke="map-needs-landmark">
-      <h2>Pick a university or workplace to see distances</h2>
-      <p>The map is showing every matching room. Choose a place and each room gets a straight-line distance, closest first.</p>
-      <a routerLink="/search" [queryParams]="listQuery()">Choose a place</a>
-    </section>
-  }
-
-  @if (error()) {
-    <div class="map-error" role="alert" data-smoke="map-error">
-      <p>{{ error() }}</p>
-      <a routerLink="/search" [queryParams]="listQuery()">Change the search</a>
-    </div>
-  } @else {
-    <p class="map-summary" aria-live="polite">
-      @if (loading()) {
-        Loading rooms…
-      } @else {
-        Showing {{ results().length }} of {{ total() }} matching {{ total() === 1 ? 'room' : 'rooms' }}.
-      }
-    </p>
-
-    <div class="map-layout" data-smoke="map-results">
-      <section class="map-panel" aria-label="Map of matching rooms">
-        <div
-          #mapCanvas
-          class="map-canvas"
-          data-smoke="map-canvas"
-          role="region"
-          aria-label="Interactive map. Matching rooms are also available in the list."
-        ></div>
-        <p class="map-help">Select a marker or use the list. Scroll-wheel zoom is off so the page remains easy to scroll.</p>
-      </section>
-
-      <section class="map-list" aria-label="Matching rooms">
-        @if (loading()) {
-          <div class="map-loading" aria-busy="true">Finding rooms near your place…</div>
-        } @else if (results().length === 0) {
-          <app-empty-state type="search" />
-        } @else {
-          <ol>
-            @for (property of results(); track property.id) {
-              <li>
-                <article
-                  class="map-listing"
-                  data-smoke="map-listing"
-                  [class.is-selected]="selectedId() === property.id"
-                  [attr.aria-current]="selectedId() === property.id ? 'true' : null"
-                >
-                  <div class="listing-heading">
-                    <a [routerLink]="['/property', property.id]">{{ property.title }}</a>
-                    @if (property.hasInspectionBadge) {
-                      <span class="checked-badge">Checked</span>
-                    }
-                  </div>
-                  <p>{{ property.areaName }}, {{ property.cityName }}</p>
-                  <p><strong>PKR {{ property.monthlyRent | number }}</strong> / month</p>
-                  <p>{{ property.availableBeds }} {{ property.availableBeds === 1 ? 'bed' : 'beds' }} available</p>
-                  @let km = distanceFromYou(property);
-                  @if (km !== null) {
-                    <p>{{ km | number:'1.0-1' }} km from you (straight-line)</p>
-                  }
-                  <button
-                    type="button"
-                    class="locate-button"
-                    data-smoke="map-locate"
-                    [attr.aria-pressed]="selectedId() === property.id"
-                    (click)="select(property)"
-                  >
-                    Show on map
-                  </button>
-                </article>
-              </li>
-            }
-          </ol>
+  <div class="map-overlay map-overlay-status">
+    @if (error()) {
+      <div class="map-status map-status-error" role="alert" data-smoke="map-error">
+        {{ error() }}
+      </div>
+    } @else {
+      <div class="map-status" aria-live="polite" data-smoke="map-summary">
+        <span>{{ summary() }}</span>
+        @if (narrowed() && !loading()) {
+          <button type="button" class="map-status-action" (click)="showAll()">Show all rooms</button>
         }
-      </section>
-    </div>
-  }
+      </div>
+    }
+
+    @if (moved() && !loading()) {
+      <button
+        type="button"
+        class="map-search-area"
+        data-smoke="map-search-area"
+        (click)="searchThisArea()"
+      >
+        Search this area
+      </button>
+    }
+  </div>
 </div>

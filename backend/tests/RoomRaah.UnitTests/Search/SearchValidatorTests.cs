@@ -29,6 +29,10 @@ public class SearchPropertiesQueryValidatorTests
             GenderPolicy = "Boys",
             FacilityIds = "1,3",
             AvailableOnly = true,
+            MinLatitude = 31.40,
+            MaxLatitude = 31.60,
+            MinLongitude = 74.20,
+            MaxLongitude = 74.40,
             Sort = "Distance",
             Page = 2,
             PageSize = 24
@@ -184,6 +188,66 @@ public class SearchPropertiesQueryValidatorTests
         _validator.TestValidate(
                 new SearchPropertiesQuery { LandmarkId = 1, MaxDistanceKm = kilometres })
             .ShouldHaveValidationErrorFor("maxDistanceKm");
+    }
+
+    private static SearchPropertiesQuery Box() => new()
+    {
+        MinLatitude = 31.40,
+        MaxLatitude = 31.60,
+        MinLongitude = 74.20,
+        MaxLongitude = 74.40
+    };
+
+    [Fact]
+    public void Rule_133_a_whole_map_box_is_accepted_without_a_landmark()
+    {
+        _validator.TestValidate(Box()).ShouldNotHaveAnyValidationErrors();
+    }
+
+    [Fact]
+    public void Rule_133_a_map_box_missing_an_edge_is_refused()
+    {
+        var query = Box();
+        query.MaxLongitude = null;
+
+        _validator.TestValidate(query).ShouldHaveValidationErrorFor("minLatitude");
+    }
+
+    [Fact]
+    public void Rule_133_a_single_edge_on_its_own_is_refused()
+    {
+        _validator.TestValidate(new SearchPropertiesQuery { MaxLatitude = 31.60 })
+            .ShouldHaveValidationErrorFor("minLatitude");
+    }
+
+    [Fact]
+    public void Rule_133_a_latitude_off_the_globe_is_refused()
+    {
+        var query = Box();
+        query.MaxLatitude = 91;
+
+        _validator.TestValidate(query).ShouldHaveValidationErrorFor("maxLatitude");
+    }
+
+    [Fact]
+    public void Rule_133_a_longitude_off_the_globe_is_refused()
+    {
+        var query = Box();
+        query.MinLongitude = -181;
+
+        _validator.TestValidate(query).ShouldHaveValidationErrorFor("minLongitude");
+    }
+
+    [Fact]
+    public void Rule_133_a_box_with_its_edges_swapped_is_refused()
+    {
+        var latitudes = Box();
+        (latitudes.MinLatitude, latitudes.MaxLatitude) = (latitudes.MaxLatitude, latitudes.MinLatitude);
+        _validator.TestValidate(latitudes).ShouldHaveValidationErrorFor("minLatitude");
+
+        var longitudes = Box();
+        (longitudes.MinLongitude, longitudes.MaxLongitude) = (longitudes.MaxLongitude, longitudes.MinLongitude);
+        _validator.TestValidate(longitudes).ShouldHaveValidationErrorFor("minLongitude");
     }
 }
 

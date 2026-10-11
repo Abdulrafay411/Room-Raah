@@ -60,6 +60,10 @@ public class SearchPropertiesQueryHandler
             GenderPolicy = Parse<GenderPolicy>(request.GenderPolicy),
             FacilityIds = facilityIds,
             AvailableOnly = request.AvailableOnly,
+            MinLatitude = request.MinLatitude,
+            MaxLatitude = request.MaxLatitude,
+            MinLongitude = request.MinLongitude,
+            MaxLongitude = request.MaxLongitude,
             Sort = Parse<PropertySort>(request.Sort) ?? PropertySort.Recent,
             Page = request.Page,
             PageSize = request.PageSize

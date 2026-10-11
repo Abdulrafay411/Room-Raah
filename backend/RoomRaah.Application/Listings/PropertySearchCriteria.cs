@@ -32,6 +32,15 @@ public sealed class PropertySearchCriteria
 
     public bool AvailableOnly { get; init; }
 
+    /// <summary>Rule 134: the map box. Either all four edges are set or none is.</summary>
+    public double? MinLatitude { get; init; }
+
+    public double? MaxLatitude { get; init; }
+
+    public double? MinLongitude { get; init; }
+
+    public double? MaxLongitude { get; init; }
+
     public PropertySort Sort { get; init; } = PropertySort.Recent;
 
     public int Page { get; init; } = 1;
@@ -64,6 +73,10 @@ public sealed class PropertySearchCriteria
             $"{nameof(GenderPolicy)}={GenderPolicy}",
             $"{nameof(FacilityIds)}={IdList.Format(FacilityIds.Distinct().Order())}",
             $"{nameof(AvailableOnly)}={AvailableOnly}",
+            $"{nameof(MinLatitude)}={Number(MinLatitude)}",
+            $"{nameof(MaxLatitude)}={Number(MaxLatitude)}",
+            $"{nameof(MinLongitude)}={Number(MinLongitude)}",
+            $"{nameof(MaxLongitude)}={Number(MaxLongitude)}",
             $"{nameof(Sort)}={Sort}",
             $"{nameof(Page)}={Number<int>(Page)}",
             $"{nameof(PageSize)}={Number<int>(PageSize)}"

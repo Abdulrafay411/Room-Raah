@@ -5,7 +5,9 @@ listings and communication inside the platform.
 
 ## Features
 
-- Public search by location, rent, facilities and availability; photos, maps and room comparison.
+- Public search by location, rent, facilities and availability; photos and room comparison.
+- A full-screen map with place search, a card per room and "Search this area" for the part
+  of the map on screen.
 - Seeker accounts with saved listings, visit requests, reviews and reports, plus Google Maps
   directions once an in-person visit is accepted.
 - Live messaging through SignalR, with polling when the connection is unavailable. Either
@@ -184,7 +186,7 @@ npm test -- --watch=false
 ```
 
 Integration tests require Docker. Test source is included. The latest frontend validation
-passed 260 unit tests, including the AI assistant's. An earlier packaging also passed 50 live
+passed 268 unit tests, including the AI assistant's. An earlier packaging also passed 50 live
 browser checks, including the assistant for seekers, owners and admins. The original browser
 automation harness and generated reports are excluded from this source-only submission.
 

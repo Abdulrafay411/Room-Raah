@@ -330,6 +330,67 @@ public class PublicSearchEndpointTests
     }
 
     [Fact]
+    public async Task Rule_133_a_map_box_missing_an_edge_is_refused()
+    {
+        (await Anonymous().GetAsync(
+                "/api/v1/properties?minLatitude=20&maxLatitude=40&minLongitude=60"))
+            .StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    /// <summary>
+    /// The boxes are drawn around one listing's own pin, so the test does not depend on
+    /// where the seed happens to put anything else. Many seeded listings share a
+    /// neighbourhood, so a box can hold more than one page: the assertion is that every
+    /// card returned sits inside, not how many there are.
+    /// </summary>
+    [Fact]
+    public async Task Rule_134_a_map_box_returns_only_what_is_inside_it()
+    {
+        var everything = await SearchAsync("?pageSize=50");
+        var anchor = everything.Items.First();
+
+        var south = anchor.Latitude - 0.01;
+        var north = anchor.Latitude + 0.01;
+        var west = anchor.Longitude - 0.01;
+        var east = anchor.Longitude + 0.01;
+
+        var inside = await SearchAsync(Box(south, north, west, east));
+
+        inside.TotalCount.ShouldBeGreaterThan(0);
+        inside.Items.ShouldAllBe(card =>
+            card.Latitude >= south && card.Latitude <= north &&
+            card.Longitude >= west && card.Longitude <= east);
+    }
+
+    [Fact]
+    public async Task Rule_134_a_listing_just_outside_the_box_is_left_out()
+    {
+        var everything = await SearchAsync("?pageSize=50");
+        var anchor = everything.Items.First();
+
+        // A box that starts a little east of the pin and goes further east.
+        var west = anchor.Longitude + 0.0001;
+        var east = anchor.Longitude + 0.5;
+        var page = await SearchAsync(Box(anchor.Latitude - 0.5, anchor.Latitude + 0.5, west, east));
+
+        page.Items.ShouldNotContain(card => card.Id == anchor.Id);
+        page.Items.ShouldAllBe(card => card.Longitude >= west && card.Longitude <= east);
+    }
+
+    private static string Box(double south, double north, double west, double east) =>
+        FormattableString.Invariant(
+            $"?pageSize=50&minLatitude={south}&maxLatitude={north}&minLongitude={west}&maxLongitude={east}");
+
+    [Fact]
+    public async Task Rule_134_a_map_box_over_open_sea_is_empty_rather_than_an_error()
+    {
+        var page = await SearchAsync("?minLatitude=-10&maxLatitude=-9&minLongitude=80&maxLongitude=81");
+
+        page.Items.ShouldBeEmpty();
+        page.TotalCount.ShouldBe(0);
+    }
+
+    [Fact]
     public async Task A_card_carries_the_pin_the_map_view_needs()
     {
         var page = await SearchAsync("?pageSize=50");

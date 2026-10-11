@@ -13,6 +13,14 @@ public class CreateVisitRequestCommandValidator : AbstractValidator<CreateVisitR
     /// </summary>
     public const int MaximumDaysAhead = 60;
 
+    /// <summary>
+    /// How far back a preferred time may be. "Today" is the rule, so a visit arranged
+    /// for this morning can still be recorded; the server does not know the person's
+    /// time zone, so it allows the last day rather than its own UTC midnight. The client
+    /// holds the person to their own local midnight, which always falls inside this.
+    /// </summary>
+    public const int MaximumHoursBehind = 24;
+
     public CreateVisitRequestCommandValidator()
     {
         RuleFor(x => x.PropertyId)
@@ -22,8 +30,8 @@ public class CreateVisitRequestCommandValidator : AbstractValidator<CreateVisitR
             .Must(BeAVisitType).WithMessage("Visit type must be Physical or Video.");
 
         RuleFor(x => x.PreferredAt)
-            .Must(at => at > DateTime.UtcNow)
-            .WithMessage("The preferred time must be in the future.")
+            .Must(at => at >= DateTime.UtcNow.AddHours(-MaximumHoursBehind))
+            .WithMessage("The preferred time may not be before today.")
             .Must(at => at <= DateTime.UtcNow.AddDays(MaximumDaysAhead))
             .WithMessage($"The preferred time must be within {MaximumDaysAhead} days.");
     }

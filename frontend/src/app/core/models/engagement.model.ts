@@ -179,7 +179,9 @@ export function visitProblem(preferredAt: string, now: Date = new Date()): strin
 
   const when = new Date(preferredAt);
   if (Number.isNaN(when.getTime())) return 'That is not a date we can read.';
-  if (when.getTime() <= now.getTime()) return 'Choose a time in the future.';
+  // Today counts, including a time already past - a visit arranged by phone this morning
+  // can still be recorded. Only an earlier day is refused.
+  if (when.getTime() < startOfDay(now).getTime()) return 'Choose today or a later date.';
 
   const limit = new Date(now.getTime());
   limit.setDate(limit.getDate() + VISIT_MAX_DAYS_AHEAD);
@@ -202,9 +204,16 @@ export function toLocalInputValue(date: Date): string {
   );
 }
 
+/** Local midnight at the start of `now`'s day. */
+function startOfDay(now: Date): Date {
+  const start = new Date(now.getTime());
+  start.setHours(0, 0, 0, 0);
+  return start;
+}
+
 /** The earliest and latest a picker may offer, so it cannot produce the wrong side. */
 export function visitWindow(now: Date = new Date()): { min: string; max: string } {
-  const min = new Date(now.getTime() + 60 * 60 * 1000);
+  const min = startOfDay(now);
   const max = new Date(now.getTime());
   max.setDate(max.getDate() + VISIT_MAX_DAYS_AHEAD);
   return { min: toLocalInputValue(min), max: toLocalInputValue(max) };

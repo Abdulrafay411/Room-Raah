@@ -25,6 +25,10 @@ public class PropertySearchCriteriaTests
         GenderPolicy = GenderPolicy.Boys,
         FacilityIds = [3, 1],
         AvailableOnly = true,
+        MinLatitude = 31.40,
+        MaxLatitude = 31.60,
+        MinLongitude = 74.20,
+        MaxLongitude = 74.40,
         Sort = PropertySort.Distance,
         Page = 2,
         PageSize = 24
@@ -88,6 +92,22 @@ public class PropertySearchCriteriaTests
     {
         new PropertySearchCriteria().Describe()
             .ShouldNotBe(new PropertySearchCriteria { AvailableOnly = true }.Describe());
+    }
+
+    [Fact]
+    public void Rule_134_two_map_boxes_do_not_share_an_entry()
+    {
+        var lahore = new PropertySearchCriteria
+        {
+            MinLatitude = 31.40, MaxLatitude = 31.60, MinLongitude = 74.20, MaxLongitude = 74.40
+        };
+        var karachi = new PropertySearchCriteria
+        {
+            MinLatitude = 24.80, MaxLatitude = 25.00, MinLongitude = 67.00, MaxLongitude = 67.20
+        };
+
+        lahore.Describe().ShouldNotBe(karachi.Describe());
+        lahore.Describe().ShouldNotBe(new PropertySearchCriteria().Describe());
     }
 
     [Fact]

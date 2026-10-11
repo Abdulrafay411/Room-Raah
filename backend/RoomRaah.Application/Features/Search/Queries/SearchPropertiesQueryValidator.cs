@@ -81,5 +81,49 @@ public class SearchPropertiesQueryValidator : AbstractValidator<SearchProperties
             .WithMessage("Sorting by distance needs a landmarkId to measure from.")
             .When(x => string.Equals(x.Sort, nameof(PropertySort.Distance), StringComparison.OrdinalIgnoreCase))
             .OverridePropertyName("sort");
+
+        // Rule 133. Three edges of a box are not a smaller box, they are no box at all,
+        // and guessing the fourth would answer a question nobody asked.
+        RuleFor(x => x.MinLatitude)
+            .Must((query, _) => BoxEdgeCount(query) == 4)
+            .WithMessage("A map box needs all four of minLatitude, maxLatitude, minLongitude and maxLongitude.")
+            .When(x => BoxEdgeCount(x) is > 0 and < 4)
+            .OverridePropertyName("minLatitude");
+
+        RuleFor(x => x.MinLatitude)
+            .InclusiveBetween(-90, 90).WithMessage("Latitude must be between -90 and 90.")
+            .When(x => x.MinLatitude is not null)
+            .OverridePropertyName("minLatitude");
+
+        RuleFor(x => x.MaxLatitude)
+            .InclusiveBetween(-90, 90).WithMessage("Latitude must be between -90 and 90.")
+            .When(x => x.MaxLatitude is not null)
+            .OverridePropertyName("maxLatitude");
+
+        RuleFor(x => x.MinLongitude)
+            .InclusiveBetween(-180, 180).WithMessage("Longitude must be between -180 and 180.")
+            .When(x => x.MinLongitude is not null)
+            .OverridePropertyName("minLongitude");
+
+        RuleFor(x => x.MaxLongitude)
+            .InclusiveBetween(-180, 180).WithMessage("Longitude must be between -180 and 180.")
+            .When(x => x.MaxLongitude is not null)
+            .OverridePropertyName("maxLongitude");
+
+        RuleFor(x => x.MinLatitude)
+            .Must((query, min) => min <= query.MaxLatitude)
+            .WithMessage("minLatitude may not be greater than maxLatitude.")
+            .When(x => x.MinLatitude is not null && x.MaxLatitude is not null)
+            .OverridePropertyName("minLatitude");
+
+        RuleFor(x => x.MinLongitude)
+            .Must((query, min) => min <= query.MaxLongitude)
+            .WithMessage("minLongitude may not be greater than maxLongitude.")
+            .When(x => x.MinLongitude is not null && x.MaxLongitude is not null)
+            .OverridePropertyName("minLongitude");
     }
+
+    private static int BoxEdgeCount(SearchPropertiesQuery query) =>
+        new[] { query.MinLatitude, query.MaxLatitude, query.MinLongitude, query.MaxLongitude }
+            .Count(edge => edge is not null);
 }

@@ -20,7 +20,7 @@ import {
 /**
  * Page 15: ask the owner of one listing for a visit.
  *
- * The date is the thing that catches people out. `preferredAt` must be in the future and at
+ * The date is the thing that catches people out. `preferredAt` must be today or later and at
  * most sixty days ahead, and either side of that is a 400 - so the picker is given `min` and
  * `max` and cannot produce the wrong answer, and the same window is checked again before
  * anything is sent. Both, not one: the attributes are advisory in some browsers.

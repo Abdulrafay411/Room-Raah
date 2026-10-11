@@ -242,13 +242,13 @@ describe('AgentToolbox', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/verify']);
   });
 
-  it('refuses a visit time in the past before asking anyone to confirm it', async () => {
+  it('refuses a visit on an earlier day before asking anyone to confirm it', async () => {
     const prepared = await toolbox().prepare('request_visit', {
       propertyId: 7,
       visitType: 'Physical',
       preferredAt: '2020-01-01T10:00',
     });
-    expect('outcome' in prepared && prepared.outcome.result).toMatchObject({ error: 'Choose a time in the future.' });
+    expect('outcome' in prepared && prepared.outcome.result).toMatchObject({ error: 'Choose today or a later date.' });
   });
 
   it('does not offer an owner the seeker-only tools', () => {
