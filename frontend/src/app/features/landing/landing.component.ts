@@ -38,9 +38,11 @@ export class LandingComponent {
   constructor() {
     this.engagement.primeShortlist();
 
+    // The strip is titled "Recently inspected", so only badged listings belong in it. The
+    // API puts badged listings first and fills the rest with unbadged ones; those stay off.
     this.properties.featured().subscribe({
       next: (list) => {
-        this.featured.set((list ?? []).slice(0, 6));
+        this.featured.set((list ?? []).filter((p) => p.hasInspectionBadge).slice(0, 6));
         this.loading.set(false);
       },
       // A landing page with no featured strip is a smaller page, not a broken one. There
