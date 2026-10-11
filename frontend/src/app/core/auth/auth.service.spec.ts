@@ -4,6 +4,10 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { AuthSessionDto } from './auth.model';
+import { environment } from '../../../environments/environment';
+
+/** Whatever the environment points at, so these tests do not break when the API moves. */
+const API = environment.apiBaseUrl;
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -67,7 +71,7 @@ describe('AuthService', () => {
       expect(session).toEqual(mockSession);
     });
 
-    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/auth/login');
+    const req = httpMock.expectOne(`${API}/auth/login`);
     expect(req.request.method).toBe('POST');
     req.flush(mockSession);
 
@@ -84,7 +88,7 @@ describe('AuthService', () => {
       expect(session).toEqual(mockSession);
     });
 
-    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/auth/verify-otp');
+    const req = httpMock.expectOne(`${API}/auth/verify-otp`);
     expect(req.request.method).toBe('POST');
     req.flush(mockSession);
 
@@ -105,7 +109,7 @@ describe('AuthService', () => {
       expect(res.refreshToken).toBe('rotated-refresh-token-456');
     });
 
-    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/auth/refresh');
+    const req = httpMock.expectOne(`${API}/auth/refresh`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ refreshToken: 'refresh-token-123' });
     req.flush(rotatedSession);
@@ -120,7 +124,7 @@ describe('AuthService', () => {
 
     service.logout().subscribe();
 
-    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/auth/logout');
+    const req = httpMock.expectOne(`${API}/auth/logout`);
     expect(req.request.method).toBe('POST');
     req.flush({});
 

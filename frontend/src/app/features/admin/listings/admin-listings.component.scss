@@ -1,36 +1,165 @@
 @use '../admin-common';
+@use 'tokens' as *;
+@use 'mixins' as *;
 
-.listing-detail,
-.checks,
-.decision {
-  display: grid;
-  gap: 1rem;
+.listing-row {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
 }
 
-.checks,
-.decision {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
+.listing-row-body {
+  display: grid;
+  gap: $space-1;
+  min-width: 0;
+}
+
+.listing-row .row-actions {
+  grid-column: 1 / -1;
+}
+
+@include tablet-up {
+  .listing-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .listing-row .row-actions {
+    grid-column: auto;
+    align-self: center;
+  }
+}
+
+.photo-strip {
+  display: flex;
+  gap: $space-2;
+  margin: 0;
+  padding: 0 0 $space-1;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.photo {
+  flex: 0 0 auto;
+
+  a {
+    display: block;
+    border-radius: $radius-md;
+    @include focus-visible;
+  }
+
+  img {
+    display: block;
+    width: 96px;
+    height: 72px;
+    border-radius: $radius-md;
+    object-fit: cover;
+    background: $color-slate-100;
+  }
+
+  &.is-primary img {
+    outline: 2px solid $color-green;
+    outline-offset: 1px;
+  }
+}
+
+.prose {
+  white-space: pre-wrap;
+}
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-2;
+
+  p {
+    margin: 0;
+    font-size: $font-size-sm;
+  }
 }
 
 .check-list {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.5rem;
-  padding: 0;
+  gap: $space-2;
   margin: 0;
+  padding: 0;
   list-style: none;
 }
 
-.check-list li {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.65rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+.check {
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-md;
+
+  &.is-editing {
+    border-color: $color-navy;
+  }
 }
 
-@media (max-width: 850px) {
-  .check-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.check-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: $space-2 $space-3;
+  align-items: center;
+  padding: $space-3;
+
+  // Placed by hand: auto-placement put the button in the first free cell, which was
+  // column one, and pushed the check's own name to the right of its status.
+  .check-copy {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  app-admin-status {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  app-button {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  @include tablet-up {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+
+    app-button {
+      grid-row: 1;
+      grid-column: 3;
+      justify-self: auto;
+    }
+  }
+}
+
+.check-copy {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  align-items: baseline;
+  column-gap: $space-2;
+  min-width: 0;
+}
+
+.check-kind {
+  color: $color-slate-500;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.check-hint {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  color: $color-slate-600;
+  font-size: $font-size-sm;
+  overflow-wrap: anywhere;
+}
+
+.check-form {
+  display: grid;
+  gap: $space-3;
+  padding: 0 $space-3 $space-3;
+  border-top: 1px dashed $color-slate-200;
+  padding-top: $space-3;
 }

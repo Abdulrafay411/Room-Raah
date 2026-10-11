@@ -148,6 +148,26 @@ export function canReview(visit: VisitRequest): boolean {
 }
 
 /**
+ * Directions are offered once the owner has said yes to an in-person visit, and not
+ * before: the product's flow is request, then accept, then go, and a route on a request
+ * still waiting for an answer invites somebody to turn up unannounced. A video call has
+ * nowhere to travel to.
+ */
+export function wantsDirections(visit: VisitRequest): boolean {
+  return visit.status === 'Accepted' && visit.visitType === 'Physical';
+}
+
+/**
+ * Google Maps directions to a point. No key and no billing: it is a plain link, and Google
+ * starts the route from wherever the person is, which also gives them the road distance
+ * and travel time this product only ever shows as a straight line.
+ */
+export function directionsUrl(latitude: number, longitude: number): string | null {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+}
+
+/**
  * The two things the server answers 400 to on a visit request. Catching them here means the
  * person is told before they submit rather than after, which is what the brief asks for -
  * and it keeps a round trip that can only fail off the wire.

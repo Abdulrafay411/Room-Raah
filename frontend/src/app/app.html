@@ -8,14 +8,14 @@
       </a>
 
       <nav class="header-nav" aria-label="Main">
-        <a routerLink="/search" routerLinkActive="is-active" class="nav-link">Search</a>
+        <a routerLink="/search" routerLinkActive="is-active" class="nav-link">Browse rooms</a>
         <a routerLink="/how-it-works" routerLinkActive="is-active" class="nav-link">
           How it works
         </a>
         <!-- A seeker's own two lists. They are behind the verified guard, so they are only
              offered to somebody the guard will let through - a nav link that bounces you to
              a sign-in screen is the same bug as a dead button. -->
-        @if (auth.isAuthenticated() && auth.userRole() === 'Seeker') {
+        @if (auth.isAuthenticated() && auth.isEmailVerified() && auth.userRole() === 'Seeker') {
           <a routerLink="/saved" routerLinkActive="is-active" class="nav-link">Saved</a>
           <a routerLink="/visits" routerLinkActive="is-active" class="nav-link">My visits</a>
         }
@@ -60,11 +60,6 @@
 
       <div class="header-account">
         @if (auth.isAuthenticated()) {
-          <!-- An unverified account may browse but not act, so it is told once, here,
-               rather than discovering it at the moment it tries to do something. -->
-          @if (!auth.isEmailVerified()) {
-            <a routerLink="/verify" class="verify-nudge">Verify your email</a>
-          }
           <a routerLink="/profile" routerLinkActive="is-active" class="account-name">
             {{ auth.currentUser()?.fullName }}
           </a>
@@ -78,6 +73,27 @@
       </div>
     </div>
   </header>
+
+  <!-- An unverified account may browse but not act, so it is told plainly on every page,
+       rather than discovering it when a button sends it away. Not on the verify page
+       itself, where it would only point at the screen already in view. -->
+  @if (needsVerification()) {
+    <div class="verify-banner" role="status" data-smoke="verify-banner">
+      <div class="container-centered verify-banner-inner">
+        <p class="verify-banner-text">
+          Your email isn't verified yet. You can browse rooms, but saving, visits and messages
+          need a verified email.
+        </p>
+        <a
+          class="verify-banner-action"
+          routerLink="/verify"
+          [queryParams]="verifyQuery()"
+        >
+          Verify now
+        </a>
+      </div>
+    </div>
+  }
 
   <main id="main" class="app-main-content">
     <router-outlet></router-outlet>
@@ -93,7 +109,7 @@
       <p class="footer-note">RoomRaah — rooms and hostels across Pakistan.</p>
       <nav class="footer-nav" aria-label="Footer">
         <a routerLink="/how-it-works">How it works</a>
-        <a routerLink="/search">Search</a>
+        <a routerLink="/search">Browse rooms</a>
       </nav>
     </div>
   </footer>

@@ -141,7 +141,9 @@ describe('Route Guards', () => {
       isVerifiedSignal.set(false);
 
       settle(TestBed.runInInjectionContext(() => verifiedGuard(mockRoute, mockState)));
-      expect(router.createUrlTree).toHaveBeenCalledWith(['/verify']);
+      expect(router.createUrlTree).toHaveBeenCalledWith(['/verify'], {
+        queryParams: { returnUrl: '/protected-page', reason: 'page' },
+      });
     });
 
     it('should redirect to /login when unauthenticated and no refreshToken', () => {

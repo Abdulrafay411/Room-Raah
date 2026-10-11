@@ -9,6 +9,7 @@ import {
   FormFieldComponent,
   InputDirective,
 } from '../../../shared/components';
+import { MailpitTipComponent } from '../mailpit-tip/mailpit-tip.component';
 
 @Component({
   selector: 'app-reset-password',
@@ -20,6 +21,7 @@ import {
     ButtonComponent,
     FormFieldComponent,
     InputDirective,
+    MailpitTipComponent,
   ],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss'],

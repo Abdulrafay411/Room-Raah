@@ -1,80 +1,174 @@
 <section class="admin-panel" data-smoke="admin-inspections">
-  <div class="panel-card panel-head">
-    <div>
-      <h2>Inspection worklist</h2>
-      <p class="muted">This queue is based only on past visits. RoomRaah does not schedule a future date here.</p>
-    </div>
-    @if (canInspect()) { <span class="status" data-state="Active">Inspector access</span> }
-    @else { <span class="status">View and badge removal access</span> }
-  </div>
-
   @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
   @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
 
-  <div class="panel-card">
-    @if (loading()) {
-      <p>Loading worklist…</p>
-    } @else if (due().length === 0) {
-      <p class="empty-copy" data-smoke="admin-inspections-empty">No listings are due for inspection.</p>
-    } @else {
-      <ul class="queue" data-smoke="admin-inspections-list">
-        @for (row of due(); track row.propertyId) {
-          <li class="queue-row">
-            <div class="row-head"><h3>{{ row.title }}</h3><span class="status">{{ row.daysOverdue }} days overdue</span></div>
-            <div class="meta">
-              <span>{{ row.areaName }}, {{ row.cityName }}</span>
-              <span>Owner: {{ row.ownerDisplayName }}</span>
-              <span>Last inspected: {{ row.lastInspectionAt ? (row.lastInspectionAt | date:'mediumDate') : 'Never' }}</span>
-            </div>
-            <div><app-button size="sm" variant="outline" (clicked)="use(row)">Use this listing</app-button></div>
-          </li>
-        }
-      </ul>
-    }
-  </div>
-
-  @if (canInspect()) {
-    <form class="panel-card form-section" (submit)="$event.preventDefault(); record()" data-smoke="inspection-record-form">
-      <div><h2>Record a completed inspection</h2><p class="muted">The visit must already have happened. Recording it does not grant a badge.</p></div>
-      <div class="form-grid">
-        <label class="field">Listing ID
-          <input type="number" min="1" required [ngModel]="propertyId()" (ngModelChange)="propertyId.set($event)" name="propertyId">
-        </label>
-        <label class="field">Inspected at
-          <input type="datetime-local" required [max]="maxNow" [ngModel]="inspectedAt()" (ngModelChange)="inspectedAt.set($event)" name="inspectedAt">
-        </label>
-        <label class="field">Result
-          <select [ngModel]="result()" (ngModelChange)="result.set($event)" name="result"><option value="Passed">Passed</option><option value="Failed">Failed</option></select>
-        </label>
-        <label class="field">Fee amount (optional)
-          <input type="number" min="0" step="0.01" [ngModel]="feeAmount()" (ngModelChange)="feeAmount.set($event)" name="feeAmount">
-        </label>
-        <label class="field">Fee collected at (optional)
-          <input type="datetime-local" [max]="maxNow" [ngModel]="feeCollectedAt()" (ngModelChange)="feeCollectedAt.set($event)" name="feeCollectedAt">
-        </label>
-        <label class="field wide">Notes (optional)
-          <textarea [ngModel]="notes()" (ngModelChange)="notes.set($event)" name="notes" maxlength="1000"></textarea>
-        </label>
+  <app-admin-workspace
+    [detailOpen]="detailOpen()"
+    [alwaysShowDetail]="true"
+    detailLabel="Inspection and badge"
+    (closed)="close()"
+  >
+    <div workspace-list class="panel-card">
+      <div class="panel-head">
+        <div>
+          <h2>Due for inspection</h2>
+          <p class="muted">Ordered by how overdue they are. Built from visits that have already happened; nothing here is a scheduled date.</p>
+        </div>
+        <div class="head-side">
+          @if (canInspect()) {
+            <span class="muted access-copy">You have inspector access: you can record inspections and grant badges.</span>
+          } @else {
+            <span class="muted access-copy">You can remove badges. Recording inspections needs inspector access.</span>
+          }
+          <app-button class="drawer-opener" size="sm" variant="outline" (clicked)="openDrawer()">
+            Work on another listing
+          </app-button>
+        </div>
       </div>
-      <app-button type="submit" [loading]="saving()">Record inspection</app-button>
-    </form>
-  }
 
-  <section class="panel-card form-section" data-smoke="badge-controls">
-    <div><h2>Inspection badge</h2><p class="muted">Grant only after the latest inspection passed. Any admin may remove a badge.</p></div>
-    <div class="form-grid">
-      <label class="field">Listing ID
-        <input type="number" min="1" [ngModel]="badgePropertyId()" (ngModelChange)="badgePropertyId.set($event)">
-      </label>
-      <label class="field">Reason
-        <input [ngModel]="badgeReason()" (ngModelChange)="badgeReason.set($event)" maxlength="1000">
-      </label>
-    </div>
-    <div class="action-row">
-      @if (canInspect()) {
-        <app-button variant="success" [loading]="saving()" (clicked)="badge('grant')">Grant badge</app-button>
+      @if (loading()) {
+        <p class="loading-copy" aria-busy="true">Loading worklist…</p>
+      } @else if (due().length === 0) {
+        <p class="empty-copy" data-smoke="admin-inspections-empty">Nothing is due for inspection.</p>
+      } @else {
+        <ul class="queue" data-smoke="admin-inspections-list">
+          @for (row of due(); track row.propertyId) {
+            <li
+              class="queue-row"
+              [class.is-selected]="target()?.id === row.propertyId"
+              [attr.aria-current]="target()?.id === row.propertyId ? 'true' : null"
+            >
+              <div class="row-head">
+                <h3>{{ row.title }}</h3>
+                <span class="overdue" [class.is-late]="row.daysOverdue > 30">
+                  {{ row.daysOverdue }} day{{ row.daysOverdue === 1 ? '' : 's' }} overdue
+                </span>
+              </div>
+              <p class="meta">
+                <span>{{ row.areaName }}, {{ row.cityName }}</span>
+                <span>{{ row.ownerDisplayName }}</span>
+                <span>Last inspected {{ row.lastInspectionAt ? (row.lastInspectionAt | date: 'd MMM y') : 'never' }}</span>
+              </p>
+              <div class="row-actions">
+                <app-button size="sm" variant="outline" (clicked)="use(row)">
+                  {{ canInspect() ? 'Record inspection' : 'Open' }}
+                </app-button>
+              </div>
+            </li>
+          }
+        </ul>
       }
-      <app-button variant="danger" [loading]="saving()" (clicked)="badge('remove')">Remove badge</app-button>
+
+      <app-admin-pager
+        [page]="page()"
+        [pageSize]="pageSize"
+        [totalCount]="total()"
+        noun="listings"
+        (pageChange)="goTo($event)"
+      />
     </div>
-  </section>
+
+    <div workspace-detail class="detail">
+      <!-- Which listing. Chosen from the worklist, or looked up when it is not on it. -->
+      <div class="target" data-smoke="inspection-target">
+        @if (target(); as target) {
+          <div class="detail-head">
+            <div>
+              <p class="target-eyebrow">Listing</p>
+              <h2>{{ target.title }}</h2>
+              <p>{{ target.where }} · {{ target.owner }}</p>
+            </div>
+            <app-button size="sm" variant="ghost" (clicked)="clearTarget()">Change</app-button>
+          </div>
+          <p class="meta">
+            <span>Last inspected {{ target.lastInspectionAt ? (target.lastInspectionAt | date: 'd MMM y') : 'never' }}</span>
+            @if (target.hasBadge === true) {
+              <span class="has-badge">Carries the inspection badge</span>
+            } @else if (target.hasBadge === false) {
+              <span>No inspection badge</span>
+            }
+          </p>
+        } @else {
+          <p class="target-prompt">Pick a listing from the worklist, or find one by its number.</p>
+          <form class="lookup" (submit)="$event.preventDefault(); lookUp()">
+            <label class="field">
+              Listing number
+              <input type="number" min="1" [ngModel]="lookupId()" (ngModelChange)="lookupId.set($event)" name="lookupId" />
+            </label>
+            <app-button type="submit" size="sm" variant="outline" [loading]="lookingUp()">Find listing</app-button>
+          </form>
+        }
+      </div>
+
+      @if (canInspect()) {
+        <form class="detail-section" (submit)="$event.preventDefault(); record()" data-smoke="inspection-record-form">
+          <div>
+            <h3>Record a completed inspection</h3>
+            <p class="muted">The visit must already have happened. Recording it does not grant the badge.</p>
+          </div>
+          <div class="form-grid">
+            <label class="field">
+              Inspected at
+              <input type="datetime-local" required [max]="maxNow" [ngModel]="inspectedAt()" (ngModelChange)="inspectedAt.set($event)" name="inspectedAt" />
+            </label>
+            <label class="field">
+              Result
+              <select [ngModel]="result()" (ngModelChange)="result.set($event)" name="result">
+                <option value="Passed">Passed</option>
+                <option value="Failed">Failed</option>
+              </select>
+            </label>
+            <label class="field">
+              Fee amount <span class="field-hint">(optional, PKR)</span>
+              <input type="number" min="0" step="0.01" [ngModel]="feeAmount()" (ngModelChange)="feeAmount.set($event)" name="feeAmount" />
+            </label>
+            <label class="field">
+              Fee collected at <span class="field-hint">(optional)</span>
+              <input type="datetime-local" [max]="maxNow" [ngModel]="feeCollectedAt()" (ngModelChange)="feeCollectedAt.set($event)" name="feeCollectedAt" />
+            </label>
+            <label class="field wide">
+              Notes <span class="field-hint">(optional)</span>
+              <textarea [ngModel]="notes()" (ngModelChange)="notes.set($event)" name="notes" maxlength="1000"></textarea>
+            </label>
+          </div>
+          <div class="action-row">
+            <app-button type="submit" [loading]="saving()" [disabled]="!target()">Record inspection</app-button>
+            @if (!target()) {
+              <span class="muted">Choose a listing first.</span>
+            }
+          </div>
+        </form>
+      }
+
+      <section class="detail-section" data-smoke="badge-controls" aria-labelledby="badge-title">
+        <div>
+          <h3 id="badge-title">Inspection badge</h3>
+          <p class="muted">
+            @if (canInspect()) {
+              Grant it only after the latest inspection passed. Any admin may remove it.
+            } @else {
+              Any admin may remove a badge. Granting one needs inspector access.
+            }
+          </p>
+        </div>
+        <label class="field">
+          Reason
+          <span class="field-hint">Required. Kept with the listing for the record.</span>
+          <input [ngModel]="badgeReason()" (ngModelChange)="badgeReason.set($event)" maxlength="1000" name="badgeReason" />
+        </label>
+        <div class="action-row">
+          @if (canInspect()) {
+            <app-button variant="success" [loading]="saving()" [disabled]="!target() || target()?.hasBadge === true" (clicked)="requestBadge('grant')">
+              Grant badge
+            </app-button>
+          }
+          <app-button variant="danger" [loading]="saving()" [disabled]="!target() || target()?.hasBadge === false" (clicked)="requestBadge('remove')">
+            Remove badge
+          </app-button>
+        </div>
+      </section>
+    </div>
+  </app-admin-workspace>
+
+  <app-confirm-dialog [request]="confirm()" [busy]="saving()" (cancelled)="confirm.set(null)" />
 </section>

@@ -1,59 +1,75 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
 .admin-shell {
-  padding: 2rem 1rem 4rem;
+  padding-top: $space-6;
+  padding-bottom: $space-12;
 }
 
 .admin-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
+  margin-bottom: $space-4;
 
-.admin-heading h1,
-.admin-heading p {
-  margin: 0;
+  h1 {
+    margin: 0;
+    font-size: $font-size-2xl;
+    line-height: $line-height-tight;
+  }
 }
 
 .eyebrow {
-  color: #16744f;
-  font-weight: 700;
+  margin: 0 0 $space-1;
+  color: $color-green-hover;
+  font-weight: $font-weight-bold;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 0.75rem;
+  font-size: $font-size-xs;
 }
 
+.admin-lead {
+  margin: $space-1 0 0;
+  color: $color-slate-600;
+}
+
+// One underline bar. It scrolls sideways on a phone rather than wrapping, so the five
+// sections keep their order.
 .admin-tabs {
   display: flex;
-  gap: 0.25rem;
+  gap: $space-1;
+  margin-bottom: $space-5;
+  border-bottom: 1px solid $color-slate-200;
   overflow-x: auto;
-  border-bottom: 1px solid #dbe3e8;
-  margin-bottom: 1.5rem;
-  padding: 0.4rem;
-  border: 1px solid #dbe3e8;
-  border-radius: 12px;
-  background: #fff;
-}
+  scrollbar-width: none;
 
-.admin-tabs a {
-  flex: 0 0 auto;
-  padding: 0.75rem 1rem;
-  color: #475569;
-  text-decoration: none;
-  border-bottom: 3px solid transparent;
-}
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
-.admin-tabs a.is-active {
-  color: #123b5d;
-  border-color: #16a36a;
-  font-weight: 700;
-  background: #eef6f4;
-  border-radius: 8px 8px 0 0;
-}
+  a {
+    flex: 0 0 auto;
+    padding: $space-3 $space-3;
+    margin-bottom: -1px;
+    border-bottom: 3px solid transparent;
+    color: $color-slate-600;
+    font-weight: $font-weight-medium;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color $transition-fast, border-color $transition-fast;
 
-@media (max-width: 700px) {
-  .admin-heading {
-    align-items: start;
-    flex-direction: column;
+    &:hover {
+      color: $color-navy;
+    }
+
+    @include focus-visible;
+
+    &:focus-visible {
+      outline-offset: -2px;
+      box-shadow: none;
+    }
+
+    &.is-active {
+      color: $color-navy;
+      border-bottom-color: $color-green;
+      font-weight: $font-weight-bold;
+    }
   }
 }

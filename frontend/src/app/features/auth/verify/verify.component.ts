@@ -9,6 +9,27 @@ import {
   FormFieldComponent,
   InputDirective,
 } from '../../../shared/components';
+import { MailpitTipComponent } from '../mailpit-tip/mailpit-tip.component';
+import { VerifyReason } from '../../../core/auth/guards/session';
+
+/** What they were trying to do when they were sent here, in their words. */
+const REASONS: Record<VerifyReason, string> = {
+  save: 'Verify your email to save this room.',
+  message: 'Verify your email to message the owner.',
+  visit: 'Verify your email to request a visit.',
+  review: 'Verify your email to write a review.',
+  report: 'Verify your email to report a listing.',
+  page: 'Verify your email to open that page.',
+  action: 'Verify your email to do that.',
+};
+
+/** Only a path inside this app - never `//host` or a full URL handed in by a link. */
+export function safeReturnUrl(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) {
+    return null;
+  }
+  return value.startsWith('/verify') ? null : value;
+}
 
 @Component({
   selector: 'app-verify',
@@ -20,6 +41,7 @@ import {
     ButtonComponent,
     FormFieldComponent,
     InputDirective,
+    MailpitTipComponent,
   ],
   templateUrl: './verify.component.html',
   styleUrls: ['./verify.component.scss'],
@@ -39,12 +61,18 @@ export class VerifyComponent implements OnInit, OnDestroy {
   isResending = signal<boolean>(false);
   errorMessage = signal<string>('');
   infoMessage = signal<string>('');
+  reasonMessage = signal<string>('');
+  private returnUrl: string | null = null;
 
   resendCooldownSeconds = signal<number>(0);
   private timerInterval: any = null;
 
   ngOnInit(): void {
-    const queryEmail = this.route.snapshot.queryParams['email'];
+    const query = this.route.snapshot.queryParams;
+    this.returnUrl = safeReturnUrl(query['returnUrl']);
+    this.reasonMessage.set(REASONS[query['reason'] as VerifyReason] ?? '');
+
+    const queryEmail = query['email'];
     const currentEmail = this.authService.currentUser()?.email;
     const resolvedEmail = queryEmail || currentEmail || '';
 
@@ -77,8 +105,11 @@ export class VerifyComponent implements OnInit, OnDestroy {
     this.authService.verifyOtp(payload).subscribe({
       next: (session) => {
         this.isLoading.set(false);
-        // Brief §4.1: session is established immediately upon verification
-        if (session.user.role === 'Owner') {
+        // Brief §4.1: session is established immediately upon verification. Back to
+        // where they were stopped, when there was somewhere; otherwise their role's home.
+        if (this.returnUrl) {
+          this.router.navigateByUrl(this.returnUrl);
+        } else if (session.user.role === 'Owner') {
           this.router.navigate(['/owner']);
         } else if (session.user.role === 'Admin') {
           this.router.navigate(['/admin/listings']);

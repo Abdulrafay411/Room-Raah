@@ -46,6 +46,27 @@ export function toLogin(router: Router, state: RouterStateSnapshot): UrlTree {
   return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
 }
 
+/** Why an unverified account was sent to `/verify` - said there in one sentence. */
+export type VerifyReason = 'save' | 'message' | 'visit' | 'review' | 'report' | 'page' | 'action';
+
+/**
+ * Query parameters for `/verify`: where to come back to once the code is accepted, and what
+ * they were trying to do. A return to `/` or to verify itself carries nothing, so it is left
+ * out. Every route into verify builds its parameters here, so they all read the same way.
+ */
+export function verifyParams(context: {
+  returnUrl?: string | null;
+  reason?: VerifyReason;
+  email?: string;
+}): Record<string, string> {
+  const params: Record<string, string> = {};
+  if (context.email) params['email'] = context.email;
+  const back = context.returnUrl;
+  if (back && back !== '/' && !back.startsWith('/verify')) params['returnUrl'] = back;
+  if (context.reason) params['reason'] = context.reason;
+  return params;
+}
+
 /**
  * Signed in, wrong role. Home rather than the sign-in screen: signing in again would not
  * help, and it would look like the session had broken. `/` is the landing page, which is the

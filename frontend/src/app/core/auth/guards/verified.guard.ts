@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
-import { SessionDecision, withSession } from './session';
+import { SessionDecision, verifyParams, withSession } from './session';
 
 export const verifiedGuard: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
@@ -14,6 +14,8 @@ export const verifiedGuard: CanActivateFn = (route, state) => {
 
     // Rule 3 of AGENTS.md §3: an unverified account is routed to /verify, never shown a
     // generic error.
-    return router.createUrlTree(['/verify']);
+    return router.createUrlTree(['/verify'], {
+      queryParams: verifyParams({ returnUrl: state.url, reason: 'page' }),
+    });
   });
 };

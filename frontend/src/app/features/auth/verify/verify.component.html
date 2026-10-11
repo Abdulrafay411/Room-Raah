@@ -10,6 +10,10 @@
       <p class="auth-subtitle">Enter the 6-digit verification code sent to your email address.</p>
     </div>
 
+    @if (reasonMessage()) {
+      <p class="verify-reason" data-smoke="verify-reason">{{ reasonMessage() }}</p>
+    }
+
     @if (errorMessage()) {
       <div class="auth-alert error" role="alert">
         {{ errorMessage() }}
@@ -88,12 +92,7 @@
       </div>
     </form>
 
-    <div class="mailpit-tip-box">
-      <span class="tip-title">Testing Environment Note:</span>
-      <p class="tip-text">
-        All outgoing OTP emails are delivered to Mailpit at <code>http://54.161.213.189:8025</code>.
-      </p>
-    </div>
+    <app-mailpit-tip />
 
     <div class="auth-footer">
       <a routerLink="/login" class="auth-link">Back to sign in</a>

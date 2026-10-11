@@ -6,6 +6,7 @@ export * from './form-field/form-field.component';
 export * from './form-field/input.directive';
 export * from './empty-state/empty-state.component';
 export * from './dialog/dialog.component';
+export * from './confirm-dialog/confirm-dialog.component';
 export * from './property-card/property-card.component';
 export * from './property-card/property-card.model';
 export * from './compare-bar/compare-bar.component';

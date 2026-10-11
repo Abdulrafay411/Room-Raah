@@ -16,6 +16,7 @@ import {
   isOpenVisit,
 } from '../models/engagement.model';
 import { AuthService } from '../auth/auth.service';
+import { verifyParams } from '../auth/guards/session';
 
 /**
  * The seeker's own side of the product: their shortlist, their visit requests, the reviews
@@ -150,7 +151,7 @@ export class EngagementService {
       return;
     }
     if (!this.auth.isEmailVerified()) {
-      this.router.navigate(['/verify']);
+      this.router.navigate(['/verify'], { queryParams: verifyParams({ returnUrl, reason: 'save' }) });
       return;
     }
 

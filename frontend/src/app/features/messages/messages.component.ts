@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BadgeComponent, ButtonComponent, EmptyStateComponent } from '../../shared/components';
 import { MessagingService } from '../../core/services/messaging.service';
 import { RealtimeService } from '../../core/services/realtime.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { toFailure } from '../../core/http/api-error';
 import {
   Conversation,
@@ -43,6 +44,7 @@ import {
 export class MessagesComponent {
   private readonly api = inject(MessagingService);
   private readonly realtime = inject(RealtimeService);
+  private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -66,6 +68,16 @@ export class MessagesComponent {
   readonly connected = this.realtime.connected;
 
   readonly unread = computed(() => totalUnread(this.conversations()));
+
+  // An owner cannot open a conversation, only answer one, so the empty inbox points
+  // each role at the place a conversation actually starts from.
+  readonly isOwner = computed(() => this.auth.userRole() === 'Owner');
+  readonly emptyText = computed(() =>
+    this.isOwner()
+      ? 'When a seeker messages you about one of your listings, the conversation appears here.'
+      : 'Open a listing you like and press “Message the owner” — that starts a conversation here.',
+  );
+  readonly emptyAction = computed(() => (this.isOwner() ? 'Go to your listings' : 'Find a room'));
   readonly active = computed(
     () => this.conversations().find((c) => c.id === this.activeId()) ?? null,
   );
@@ -249,5 +261,9 @@ export class MessagesComponent {
       const element = this.scroller()?.nativeElement;
       if (element) element.scrollTop = element.scrollHeight;
     }, 0);
+  }
+
+  openEmptyAction(): void {
+    this.router.navigate([this.isOwner() ? '/owner' : '/search']);
   }
 }

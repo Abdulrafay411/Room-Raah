@@ -3,8 +3,8 @@
     <div>
       <h1 class="owner-title" id="owner-title">My listings</h1>
       <p class="owner-lead">
-        Changes to a published listing are sent for review — your live listing stays as it is
-        until somebody approves them.
+        Changes to a live listing are sent for review. Your live listing stays as it is until
+        somebody approves them.
       </p>
     </div>
     <a class="owner-new" routerLink="/owner/listing/new">Add a listing</a>
@@ -17,174 +17,248 @@
     <p class="owner-error" role="alert" data-smoke="owner-error">{{ error() }}</p>
   }
 
-  @if (loading()) {
-    <p aria-busy="true">Loading your listings…</p>
-  } @else if (listings().length === 0) {
-    <div data-smoke="owner-empty">
-      <app-empty-state
-        title="You have not listed a room yet"
-        description="Add your first listing, put three photographs on it, and send it for review."
-        actionText=""
-      />
-    </div>
-  } @else {
-    <ul class="listing-list" data-smoke="owner-listings">
-      @for (listing of listings(); track listing.id) {
-        <li class="listing">
-          <div class="listing-head">
-            <a class="listing-name" [routerLink]="['/owner/listing', listing.id]">
-              {{ listing.title }}
-            </a>
-            <app-badge [variant]="statusVariant(listing.status)" size="sm">
-              {{ statusLabel(listing.status) }}
-            </app-badge>
-          </div>
-
-          <p class="listing-where">{{ listing.areaName }}, {{ listing.cityName }}</p>
-          <p class="listing-facts">
-            {{ listing.availableBeds }} of {{ listing.totalBeds }} beds free ·
-            {{ listing.photoCount }} photograph{{ listing.photoCount === 1 ? '' : 's' }}
-            @if (listing.availabilityConfirmedAt) {
-              · beds confirmed {{ listing.availabilityConfirmedAt | date: 'd MMM' }}
-            }
-          </p>
-
-          @if (listing.hasInspectionBadge) {
-            <p class="listing-inspected">This listing carries the RoomRaah inspection badge.</p>
-          }
-
-          <!-- Only the actions the lifecycle actually allows from here. A submit button on a
-               listing already with the review team can only ever produce a 422. -->
-          <div class="listing-actions">
-            <a class="listing-edit" [routerLink]="['/owner/listing', listing.id]">
-              {{ listing.status === 'Published' ? 'Propose changes' : 'Edit' }}
-            </a>
-
-            @if (canSubmit(listing.status)) {
-              <app-button
-                variant="primary"
-                size="sm"
-                [loading]="busyId() === listing.id"
-                [disabled]="!!blockedBy(listing)"
-                (clicked)="submit(listing)"
-              >
-                Send for review
-              </app-button>
-              @if (blockedBy(listing); as why) {
-                <span class="listing-blocked">{{ why }}</span>
-              }
-            }
-
-            @if (listing.status === 'Published') {
-              <app-button
-                variant="outline"
-                size="sm"
-                [loading]="busyId() === listing.id"
-                (clicked)="confirmBeds(listing)"
-              >
-                Beds are still right
-              </app-button>
-
-              @if (!listing.hasInspectionBadge) {
-                <app-button
-                  variant="ghost"
-                  size="sm"
-                  [loading]="busyId() === listing.id"
-                  (clicked)="requestInspection(listing)"
-                >
-                  Ask for an inspection
-                </app-button>
-              }
-            }
-          </div>
-        </li>
-      }
-    </ul>
+  @if (openVisits().length) {
+    <button type="button" class="owner-alert" (click)="goToVisits()">
+      <strong>{{ openVisits().length }} visit request{{ openVisits().length === 1 ? '' : 's' }}</strong>
+      waiting for your answer
+      <span class="owner-alert-arrow" aria-hidden="true">→</span>
+    </button>
   }
 
-  <h2 class="owner-subtitle" id="owner-visits">Visit requests</h2>
+  <div class="owner-grid">
+    <section class="owner-listings" aria-labelledby="listings-title">
+      <h2 class="owner-subtitle" id="listings-title">
+        Listings
+        @if (!loading() && listings().length) {
+          <span class="owner-count">{{ listings().length }} · {{ liveCount() }} live</span>
+        }
+      </h2>
 
-  @if (visits().length === 0) {
-    <div data-smoke="owner-visits-empty">
-      <app-empty-state type="visits" />
-    </div>
-  } @else {
-    <ul class="visit-list" data-smoke="owner-visits">
-      @for (visit of visits(); track visit.id) {
-        <li class="owner-visit">
-          <div class="listing-head">
-            <span class="listing-name">{{ visit.propertyTitle }}</span>
-            <app-badge size="sm" variant="neutral">{{ visit.status }}</app-badge>
-          </div>
-
-          <!-- Rule 93: the seeker is a display name, and there is nothing here to reach
-               them with off the site. The answer goes back through the request. -->
-          <p class="visit-who">{{ visit.seekerDisplayName }}</p>
-          <p class="visit-when">
-            {{ visit.visitType === 'Video' ? 'Video call' : 'In person' }} ·
-            {{ visit.preferredAt | date: 'EEEE d MMMM, h:mm a' }}
-          </p>
-
-          @if (visit.ownerResponseNote) {
-            <p class="visit-note">You wrote: {{ visit.ownerResponseNote }}</p>
-          }
-
-          @if (decliningId() === visit.id) {
-            <div class="decline-box">
-              <label class="decline-label" [attr.for]="'decline-' + visit.id">
-                Why are you declining? The seeker sees this.
-              </label>
-              <textarea
-                class="decline-input"
-                [id]="'decline-' + visit.id"
-                rows="2"
-                maxlength="1000"
-                [ngModel]="declineNote()"
-                (ngModelChange)="declineNote.set($event)"
-              ></textarea>
-              <div class="decline-actions">
-                <app-button variant="ghost" size="sm" (clicked)="cancelDecline()">
-                  Never mind
-                </app-button>
-                <app-button
-                  variant="danger"
-                  size="sm"
-                  [disabled]="!declineNote().trim()"
-                  (clicked)="confirmDecline(visit)"
-                >
-                  Decline the visit
-                </app-button>
+      @if (loading()) {
+        <p class="owner-loading" aria-busy="true">Loading your listings…</p>
+      } @else if (listings().length === 0) {
+        <div class="owner-card" data-smoke="owner-empty">
+          <app-empty-state
+            title="You have not listed a room yet"
+            description="Add your first listing, put three photographs on it, and send it for review."
+            actionText="Add a listing"
+            (actionClicked)="addListing()"
+          />
+        </div>
+      } @else {
+        <ul class="listing-list" data-smoke="owner-listings">
+          @for (listing of listings(); track listing.id) {
+            <li class="listing" [class.is-busy]="busyId() === listing.id">
+              <!-- Decorative: the title beside it is the link. -->
+              <div class="listing-thumb-wrap" aria-hidden="true">
+                @if (listing.primaryThumbnailUrl) {
+                  <img class="listing-thumb" [src]="listing.primaryThumbnailUrl" alt="" />
+                } @else {
+                  <div class="listing-thumb listing-thumb-empty">No photo yet</div>
+                }
               </div>
-            </div>
-          } @else {
-            <div class="listing-actions">
-              @if (visit.status === 'Requested') {
-                <app-button
-                  variant="success"
-                  size="sm"
-                  [loading]="busyId() === visit.id"
-                  (clicked)="accept(visit)"
-                >
-                  Accept
-                </app-button>
-                <app-button variant="outline" size="sm" (clicked)="startDecline(visit)">
-                  Decline
-                </app-button>
-              }
-              @if (canComplete(visit)) {
-                <app-button
-                  variant="outline-green"
-                  size="sm"
-                  [loading]="busyId() === visit.id"
-                  (clicked)="completeVisit(visit)"
-                >
-                  Mark visit done
-                </app-button>
-              }
-            </div>
+
+              <div class="listing-body">
+                <div class="listing-head">
+                  <a class="listing-name" [routerLink]="['/owner/listing', listing.id]">{{ listing.title }}</a>
+                  <div class="listing-badges">
+                    @if (listing.hasInspectionBadge) {
+                      <app-badge variant="inspection" size="sm">Inspected</app-badge>
+                    }
+                    <app-badge [variant]="statusVariant(listing.status)" size="sm">
+                      {{ statusLabel(listing.status) }}
+                    </app-badge>
+                  </div>
+                </div>
+
+                <p class="listing-where">{{ listing.areaName }}, {{ listing.cityName }}</p>
+                <p class="listing-facts">
+                  <span>{{ listing.monthlyRent | currency: 'PKR' : 'symbol' : '1.0-0' }}/month</span>
+                  <span>{{ listing.availableBeds }} of {{ listing.totalBeds }} beds free</span>
+                  <span>{{ listing.photoCount }} photograph{{ listing.photoCount === 1 ? '' : 's' }}</span>
+                </p>
+
+                <p class="listing-next">{{ nextStep(listing.status, listing.photoCount) }}</p>
+
+                @if (listing.status === 'Published') {
+                  <!-- Rule 16: availability is its own, faster queue, with its own action.
+                       Re-confirming the same number is accepted and is the point. -->
+                  <form class="beds" (submit)="$event.preventDefault(); confirmBeds(listing)">
+                    <label class="beds-label" [attr.for]="'beds-' + listing.id">Beds free right now</label>
+                    <div class="beds-row">
+                      <input
+                        class="beds-input"
+                        type="number"
+                        [id]="'beds-' + listing.id"
+                        min="0"
+                        [max]="listing.totalBeds"
+                        [ngModel]="bedsFor(listing)"
+                        (ngModelChange)="setBeds(listing, $event)"
+                        [name]="'beds-' + listing.id"
+                      />
+                      <span class="beds-of">of {{ listing.totalBeds }}</span>
+                      <app-button type="submit" size="sm" variant="outline-green" [loading]="busyId() === listing.id">
+                        {{ bedsFor(listing) === listing.availableBeds ? 'Confirm beds' : 'Send new count' }}
+                      </app-button>
+                    </div>
+                    <p class="beds-hint">
+                      @if (listing.availabilityConfirmedAt) {
+                        Last confirmed {{ listing.availabilityConfirmedAt | date: 'd MMM' }}. Confirming keeps the listing marked as current.
+                      } @else {
+                        Not confirmed yet. Confirming tells seekers the listing is current.
+                      }
+                    </p>
+                  </form>
+                }
+
+                <!-- Only the actions the lifecycle actually allows from here. A submit button on a
+                     listing already with the review team can only ever produce a 422. -->
+                <div class="listing-actions">
+                  @if (listing.status !== 'PendingReview') {
+                    <a class="listing-edit" [routerLink]="['/owner/listing', listing.id]">
+                      {{ listing.status === 'Published' ? 'Propose changes' : 'Edit' }}
+                    </a>
+                  } @else {
+                    <a class="listing-edit" [routerLink]="['/owner/listing', listing.id]">View</a>
+                  }
+
+                  @if (canSubmit(listing.status)) {
+                    <app-button
+                      variant="primary"
+                      size="sm"
+                      [loading]="busyId() === listing.id"
+                      [disabled]="!!blockedBy(listing)"
+                      (clicked)="askSubmit(listing)"
+                    >
+                      Send for review
+                    </app-button>
+                  }
+
+                  @if (canAskInspection(listing)) {
+                    <app-button variant="ghost" size="sm" [loading]="busyId() === listing.id" (clicked)="askInspection(listing)">
+                      Ask for an inspection
+                    </app-button>
+                  } @else if (inspectionAsked().has(listing.id)) {
+                    <span class="listing-note">Inspection requested</span>
+                  }
+                </div>
+              </div>
+            </li>
           }
-        </li>
+        </ul>
       }
-    </ul>
+    </section>
+
+    <aside class="owner-visits" aria-labelledby="owner-visits">
+      <h2 class="owner-subtitle" id="owner-visits" tabindex="-1">
+        Visit requests
+        @if (openVisits().length) {
+          <span class="owner-count is-waiting">{{ openVisits().length }} waiting</span>
+        }
+      </h2>
+
+      @if (visits().length === 0) {
+        <div class="owner-card" data-smoke="owner-visits-empty">
+          <app-empty-state
+            type="visits"
+            title="No visit requests yet"
+            description="When a seeker asks to see one of your rooms, it appears here for you to accept or decline."
+          />
+        </div>
+      } @else {
+        <ul class="visit-list" data-smoke="owner-visits">
+          @for (visit of openVisits(); track visit.id) {
+            <li class="owner-visit is-open">
+              <ng-container *ngTemplateOutlet="visitCard; context: { $implicit: visit }" />
+              <div class="visit-actions">
+                <app-button variant="success" size="sm" [loading]="busyId() === visit.id" (clicked)="accept(visit)">Accept</app-button>
+                <app-button variant="outline" size="sm" (clicked)="startDecline(visit)">Decline</app-button>
+              </div>
+            </li>
+          }
+          @for (visit of upcomingVisits(); track visit.id) {
+            <li class="owner-visit">
+              <ng-container *ngTemplateOutlet="visitCard; context: { $implicit: visit }" />
+              <div class="visit-actions">
+                @if (canComplete(visit)) {
+                  <app-button variant="outline-green" size="sm" [loading]="busyId() === visit.id" (clicked)="completeVisit(visit)">
+                    Mark visit done
+                  </app-button>
+                  <span class="visit-hint">Marking it done lets the seeker write a review.</span>
+                } @else {
+                  <span class="visit-hint">You can mark it done once the visit has happened.</span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+
+        @if (settledVisits().length) {
+          <button type="button" class="settled-toggle" [attr.aria-expanded]="showSettled()" (click)="showSettled.set(!showSettled())">
+            {{ showSettled() ? 'Hide' : 'Show' }} {{ settledVisits().length }} earlier request{{ settledVisits().length === 1 ? '' : 's' }}
+          </button>
+          @if (showSettled()) {
+            <ul class="visit-list is-settled">
+              @for (visit of settledVisits(); track visit.id) {
+                <li class="owner-visit">
+                  <ng-container *ngTemplateOutlet="visitCard; context: { $implicit: visit }" />
+                </li>
+              }
+            </ul>
+          }
+        }
+      }
+    </aside>
+  </div>
+
+  <!-- Rule 93: the seeker is a display name, and there is nothing here to reach them with
+       off the site. The answer goes back through the request. -->
+  <ng-template #visitCard let-visit>
+    <div class="visit-head">
+      <span class="visit-who">{{ visit.seekerDisplayName }}</span>
+      <app-badge size="sm" [variant]="visit.status === 'Accepted' || visit.status === 'Completed' ? 'confirmed' : visit.status === 'Requested' ? 'warning' : 'neutral'">
+        {{ visit.status === 'Requested' ? 'Waiting' : visit.status }}
+      </app-badge>
+    </div>
+    <p class="visit-listing">{{ visit.propertyTitle }}</p>
+    <p class="visit-when">
+      {{ visit.visitType === 'Video' ? 'Video call' : 'In person' }} ·
+      {{ visit.preferredAt | date: 'EEE d MMM, h:mm a' }}
+    </p>
+    @if (visit.ownerResponseNote) {
+      <p class="visit-note">You wrote: {{ visit.ownerResponseNote }}</p>
+    }
+  </ng-template>
+
+  @if (declining(); as visit) {
+    <app-dialog
+      [isOpen]="true"
+      title="Decline this visit?"
+      [description]="'Tell ' + visit.seekerDisplayName + ' why. They read this.'"
+      [loading]="busyId() === visit.id"
+      (closed)="cancelDecline()"
+    >
+      <form class="decline-form" (submit)="$event.preventDefault(); confirmDecline()">
+        <label class="decline-label" for="decline-note">Your note</label>
+        <textarea
+          id="decline-note"
+          class="decline-input"
+          rows="3"
+          maxlength="1000"
+          autofocus
+          [ngModel]="declineNote()"
+          (ngModelChange)="declineNote.set($event)"
+          name="declineNote"
+        ></textarea>
+      </form>
+      <div dialog-actions class="decline-actions">
+        <app-button variant="ghost" (clicked)="cancelDecline()">Never mind</app-button>
+        <app-button variant="danger" [disabled]="!declineNote().trim()" (clicked)="confirmDecline()">
+          Decline the visit
+        </app-button>
+      </div>
+    </app-dialog>
   }
+
+  <app-confirm-dialog [request]="confirm()" [busy]="busyId() !== null" (cancelled)="confirm.set(null)" />
 </section>

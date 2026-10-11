@@ -1,9 +1,71 @@
 @use '../admin-common';
+@use 'tokens' as *;
+@use 'mixins' as *;
 
-.form-section {
-  display: grid;
-  gap: 1rem;
+.head-side {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+  max-width: 32ch;
 }
 
-.form-section h2,
-.form-section p { margin: 0; }
+.access-copy {
+  font-size: $font-size-sm;
+}
+
+// Only a drawer needs a way to open without a row; on a laptop the forms are already there.
+.drawer-opener {
+  @include laptop-up {
+    display: none;
+  }
+}
+
+.overdue {
+  color: $color-warning-hover;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+
+  &.is-late {
+    color: $color-danger;
+  }
+}
+
+.target {
+  display: grid;
+  gap: $space-2;
+  padding: $space-3;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-md;
+  background: $color-slate-50;
+}
+
+.target-eyebrow {
+  margin: 0;
+  color: $color-slate-500;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.target-prompt {
+  margin: 0;
+  color: $color-slate-700;
+}
+
+.has-badge {
+  color: $color-green-hover;
+  font-weight: $font-weight-semibold;
+}
+
+.lookup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: $space-2;
+
+  .field {
+    flex: 1 1 160px;
+  }
+}

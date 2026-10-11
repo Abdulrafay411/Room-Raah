@@ -167,3 +167,15 @@ input[type='checkbox'], input[type='radio'] {
 .leaflet-container {
   font: inherit;
 }
+
+// A page that keeps a bar at the bottom of the screen - the listing form's save bar - says
+// so on the body, and the assistant's launcher moves up out of its way. Without this the
+// launcher sat on top of the save button, which is the one button the page is for.
+body.has-bottom-bar .assistant-launcher {
+  bottom: calc(1.25rem + 72px);
+}
+
+body.has-bottom-bar .assistant-panel {
+  bottom: calc(5rem + 72px);
+}
+

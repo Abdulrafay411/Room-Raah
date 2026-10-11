@@ -132,34 +132,16 @@
   color: $color-slate-500;
 }
 
-.mailpit-tip-box {
-  margin-top: $space-6;
+.verify-reason {
+  margin: 0 0 $space-4;
   padding: $space-3 $space-4;
   border-radius: $radius-md;
-  background-color: $color-slate-100;
-  border: 1px dashed $color-slate-300;
-}
-
-.tip-title {
-  display: block;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-semibold;
-  color: $color-slate-700;
-  margin-bottom: 2px;
-}
-
-.tip-text {
-  font-size: $font-size-xs;
-  color: $color-slate-600;
-  line-height: 1.4;
-
-  code {
-    font-family: monospace;
-    background-color: #ffffff;
-    padding: 1px 4px;
-    border-radius: 3px;
-    border: 1px solid $color-slate-200;
-  }
+  background-color: $color-warning-light;
+  border: 1px solid $color-warning-border;
+  color: $color-warning-hover;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  text-align: center;
 }
 
 .auth-footer {

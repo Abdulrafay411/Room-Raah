@@ -4,10 +4,12 @@ import {
   canCancel,
   canComplete,
   canReview,
+  directionsUrl,
   isOpenVisit,
   toLocalInputValue,
   visitProblem,
   visitWindow,
+  wantsDirections,
 } from './engagement.model';
 
 /**
@@ -102,5 +104,29 @@ describe('the local datetime format', () => {
   // with its seconds and trailing Z reads to the browser as an empty field.
   it('has no seconds and no zone', () => {
     expect(toLocalInputValue(new Date(2026, 8, 7, 9, 5))).toBe('2026-09-07T09:05');
+  });
+});
+
+describe('directions to a visit', () => {
+  it('are offered only once the owner has accepted an in-person visit', () => {
+    expect(wantsDirections(visit({ status: 'Accepted', visitType: 'Physical' }))).toBe(true);
+    expect(wantsDirections(visit({ status: 'Requested', visitType: 'Physical' }))).toBe(false);
+    expect(wantsDirections(visit({ status: 'Completed', visitType: 'Physical' }))).toBe(false);
+    expect(wantsDirections(visit({ status: 'Cancelled', visitType: 'Physical' }))).toBe(false);
+  });
+
+  /** A video call has nowhere to travel to. */
+  it('are not offered for a video call, even an accepted one', () => {
+    expect(wantsDirections(visit({ status: 'Accepted', visitType: 'Video' }))).toBe(false);
+  });
+
+  it('open Google Maps at the listing, starting from wherever the person is', () => {
+    expect(directionsUrl(31.5204, 74.3587)).toBe(
+      'https://www.google.com/maps/dir/?api=1&destination=31.5204,74.3587',
+    );
+  });
+
+  it('give no link rather than a broken one when the coordinates are missing', () => {
+    expect(directionsUrl(Number.NaN, 74.3)).toBeNull();
   });
 });

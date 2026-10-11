@@ -1,0 +1,123 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// The sticky app header is 64px tall; the panel sits under it.
+$header: 64px;
+
+.workspace {
+  display: grid;
+  gap: $space-4;
+  align-items: start;
+
+  @include laptop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+}
+
+.workspace-list {
+  min-width: 0;
+}
+
+.workspace-detail {
+  min-width: 0;
+  background: $color-surface;
+  border: 1px solid #dbe3e8;
+  border-radius: $radius-lg;
+  padding: $space-4;
+  outline: none;
+
+  &:focus-visible {
+    box-shadow: $shadow-focus;
+  }
+
+  @include laptop-up {
+    position: sticky;
+    top: calc(#{$header} + #{$space-4});
+    max-height: calc(100vh - #{$header} - 2 * #{$space-4});
+    overflow-y: auto;
+  }
+
+  // Tablet and phone: a drawer over the queue.
+  @media (max-width: #{$breakpoint-tablet-max}) {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(100%, 560px);
+    z-index: 900;
+    border-radius: 0;
+    border-width: 0 0 0 1px;
+    box-shadow: $shadow-xl;
+    overflow-y: auto;
+    transform: translateX(100%);
+    visibility: hidden;
+    transition:
+      transform $transition-slow,
+      visibility 0s linear $transition-slow;
+
+    &.is-open {
+      transform: none;
+      visibility: visible;
+      transition:
+        transform $transition-slow,
+        visibility 0s;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}
+
+.workspace-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 899;
+  background: rgba(15, 23, 42, 0.5);
+
+  @include laptop-up {
+    display: none;
+  }
+}
+
+.workspace-detail-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+  margin: 0 0 $space-3;
+  padding-bottom: $space-3;
+  border-bottom: 1px solid $color-slate-200;
+}
+
+.workspace-detail-label {
+  color: $color-slate-500;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.close-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.workspace-placeholder {
+  display: grid;
+  justify-items: center;
+  gap: $space-3;
+  padding: $space-10 $space-4;
+  text-align: center;
+  color: $color-slate-500;
+
+  p {
+    margin: 0;
+    max-width: 34ch;
+  }
+}
+
+.placeholder-art {
+  width: 72px;
+  height: 72px;
+}

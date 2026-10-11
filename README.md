@@ -6,11 +6,14 @@ listings and communication inside the platform.
 ## Features
 
 - Public search by location, rent, facilities and availability; photos, maps and room comparison.
-- Seeker accounts with saved listings, visit requests, reviews and reports.
+- Seeker accounts with saved listings, visit requests, reviews and reports, plus Google Maps
+  directions once an in-person visit is accepted.
 - Live messaging through SignalR, with polling when the connection is unavailable.
 - Owner listing and photo management, availability confirmation and visit responses.
 - Admin listing/revision approval, review/report moderation, inspections and account management.
 - Email verification, JWT sessions and role permissions. Published edits need admin approval.
+  An unverified account can browse; a banner says what needs verification, and the verify
+  page returns the user to what they were doing.
 - Responsive Angular interface for phone, tablet, laptop and desktop.
 - **AI assistant** powered by a **local AI model (Qwen 3.5 9B via Ollama)**: finds rooms from a
   plain-language message in English or Roman Urdu, measures distance, and carries out actions
@@ -158,6 +161,11 @@ Local seeded accounts all use `Password1` for this demo only:
 | Owner | owner.checked@roomraah.local |
 | Admin | admin@roomraah.local |
 
+The login page also has a **quick sign-in (testing only)**: pick an account type, then any
+account of that type. It reads the list through the seeded admin account, so it shows every
+account's email - remove it before any public deployment. The verify and reset-password
+pages have an **Open Mailpit** button for the same reason: local testing.
+
 Suggested demo: search a room, compare options, save a listing, request a visit and open a
 conversation. Then demonstrate owner management and admin approval with the other accounts.
 Finally, open **Ask RoomRaah** and try the same tasks by conversation.
@@ -174,8 +182,8 @@ npm test -- --watch=false
 ```
 
 Integration tests require Docker. Test source is included. The latest frontend validation
-passed 222 unit tests, including the AI assistant's, and 50 live browser checks, including
-the assistant for seekers, owners and admins, before packaging. The original browser
+passed 257 unit tests, including the AI assistant's. An earlier packaging also passed 50 live
+browser checks, including the assistant for seekers, owners and admins. The original browser
 automation harness and generated reports are excluded from this source-only submission.
 
 ## Submission contents

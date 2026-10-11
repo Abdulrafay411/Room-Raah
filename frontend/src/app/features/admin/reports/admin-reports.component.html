@@ -2,85 +2,185 @@
   @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
   @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
 
-  <section class="panel-card">
-    <div class="panel-head">
-      <div>
-        <h2>Listing reports</h2>
-        <p class="muted">A verdict records the report. Unpublishing remains a separate listing decision.</p>
-      </div>
-      <label>Status
-        <select [ngModel]="reportStatus()" (ngModelChange)="reportStatus.set($event); loadReports()">
-          <option value="">All reports</option><option value="Open">Open</option><option value="UnderReview">Under review</option><option value="Upheld">Upheld</option><option value="Dismissed">Dismissed</option>
-        </select>
-      </label>
-    </div>
-
-    @if (loadingReports()) {
-      <p>Loading reports…</p>
-    } @else if (reports().length === 0) {
-      <p class="empty-copy" data-smoke="admin-reports-empty">No reports in this queue.</p>
-    } @else {
-      <ul class="queue" data-smoke="admin-reports-list">
-        @for (report of reports(); track report.id) {
-          <li class="queue-row">
-            <div class="row-head"><h3>{{ report.propertyTitle }}</h3><span class="status" [attr.data-state]="report.status">{{ report.status }}</span></div>
-            <div class="meta"><span>{{ report.reason }}</span><span>Reported by {{ report.reportedByDisplayName }}</span><span>{{ report.createdAt | date:'mediumDate' }}</span></div>
-            <p>{{ report.details }}</p>
-            <div><app-button size="sm" variant="outline" (clicked)="selectedReport.set(report)">Review report</app-button></div>
-          </li>
-        }
-      </ul>
-    }
-
-    @if (selectedReport(); as report) {
-      <div class="report-decision" data-smoke="admin-report-detail">
-        <h3>Decision for “{{ report.propertyTitle }}”</h3>
-        @if (report.status === 'Open' || report.status === 'UnderReview') {
-          <label class="field">Verdict note (required for uphold or dismiss)
-            <textarea [ngModel]="note()" (ngModelChange)="note.set($event)" maxlength="1000"></textarea>
-          </label>
-          <div class="action-row">
-            @if (report.status === 'Open') {
-              <app-button variant="outline" [loading]="saving()" (clicked)="resolve('UnderReview')">Mark under review</app-button>
-            }
-            <app-button variant="danger" [loading]="saving()" (clicked)="resolve('Upheld')">Uphold report</app-button>
-            <app-button variant="success" [loading]="saving()" (clicked)="resolve('Dismissed')">Dismiss report</app-button>
+  <app-admin-workspace
+    [detailOpen]="!!selectedReport()"
+    detailLabel="Report decision"
+    placeholder="Choose a report to read it in full and record a verdict. Reviews are approved or hidden straight from their queue."
+    (closed)="close()"
+  >
+    <div workspace-list class="stack">
+      <section class="panel-card" aria-labelledby="reports-title">
+        <div class="panel-head">
+          <div>
+            <h2 id="reports-title">Listing reports</h2>
+            <p class="muted">A verdict closes the report. Unpublishing is a separate decision on the Listings tab.</p>
           </div>
-        } @else {
-          <p><strong>Admin note:</strong> {{ report.adminNote }}</p>
-        }
-      </div>
-    }
-  </section>
+          <label class="filter">
+            Status
+            <select [ngModel]="reportStatus()" (ngModelChange)="filterReports($event)" name="reportStatus">
+              @for (option of reportFilters; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
 
-  <section class="panel-card" data-smoke="admin-review-moderation">
-    <div class="panel-head">
-      <div><h2>Review moderation</h2><p class="muted">New reviews stay invisible until approved.</p></div>
-      <label>State
-        <select [ngModel]="reviewState()" (ngModelChange)="reviewState.set($event); loadReviews()">
-          <option value="">All reviews</option><option value="Pending">Pending</option><option value="Approved">Approved</option><option value="Hidden">Hidden</option>
-        </select>
-      </label>
+        @if (loadingReports()) {
+          <p class="loading-copy" aria-busy="true">Loading reports…</p>
+        } @else if (reports().length === 0) {
+          <p class="empty-copy" data-smoke="admin-reports-empty">No reports here.</p>
+        } @else {
+          <ul class="queue" data-smoke="admin-reports-list">
+            @for (report of reports(); track report.id) {
+              <li
+                class="queue-row"
+                [class.is-selected]="selectedReport()?.id === report.id"
+                [attr.aria-current]="selectedReport()?.id === report.id ? 'true' : null"
+              >
+                <div class="row-head">
+                  <h3>{{ report.propertyTitle }}</h3>
+                  <app-admin-status [value]="report.status" />
+                </div>
+                <p class="meta">
+                  <span class="reason">{{ report.reason }}</span>
+                  <span>{{ report.reportedByDisplayName }}</span>
+                  <span>{{ report.createdAt | date: 'd MMM y' }}</span>
+                </p>
+                <p class="excerpt">{{ report.details }}</p>
+                <div class="row-actions">
+                  <app-button size="sm" variant="outline" (clicked)="open(report)">Review report</app-button>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+
+        <app-admin-pager
+          [page]="reportPage()"
+          [pageSize]="pageSize"
+          [totalCount]="reportTotal()"
+          noun="reports"
+          (pageChange)="goToReports($event)"
+        />
+      </section>
+
+      <section class="panel-card" aria-labelledby="reviews-title" data-smoke="admin-review-moderation">
+        <div class="panel-head">
+          <div>
+            <h2 id="reviews-title">Reviews</h2>
+            <p class="muted">A new review is invisible until it is approved here.</p>
+          </div>
+          <label class="filter">
+            Show
+            <select [ngModel]="reviewState()" (ngModelChange)="filterReviews($event)" name="reviewState">
+              @for (option of reviewFilters; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        @if (loadingReviews()) {
+          <p class="loading-copy" aria-busy="true">Loading reviews…</p>
+        } @else if (reviews().length === 0) {
+          <p class="empty-copy" data-smoke="admin-reviews-empty">No reviews here.</p>
+        } @else {
+          <ul class="queue" data-smoke="admin-reviews-list">
+            @for (review of reviews(); track review.id) {
+              <li class="queue-row">
+                <div class="row-head">
+                  <h3>{{ review.propertyTitle }}</h3>
+                  <app-admin-status [value]="review.moderationState" />
+                </div>
+                <p class="meta">
+                  <span class="rating" [attr.aria-label]="review.rating + ' out of 5'">
+                    <span aria-hidden="true">{{ '★★★★★'.slice(0, review.rating) }}</span>
+                    {{ review.rating }}/5
+                  </span>
+                  <span>{{ review.authorDisplayName }}</span>
+                  <span>{{ review.stayStatus === 'CurrentlyStaying' ? 'Staying now' : review.stayStatus === 'PreviouslyStayed' ? 'Stayed before' : 'Visited' }}</span>
+                  <span>{{ review.createdAt | date: 'd MMM y' }}</span>
+                </p>
+                <p class="comment">{{ review.comment }}</p>
+                <div class="row-actions">
+                  @if (review.moderationState !== 'Approved') {
+                    <app-button size="sm" variant="success" [loading]="saving()" (clicked)="requestModeration(review, 'Approved')">
+                      Approve review
+                    </app-button>
+                  }
+                  @if (review.moderationState !== 'Hidden') {
+                    <app-button size="sm" variant="danger" [loading]="saving()" (clicked)="requestModeration(review, 'Hidden')">
+                      Hide review
+                    </app-button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        }
+
+        <app-admin-pager
+          [page]="reviewPage()"
+          [pageSize]="pageSize"
+          [totalCount]="reviewTotal()"
+          noun="reviews"
+          (pageChange)="goToReviews($event)"
+        />
+      </section>
     </div>
 
-    @if (loadingReviews()) {
-      <p>Loading reviews…</p>
-    } @else if (reviews().length === 0) {
-      <p class="empty-copy" data-smoke="admin-reviews-empty">No reviews in this queue.</p>
-    } @else {
-      <ul class="queue" data-smoke="admin-reviews-list">
-        @for (review of reviews(); track review.id) {
-          <li class="queue-row">
-            <div class="row-head"><h3>{{ review.propertyTitle }}</h3><span class="status" [attr.data-state]="review.moderationState">{{ review.moderationState }}</span></div>
-            <div class="meta"><span>{{ review.rating }}/5</span><span>{{ review.stayStatus }}</span><span>By {{ review.authorDisplayName }}</span></div>
-            <p>{{ review.comment }}</p>
-            <div class="action-row">
-              <app-button size="sm" variant="success" [loading]="saving()" (clicked)="moderate(review, 'Approved')">Approve review</app-button>
-              <app-button size="sm" variant="danger" [loading]="saving()" (clicked)="moderate(review, 'Hidden')">Hide review</app-button>
+    <div workspace-detail>
+      @if (selectedReport(); as report) {
+        <article class="detail" data-smoke="admin-report-detail">
+          <header class="detail-head">
+            <div>
+              <h2>{{ report.propertyTitle }}</h2>
+              <p>Reported by {{ report.reportedByDisplayName }} on {{ report.createdAt | date: 'd MMM y, h:mm a' }}</p>
             </div>
-          </li>
-        }
-      </ul>
-    }
-  </section>
+            <app-admin-status [value]="report.status" />
+          </header>
+
+          <dl class="facts">
+            <div>
+              <dt>Reason</dt>
+              <dd>{{ report.reason }}</dd>
+            </div>
+            <div class="wide">
+              <dt>What they said</dt>
+              <dd class="prose">{{ report.details }}</dd>
+            </div>
+          </dl>
+
+          @if (report.status === 'Open' || report.status === 'UnderReview') {
+            <section class="detail-section" aria-labelledby="report-decision">
+              <h3 id="report-decision">Verdict</h3>
+              <label class="field">
+                Note
+                <span class="field-hint">Required to uphold or dismiss. Kept on the report for the record.</span>
+                <textarea [ngModel]="note()" (ngModelChange)="note.set($event)" maxlength="1000" name="note"></textarea>
+              </label>
+              <div class="action-row">
+                @if (report.status === 'Open') {
+                  <app-button variant="outline" [loading]="saving()" (clicked)="request('UnderReview')">Mark under review</app-button>
+                }
+                <app-button variant="danger" [loading]="saving()" (clicked)="request('Upheld')">Uphold report</app-button>
+                <app-button variant="primary" [loading]="saving()" (clicked)="request('Dismissed')">Dismiss report</app-button>
+              </div>
+              <p class="muted">Upholding does not unpublish the listing. That is done from the Listings tab.</p>
+            </section>
+          } @else {
+            <section class="detail-section">
+              <h3>Admin note</h3>
+              <p class="prose">{{ report.adminNote || 'No note was left.' }}</p>
+              @if (report.resolvedAt) {
+                <p class="muted">Closed {{ report.resolvedAt | date: 'd MMM y, h:mm a' }}</p>
+              }
+            </section>
+          }
+        </article>
+      }
+    </div>
+  </app-admin-workspace>
+
+  <app-confirm-dialog [request]="confirm()" [busy]="saving()" (cancelled)="confirm.set(null)" />
 </section>

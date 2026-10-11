@@ -1,7 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { AuthService } from './core/auth/auth.service';
+import { verifyParams } from './core/auth/guards/session';
 import { GeolocationService } from './core/services/geolocation.service';
 import { RealtimeService } from './core/services/realtime.service';
 import { ButtonComponent } from './shared/components';
@@ -40,5 +43,19 @@ export class App {
    * so this costs nothing until somebody signs in.
    */
   private readonly realtime = inject(RealtimeService);
+
+  private readonly router = inject(Router);
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  readonly needsVerification = computed(
+    () => this.auth.isAuthenticated() && !this.auth.isEmailVerified() && !this.url().startsWith('/verify'),
+  );
+  readonly verifyQuery = computed(() => verifyParams({ returnUrl: this.url() }));
 }
 

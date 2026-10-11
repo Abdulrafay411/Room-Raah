@@ -7,6 +7,7 @@ import { EngagementService } from '../../../core/services/engagement.service';
 import { PropertyService } from '../../../core/services/property.service';
 import { fieldErrorMap, toFailure } from '../../../core/http/api-error';
 import { PropertyDetail } from '../../../core/models/catalog.model';
+import { verifyParams } from '../../../core/auth/guards/session';
 import {
   VISIT_TYPES,
   VisitRequest,
@@ -120,7 +121,9 @@ export class VisitRequestComponent {
           const failure = toFailure(err);
           // A 403 for an unverified account is a different screen, not a message.
           if (failure.needsVerification) {
-            this.router.navigate(['/verify']);
+            this.router.navigate(['/verify'], {
+              queryParams: verifyParams({ returnUrl: this.router.url, reason: 'visit' }),
+            });
             return;
           }
           this.error.set(failure.message);

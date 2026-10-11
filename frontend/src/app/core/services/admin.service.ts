@@ -23,13 +23,16 @@ import {
 } from '../models/admin.model';
 import { PropertyStatus } from '../models/owner.model';
 
+/** Rows per page on every admin queue. Twenty fits a laptop screen beside the detail. */
+export const ADMIN_PAGE_SIZE = 20;
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiBaseUrl}/admin`;
 
-  properties(status?: PropertyStatus): Observable<AdminPropertyPage> {
-    let params = new HttpParams().set('page', 1).set('pageSize', 50);
+  properties(status?: PropertyStatus, page = 1): Observable<AdminPropertyPage> {
+    let params = new HttpParams().set('page', page).set('pageSize', ADMIN_PAGE_SIZE);
     if (status) params = params.set('status', status);
     return this.http.get<AdminPropertyPage>(`${this.base}/properties`, { params });
   }
@@ -52,8 +55,8 @@ export class AdminService {
     });
   }
 
-  revisions(kind: RevisionKind): Observable<RevisionPage> {
-    const params = new HttpParams().set('kind', kind).set('page', 1).set('pageSize', 50);
+  revisions(kind: RevisionKind, page = 1): Observable<RevisionPage> {
+    const params = new HttpParams().set('kind', kind).set('page', page).set('pageSize', ADMIN_PAGE_SIZE);
     return this.http.get<RevisionPage>(`${this.base}/revisions`, { params });
   }
 
@@ -67,8 +70,8 @@ export class AdminService {
     });
   }
 
-  dueInspections(): Observable<InspectionPage> {
-    const params = new HttpParams().set('page', 1).set('pageSize', 50);
+  dueInspections(page = 1): Observable<InspectionPage> {
+    const params = new HttpParams().set('page', page).set('pageSize', ADMIN_PAGE_SIZE);
     return this.http.get<InspectionPage>(`${this.base}/inspections/due`, { params });
   }
 
@@ -87,8 +90,8 @@ export class AdminService {
     return this.http.post<AdminProperty>(`${this.base}/properties/${id}/badge/${action}`, { reason });
   }
 
-  reviews(state?: ReviewState): Observable<ReviewQueuePage> {
-    let params = new HttpParams().set('page', 1).set('pageSize', 50);
+  reviews(state?: ReviewState, page = 1): Observable<ReviewQueuePage> {
+    let params = new HttpParams().set('page', page).set('pageSize', ADMIN_PAGE_SIZE);
     if (state) params = params.set('state', state);
     return this.http.get<ReviewQueuePage>(`${this.base}/reviews`, { params });
   }
@@ -97,8 +100,8 @@ export class AdminService {
     return this.http.patch<ReviewQueueRow>(`${this.base}/reviews/${id}`, { state });
   }
 
-  reports(status?: ReportStatus): Observable<ReportPage> {
-    let params = new HttpParams().set('page', 1).set('pageSize', 50);
+  reports(status?: ReportStatus, page = 1): Observable<ReportPage> {
+    let params = new HttpParams().set('page', page).set('pageSize', ADMIN_PAGE_SIZE);
     if (status) params = params.set('status', status);
     return this.http.get<ReportPage>(`${this.base}/reports`, { params });
   }
@@ -110,8 +113,8 @@ export class AdminService {
     });
   }
 
-  users(filters: { role?: string; isActive?: string; q?: string }): Observable<AdminUserPage> {
-    let params = new HttpParams().set('page', 1).set('pageSize', 50);
+  users(filters: { role?: string; isActive?: string; q?: string }, page = 1): Observable<AdminUserPage> {
+    let params = new HttpParams().set('page', page).set('pageSize', ADMIN_PAGE_SIZE);
     if (filters.role) params = params.set('role', filters.role);
     if (filters.isActive) params = params.set('isActive', filters.isActive);
     if (filters.q?.trim()) params = params.set('q', filters.q.trim());

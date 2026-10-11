@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -6,6 +6,8 @@ import { Observable } from 'rxjs';
 import {
   BadgeComponent,
   ButtonComponent,
+  ConfirmDialogComponent,
+  ConfirmRequest,
   FormFieldComponent,
   InputDirective,
 } from '../../shared/components';
@@ -30,9 +32,15 @@ import {
   MyListing,
   PHOTOS_MAX,
   PHOTOS_MIN,
+  PendingRevision,
   emptyDraft,
+  isDirty,
   livePhotoCount,
+  nextStep,
   photoProblem,
+  readiness,
+  revisionFieldLabel,
+  revisionSince,
   saveEffect,
   saveLabel,
   saveOutcome,
@@ -52,6 +60,12 @@ import {
  * `PendingReview` is refused outright because an admin is reading it right now, so the form
  * is read-only there instead of offering a button that can only 422.
  *
+ * The page has two different kinds of write and used to put the button for each at a
+ * different end of a long scroll. The form's own save lives in a bar that stays at the
+ * bottom of the screen, and it only lights up once something has changed, because a
+ * revision that changes nothing is refused. Sending the whole listing for review is a
+ * separate decision, so it sits beside the form with the checklist of what it still needs.
+ *
  * Photographs behave the same way. On a published listing an upload is a proposal, and the
  * new photo comes back marked `PendingAdd` rather than `Live`. Only live ones count towards
  * the three a submission needs, which is why the counter here counts those and not `length`.
@@ -68,6 +82,7 @@ import {
     FormFieldComponent,
     InputDirective,
     MapPinComponent,
+    ConfirmDialogComponent,
   ],
   templateUrl: './listing-form.component.html',
   styleUrls: ['./listing-form.component.scss'],
@@ -86,6 +101,14 @@ export class ListingFormComponent {
   readonly error = signal<string | null>(null);
   readonly notice = signal<string | null>(null);
   readonly fieldErrors = signal<Record<string, string>>({});
+  readonly confirm = signal<ConfirmRequest | null>(null);
+
+  /**
+   * The revision the last save made, with its diff. The listing itself does not carry one
+   * when it is read back, so this is the one place an owner sees what they proposed beside
+   * what is live, and it lasts as long as this page does.
+   */
+  readonly revision = signal<PendingRevision | null>(null);
 
   readonly cities = signal<City[]>([]);
   readonly areas = signal<Area[]>([]);
@@ -102,6 +125,8 @@ export class ListingFormComponent {
 
   readonly statusLabel = statusLabel;
   readonly statusVariant = statusVariant;
+  readonly fieldLabel = revisionFieldLabel;
+  readonly revisionSince = revisionSince;
 
   readonly isNew = computed(() => this.listing() === null);
 
@@ -121,23 +146,53 @@ export class ListingFormComponent {
     return listing ? saveLabel(listing.status) : 'Create listing';
   });
 
-  readonly photos = computed(() => this.listing()?.photos ?? []);
+  /** Whether anything on the form differs from the listing it was loaded from. */
+  readonly dirty = computed(() => {
+    const listing = this.listing();
+    return listing ? isDirty(this.draft(), toDraft(listing)) : true;
+  });
+
+  readonly photos = computed(() =>
+    [...(this.listing()?.photos ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
+  );
   readonly liveCount = computed(() => {
     const listing = this.listing();
     return listing ? livePhotoCount(listing) : 0;
   });
+
+  readonly canSubmit = computed(() => {
+    const listing = this.listing();
+    return !!listing && (listing.status === 'Draft' || listing.status === 'ChangesRequested');
+  });
+
+  readonly checklist = computed(() => readiness(this.draft(), this.liveCount()));
+  readonly checklistDone = computed(() => this.checklist().filter((item) => item.done).length);
 
   readonly submitBlockedBy = computed(() => {
     const listing = this.listing();
     return listing ? submitProblem(listing.status, livePhotoCount(listing)) : null;
   });
 
+  readonly next = computed(() => {
+    const listing = this.listing();
+    return listing ? nextStep(listing.status, livePhotoCount(listing)) : null;
+  });
+
   constructor() {
+    // The save bar is fixed to the bottom of the screen, where the assistant's launcher
+    // also lives. The body says a bar is there and the launcher moves up (styles.scss).
+    const destroyRef = inject(DestroyRef);
+    effect(() => {
+      document.body.classList.toggle('has-bottom-bar', !this.loading() && !this.locked());
+    });
+    destroyRef.onDestroy(() => document.body.classList.remove('has-bottom-bar'));
+
     this.reference.cities().subscribe((list) => this.cities.set(list ?? []));
     this.reference.facilities().subscribe((list) => this.facilities.set(list ?? []));
 
     this.route.paramMap.subscribe((params) => {
       const raw = params.get('id');
+      this.revision.set(null);
       if (!raw || raw === 'new') {
         this.listing.set(null);
         this.draft.set(emptyDraft());
@@ -177,6 +232,7 @@ export class ListingFormComponent {
   private adopt(listing: MyListing): void {
     this.listing.set(listing);
     this.draft.set(toDraft(listing));
+    if (listing.pendingRevision) this.revision.set(listing.pendingRevision);
   }
 
   onCity(cityId: number | null): void {
@@ -195,6 +251,14 @@ export class ListingFormComponent {
 
   patch(change: Partial<ListingDraft>): void {
     this.draft.update((current) => ({ ...current, ...change }));
+    // A field that was wrong and has been touched is no longer shouting.
+    const key = Object.keys(change)[0];
+    if (key && this.fieldErrors()[key]) {
+      this.fieldErrors.update((errors) => {
+        const { [key]: _cleared, ...rest } = errors;
+        return rest;
+      });
+    }
   }
 
   toggleFacility(id: number, on: boolean): void {
@@ -212,28 +276,41 @@ export class ListingFormComponent {
     this.patch(at);
   }
 
+  discard(): void {
+    const listing = this.listing();
+    if (!listing) return;
+    this.draft.set(toDraft(listing));
+    this.fieldErrors.set({});
+    this.error.set(null);
+  }
+
   /**
-   * The same three rules the server enforces, checked here so somebody is told before they
-   * submit rather than after. Never only here - the server is still the authority.
+   * The same rules the server enforces, checked here so somebody is told before they
+   * submit rather than after, and at the field rather than only at the top. Never only
+   * here - the server is still the authority.
    */
-  private localProblem(): string | null {
+  private localProblems(): Record<string, string> {
     const draft = this.draft();
-    if (!draft.title.trim()) return 'Give the listing a title.';
-    if (!draft.description.trim()) return 'Describe the room.';
-    if (!draft.addressLine.trim()) return 'Add the address.';
-    if (!draft.areaId) return 'Choose the area the room is in.';
-    if (draft.totalBeds < 1) return 'A room has at least one bed.';
+    const problems: Record<string, string> = {};
+    if (!draft.title.trim()) problems['title'] = 'Give the listing a title.';
+    if (!draft.description.trim()) problems['description'] = 'Describe the room.';
+    if (!draft.areaId) problems['areaId'] = 'Choose the area the room is in.';
+    if (!draft.addressLine.trim()) problems['addressLine'] = 'Add the address.';
+    if (draft.totalBeds < 1) problems['totalBeds'] = 'A room has at least one bed.';
     if (draft.availableBeds > draft.totalBeds) {
-      return 'There cannot be more free beds than beds.';
+      problems['availableBeds'] = 'There cannot be more free beds than beds.';
     }
-    if (draft.monthlyRent <= 0) return 'Set a monthly rent.';
-    return null;
+    if (draft.monthlyRent <= 0) problems['monthlyRent'] = 'Set a monthly rent.';
+    return problems;
   }
 
   save(): void {
-    const problem = this.localProblem();
-    if (problem) {
-      this.error.set(problem);
+    const problems = this.localProblems();
+    const first = Object.keys(problems)[0];
+    if (first) {
+      this.fieldErrors.set(problems);
+      this.error.set('Some fields need attention before this can be saved.');
+      focusField(first);
       return;
     }
 
@@ -254,7 +331,7 @@ export class ListingFormComponent {
 
         if (!listing) {
           // A new listing gets its own URL, so a refresh does not land back on a blank form.
-          this.notice.set('Created. Add photographs, then send it for review.');
+          this.notice.set('Created. Add at least three photographs, then send it for review.');
           this.router.navigate(['/owner/listing', saved.id], { replaceUrl: true });
           return;
         }
@@ -264,16 +341,29 @@ export class ListingFormComponent {
       error: (err) => {
         const failure = toFailure(err);
         this.error.set(failure.message);
-        this.fieldErrors.set(fieldErrorMap(failure));
+        const errors = fieldErrorMap(failure);
+        this.fieldErrors.set(errors);
+        const firstServer = Object.keys(errors)[0];
+        if (firstServer) focusField(firstServer);
         this.saving.set(false);
       },
     });
   }
 
-  submitForReview(): void {
+  /** Sending locks the listing until the review team answers, so it is worth one question. */
+  askSubmit(): void {
     const listing = this.listing();
     if (!listing) return;
-    this.runPhoto(this.owner.submit(listing.id), 'Sent for review.');
+    this.confirm.set({
+      title: 'Send this listing for review?',
+      description: `"${listing.title}" goes to the review team. Until they answer, it cannot be changed. If they approve it, it goes into search.`,
+      confirmLabel: 'Send for review',
+      variant: 'primary',
+      run: () => {
+        this.confirm.set(null);
+        this.runPhoto(this.owner.submit(listing.id), 'Sent for review. You will see the answer on your listings page.');
+      },
+    });
   }
 
   onFile(event: Event): void {
@@ -295,27 +385,41 @@ export class ListingFormComponent {
     this.runPhoto(
       this.owner.uploadPhoto(listing.id, file),
       this.makesRevision()
-        ? 'Photograph sent for review — it is not on the live listing yet.'
+        ? 'Photograph sent for review. It is not on the live listing yet.'
         : 'Photograph added.',
     );
     input.value = '';
   }
 
-  removePhoto(photo: ListingPhoto): void {
+  /** Removing is final on a draft and a proposal on a live listing; either way it asks. */
+  askRemovePhoto(photo: ListingPhoto): void {
     const listing = this.listing();
     if (!listing) return;
-    this.runPhoto(
-      this.owner.deletePhoto(listing.id, photo.id),
-      this.makesRevision()
-        ? 'Removal sent for review — the photograph is still on the live listing.'
-        : 'Photograph removed.',
-    );
+    const revision = this.makesRevision();
+    this.confirm.set({
+      title: revision ? 'Propose removing this photograph?' : 'Remove this photograph?',
+      description: revision
+        ? 'It stays on the live listing until the review team approves the removal.'
+        : photo.isPrimary
+          ? 'It is the main photograph. The next one in order becomes the main one.'
+          : 'It is removed from the listing straight away.',
+      confirmLabel: revision ? 'Propose removal' : 'Remove photograph',
+      run: () => {
+        this.confirm.set(null);
+        this.runPhoto(
+          this.owner.deletePhoto(listing.id, photo.id),
+          revision
+            ? 'Removal sent for review. The photograph is still on the live listing.'
+            : 'Photograph removed.',
+        );
+      },
+    });
   }
 
   makePrimary(photo: ListingPhoto): void {
     const listing = this.listing();
     if (!listing) return;
-    this.runPhoto(this.owner.makePrimary(listing.id, photo.id), 'Main photograph changed.');
+    this.runPhoto(this.owner.makePrimary(listing.id, photo.id), 'Main photograph changed. It is the one every card shows.');
   }
 
   /** Reordering sends every photograph the listing holds, exactly once, in the new order. */
@@ -323,9 +427,7 @@ export class ListingFormComponent {
     const listing = this.listing();
     if (!listing) return;
 
-    const ids = [...this.photos()]
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((item) => item.id);
+    const ids = this.photos().map((item) => item.id);
     const from = ids.indexOf(photo.id);
     const to = from + by;
     if (from < 0 || to < 0 || to >= ids.length) return;
@@ -351,4 +453,14 @@ export class ListingFormComponent {
       },
     });
   }
+}
+
+/** The field ids are the draft's keys, so a problem can be taken straight to its input. */
+function focusField(key: string): void {
+  setTimeout(() => {
+    const element = document.getElementById(key);
+    if (!element) return;
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.focus({ preventScroll: true });
+  }, 0);
 }

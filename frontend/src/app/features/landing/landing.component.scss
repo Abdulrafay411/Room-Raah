@@ -136,19 +136,6 @@
   color: $color-slate-500;
 }
 
-.hero-links {
-  margin: $space-6 0 0;
-  display: flex;
-  justify-content: center;
-  gap: $space-3;
-  font-size: $font-size-sm;
-
-  a {
-    color: #fff;
-    text-decoration: underline;
-  }
-}
-
 .featured {
   @include container-centered;
   padding-top: $space-10;

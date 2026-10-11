@@ -55,20 +55,6 @@
   color: #b91c1c;
 }
 
-.messages-hint {
-  margin: 0.75rem 0 0.5rem;
-  color: #475569;
-}
-
-.messages-cta {
-  display: inline-block;
-  padding: 0.55rem 1rem;
-  border-radius: 8px;
-  background: #0f172a;
-  color: #fff;
-  text-decoration: none;
-}
-
 .messages-layout {
   display: grid;
   grid-template-columns: minmax(240px, 300px) 1fr;

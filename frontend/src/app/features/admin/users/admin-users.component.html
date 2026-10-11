@@ -1,74 +1,170 @@
 <section class="admin-panel" data-smoke="admin-users">
-  <form class="panel-card filters" (submit)="$event.preventDefault(); load()">
-    <div><h2>User accounts</h2><p class="muted">Search by name or email. Inactive accounts remain visible by default.</p></div>
-    <div class="filter-row">
-      <label>Search
-        <input type="search" minlength="2" maxlength="200" [ngModel]="query()" (ngModelChange)="query.set($event)" name="q">
-      </label>
-      <label>Role
-        <select [ngModel]="role()" (ngModelChange)="role.set($event)" name="role"><option value="">All roles</option><option value="Seeker">Seeker</option><option value="Owner">Owner</option><option value="Admin">Admin</option></select>
-      </label>
-      <label>Account state
-        <select [ngModel]="active()" (ngModelChange)="active.set($event)" name="active"><option value="">Active and inactive</option><option value="true">Active</option><option value="false">Inactive</option></select>
-      </label>
-      <app-button type="submit" size="sm">Apply filters</app-button>
-      <app-button type="button" size="sm" variant="ghost" (clicked)="clear()">Clear</app-button>
-    </div>
-  </form>
-
   @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
   @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
 
-  <div class="panel-card">
-    @if (loading()) {
-      <p>Loading accounts…</p>
-    } @else if (items().length === 0) {
-      <p class="empty-copy" data-smoke="admin-users-empty">No accounts match these filters.</p>
-    } @else {
-      <ul class="queue" data-smoke="admin-users-list">
-        @for (user of items(); track user.id) {
-          <li class="queue-row" data-smoke="admin-user-row">
-            <div class="row-head"><h3>{{ user.fullName }}</h3><span class="status" [attr.data-state]="user.isActive ? 'Active' : 'Inactive'">{{ user.isActive ? 'Active' : 'Inactive' }}</span></div>
-            <div class="meta"><span>{{ user.email }}</span><span>{{ user.role }}</span><span>{{ user.isEmailVerified ? 'Email verified' : 'Email not verified' }}</span><span>Joined {{ user.createdAt | date:'mediumDate' }}</span></div>
-            <div><app-button size="sm" variant="outline" (clicked)="open(user)">View account</app-button></div>
-          </li>
-        }
-      </ul>
-    }
-  </div>
-
-  @if (detailLoading()) {
-    <div class="panel-card"><p>Loading account…</p></div>
-  } @else if (selected(); as user) {
-    <article class="panel-card user-detail" data-smoke="admin-user-detail">
-      <div class="row-head"><h2>{{ user.fullName }}</h2><span class="status" [attr.data-state]="user.isActive ? 'Active' : 'Inactive'">{{ user.isActive ? 'Active' : 'Inactive' }}</span></div>
-      <div class="detail-grid">
-        <p><strong>Email</strong><br>{{ user.email }}</p>
-        <p><strong>Role</strong><br>{{ user.role }}</p>
-        <p data-smoke="admin-user-phone"><strong>Phone</strong><br>{{ user.phoneNumber || 'Not provided' }}</p>
-        @if (user.cnicNumber) {
-          <p data-smoke="admin-user-cnic"><strong>CNIC</strong><br>{{ user.cnicNumber }}</p>
-        }
-        @if (user.role === 'Owner') {
-          <p><strong>Identity check</strong><br>{{ user.identityStatus || 'Not checked' }}</p>
-        }
-        @if (user.role === 'Admin') {
-          <p><strong>Inspection permission</strong><br>{{ user.canInspect ? 'Can record inspections' : 'Cannot record inspections' }}</p>
-        }
+  <app-admin-workspace
+    [detailOpen]="!!selected() || detailLoading()"
+    detailLabel="Account"
+    placeholder="Choose an account to see its details and, for a seeker or owner, deactivate or reactivate it."
+    (closed)="close()"
+  >
+    <div workspace-list class="panel-card">
+      <div class="panel-head">
+        <div>
+          <h2>Accounts</h2>
+          <p class="muted">Search by name or email. Inactive accounts are listed too.</p>
+        </div>
       </div>
 
-      @if (canChange(user)) {
-        <label class="field">Reason
-          <textarea [ngModel]="reason()" (ngModelChange)="reason.set($event)" maxlength="1000"></textarea>
+      <form class="filters" (submit)="$event.preventDefault(); search()">
+        <label class="field grow">
+          Search
+          <input type="search" minlength="2" maxlength="200" [ngModel]="query()" (ngModelChange)="query.set($event)" name="q" placeholder="Name or email" />
         </label>
-        @if (user.isActive) {
-          <app-button variant="danger" [loading]="saving()" (clicked)="changeActive(false)">Deactivate account</app-button>
-        } @else {
-          <app-button variant="success" [loading]="saving()" (clicked)="changeActive(true)">Reactivate account</app-button>
-        }
+        <label class="field">
+          Role
+          <select [ngModel]="role()" (ngModelChange)="role.set($event)" name="role">
+            <option value="">Any role</option>
+            <option value="Seeker">Seeker</option>
+            <option value="Owner">Owner</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </label>
+        <label class="field">
+          State
+          <select [ngModel]="active()" (ngModelChange)="active.set($event)" name="active">
+            <option value="">Active and inactive</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </label>
+        <div class="filter-buttons">
+          <app-button type="submit" size="sm">Search</app-button>
+          <app-button type="button" size="sm" variant="ghost" (clicked)="clear()">Clear</app-button>
+        </div>
+      </form>
+
+      @if (loading()) {
+        <p class="loading-copy" aria-busy="true">Loading accounts…</p>
+      } @else if (items().length === 0) {
+        <p class="empty-copy" data-smoke="admin-users-empty">No accounts match.</p>
       } @else {
-        <p class="muted">Admin accounts cannot be changed here.</p>
+        <ul class="queue" data-smoke="admin-users-list">
+          @for (user of items(); track user.id) {
+            <li
+              class="queue-row"
+              data-smoke="admin-user-row"
+              [class.is-selected]="selected()?.id === user.id"
+              [attr.aria-current]="selected()?.id === user.id ? 'true' : null"
+            >
+              <div class="row-head">
+                <h3>{{ user.fullName }}</h3>
+                <div class="pills">
+                  <app-admin-status [value]="user.role" />
+                  <app-admin-status [value]="user.isActive ? 'Active' : 'Inactive'" />
+                </div>
+              </div>
+              <p class="meta">
+                <span>{{ user.email }}</span>
+                <span>{{ user.isEmailVerified ? 'Email verified' : 'Email not verified' }}</span>
+                <span>Joined {{ user.createdAt | date: 'd MMM y' }}</span>
+              </p>
+              <div class="row-actions">
+                <app-button size="sm" variant="outline" (clicked)="open(user)">View account</app-button>
+              </div>
+            </li>
+          }
+        </ul>
       }
-    </article>
-  }
+
+      <app-admin-pager
+        [page]="page()"
+        [pageSize]="pageSize"
+        [totalCount]="total()"
+        noun="accounts"
+        (pageChange)="goTo($event)"
+      />
+    </div>
+
+    <div workspace-detail>
+      @if (detailLoading()) {
+        <p class="loading-copy" aria-busy="true">Loading account…</p>
+      } @else if (selected(); as user) {
+        <article class="detail" data-smoke="admin-user-detail">
+          <header class="detail-head">
+            <div>
+              <h2>{{ user.fullName }}</h2>
+              <p>{{ user.role }} · joined {{ user.createdAt | date: 'd MMM y' }}</p>
+            </div>
+            <app-admin-status [value]="user.isActive ? 'Active' : 'Inactive'" />
+          </header>
+
+          <!-- Rule 116: the one screen in the product that shows a phone number or CNIC. -->
+          <dl class="facts">
+            <div>
+              <dt>Email</dt>
+              <dd>{{ user.email }} <span class="muted">({{ user.isEmailVerified ? 'verified' : 'not verified' }})</span></dd>
+            </div>
+            <div data-smoke="admin-user-phone">
+              <dt>Phone</dt>
+              <dd>{{ user.phoneNumber || 'Not provided' }}</dd>
+            </div>
+            @if (user.cnicNumber) {
+              <div data-smoke="admin-user-cnic">
+                <dt>CNIC</dt>
+                <dd>{{ user.cnicNumber }}</dd>
+              </div>
+            }
+            @if (user.role === 'Owner') {
+              <div>
+                <dt>Identity check</dt>
+                <dd>
+                  <app-admin-status [value]="user.identityStatus || 'NotChecked'" />
+                  @if (user.identityCheckedAt) {
+                    <span class="muted">{{ user.identityCheckedAt | date: 'd MMM y' }}</span>
+                  }
+                </dd>
+              </div>
+            }
+            @if (user.role === 'Admin') {
+              <div>
+                <dt>Inspections</dt>
+                <dd>{{ user.canInspect ? 'Can record inspections and grant badges' : 'Cannot record inspections' }}</dd>
+              </div>
+            }
+          </dl>
+
+          @if (canChange(user)) {
+            <section class="detail-section" aria-labelledby="account-action">
+              <h3 id="account-action">{{ user.isActive ? 'Deactivate' : 'Reactivate' }}</h3>
+              <label class="field">
+                Reason
+                <span class="field-hint">Required. Kept with the account for the record.</span>
+                <textarea [ngModel]="reason()" (ngModelChange)="reason.set($event)" maxlength="1000" name="reason"></textarea>
+              </label>
+              <div class="action-row">
+                @if (user.isActive) {
+                  <app-button variant="danger" [loading]="saving()" (clicked)="request(false)">Deactivate account</app-button>
+                } @else {
+                  <app-button variant="success" [loading]="saving()" (clicked)="request(true)">Reactivate account</app-button>
+                }
+              </div>
+            </section>
+          } @else {
+            <section class="detail-section">
+              <p class="muted">
+                @if (user.role === 'Admin') {
+                  An admin account cannot be deactivated from here.
+                } @else {
+                  This is your own account.
+                }
+              </p>
+            </section>
+          }
+        </article>
+      }
+    </div>
+  </app-admin-workspace>
+
+  <app-confirm-dialog [request]="confirm()" [busy]="saving()" (cancelled)="confirm.set(null)" />
 </section>

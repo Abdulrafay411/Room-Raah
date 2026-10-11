@@ -1,11 +1,31 @@
 @use '../admin-common';
+@use 'tokens' as *;
+@use 'mixins' as *;
 
-.filters,
-.user-detail {
-  display: grid;
-  gap: 1rem;
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: $space-2 $space-3;
+  margin-bottom: $space-4;
+
+  .grow {
+    flex: 1 1 200px;
+  }
+
+  @include phone {
+    .field {
+      flex: 1 1 100%;
+    }
+  }
 }
 
-.filters h2,
-.filters p,
-.user-detail h2 { margin: 0; }
+.filter-buttons {
+  display: flex;
+  gap: $space-2;
+}
+
+.pills {
+  display: flex;
+  gap: $space-1;
+}

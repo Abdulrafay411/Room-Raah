@@ -8,6 +8,7 @@ import { PropertyService } from '../../../core/services/property.service';
 import { fieldErrorMap, toFailure } from '../../../core/http/api-error';
 import { PropertyDetail, StayStatus } from '../../../core/models/catalog.model';
 import { MyReview, REVIEW_COMMENT_MAX, STAY_STATUSES } from '../../../core/models/engagement.model';
+import { verifyParams } from '../../../core/auth/guards/session';
 
 /**
  * Writing a review of one listing.
@@ -89,7 +90,9 @@ export class WriteReviewComponent {
         error: (err) => {
           const failure = toFailure(err);
           if (failure.needsVerification) {
-            this.router.navigate(['/verify']);
+            this.router.navigate(['/verify'], {
+              queryParams: verifyParams({ returnUrl: this.router.url, reason: 'review' }),
+            });
             return;
           }
           this.error.set(failure.message);

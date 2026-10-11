@@ -117,11 +117,42 @@
   max-width: 160px;
 }
 
-.verify-nudge {
+.verify-banner {
+  background-color: $color-warning-light;
+  border-bottom: 1px solid $color-warning-border;
+}
+
+.verify-banner-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2 $space-4;
+  padding-top: $space-2;
+  padding-bottom: $space-2;
+}
+
+.verify-banner-text {
+  margin: 0;
   font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
   color: $color-warning-hover;
-  text-decoration: underline;
+}
+
+.verify-banner-action {
+  flex-shrink: 0;
+  padding: 6px $space-4;
+  border-radius: $radius-md;
+  background-color: $color-warning-hover;
+  color: #fff;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+
+  @include focus-visible;
+
+  &:hover {
+    background-color: $color-warning;
+  }
 }
 
 .signup-link {
@@ -222,8 +253,7 @@
     text-overflow: ellipsis;
   }
 
-  .account-name,
-  .verify-nudge {
+  .account-name {
     display: none;
   }
 }

@@ -10,6 +10,7 @@ import { MessagingService } from '../../core/services/messaging.service';
 import { GeolocationService } from '../../core/services/geolocation.service';
 import { PropertyService } from '../../core/services/property.service';
 import { toFailure } from '../../core/http/api-error';
+import { verifyParams } from '../../core/auth/guards/session';
 import {
   PropertyDetail,
   Review,
@@ -183,7 +184,9 @@ export class PropertyDetailComponent {
       return;
     }
     if (!this.auth.isEmailVerified()) {
-      this.router.navigate(['/verify']);
+      this.router.navigate(['/verify'], {
+        queryParams: verifyParams({ returnUrl: `/property/${id}`, reason: 'message' }),
+      });
       return;
     }
 

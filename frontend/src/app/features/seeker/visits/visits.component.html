@@ -48,6 +48,18 @@
           }
 
           <div class="visit-actions">
+            @if (directionsFor(visit); as url) {
+              <a
+                class="visit-directions"
+                [href]="url"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-smoke="visit-directions"
+              >
+                Get directions
+                <span class="sr-only">(opens Google Maps in a new tab)</span>
+              </a>
+            }
             @if (canComplete(visit)) {
               <app-button
                 variant="success"

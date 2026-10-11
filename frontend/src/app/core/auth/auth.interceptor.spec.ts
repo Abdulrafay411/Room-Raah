@@ -6,6 +6,10 @@ import { Subject, of, throwError } from 'rxjs';
 import { _resetInterceptorState, authInterceptor } from './auth.interceptor';
 import { AuthService } from './auth.service';
 import { AuthSessionDto } from './auth.model';
+import { environment } from '../../../environments/environment';
+
+/** Whatever the environment points at, so these tests do not break when the API moves. */
+const API = environment.apiBaseUrl;
 
 describe('authInterceptor', () => {
   let httpClient: HttpClient;
@@ -41,9 +45,9 @@ describe('authInterceptor', () => {
   it('should attach Bearer token to API requests when authenticated', () => {
     authService.accessTokenSignal.set(sampleToken);
 
-    httpClient.get('http://54.161.213.189:8080/api/v1/properties').subscribe();
+    httpClient.get(`${API}/properties`).subscribe();
 
-    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/properties');
+    const req = httpMock.expectOne(`${API}/properties`);
     expect(req.request.headers.get('Authorization')).toBe(`Bearer ${sampleToken}`);
     req.flush({ items: [] });
   });
@@ -51,9 +55,9 @@ describe('authInterceptor', () => {
   it('should not attach token to /auth/login request', () => {
     authService.accessTokenSignal.set(sampleToken);
 
-    httpClient.post('http://54.161.213.189:8080/api/v1/auth/login', {}).subscribe();
+    httpClient.post(`${API}/auth/login`, {}).subscribe();
 
-    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/auth/login');
+    const req = httpMock.expectOne(`${API}/auth/login`);
     expect(req.request.headers.has('Authorization')).toBe(false);
     req.flush({});
   });
@@ -71,16 +75,16 @@ describe('authInterceptor', () => {
       } as AuthSessionDto)
     );
 
-    httpClient.get('http://54.161.213.189:8080/api/v1/properties').subscribe();
+    httpClient.get(`${API}/properties`).subscribe();
 
     // 1st request fails with 401
-    const firstReq = httpMock.expectOne('http://54.161.213.189:8080/api/v1/properties');
+    const firstReq = httpMock.expectOne(`${API}/properties`);
     firstReq.flush({ error: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
 
     expect(refreshSpy).toHaveBeenCalled();
 
     // Retry request with refreshed token
-    const retryReq = httpMock.expectOne('http://54.161.213.189:8080/api/v1/properties');
+    const retryReq = httpMock.expectOne(`${API}/properties`);
     expect(retryReq.request.headers.get('Authorization')).toBe(`Bearer ${newRefreshedToken}`);
     retryReq.flush({ items: [] });
   });
@@ -90,14 +94,14 @@ describe('authInterceptor', () => {
     // Unverified user:
     vi.spyOn(authService, 'isEmailVerified').mockReturnValue(false);
 
-    httpClient.post('http://54.161.213.189:8080/api/v1/saved/1', {}).subscribe({
+    httpClient.post(`${API}/saved/1`, {}).subscribe({
       error: () => {},
     });
 
-    const req = httpMock.expectOne('http://54.161.213.189:8080/api/v1/saved/1');
+    const req = httpMock.expectOne(`${API}/saved/1`);
     req.flush({ error: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
 
-    expect(routerSpy.navigate).toHaveBeenCalledWith(['/verify']);
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/verify'], { queryParams: { reason: 'action' } });
   });
 
   it('should queue concurrent 401 requests and retry all after single refresh', () => {
@@ -110,17 +114,17 @@ describe('authInterceptor', () => {
     let req1Result: any = null;
     let req2Result: any = null;
 
-    httpClient.get('http://54.161.213.189:8080/api/v1/properties').subscribe((res) => (req1Result = res));
-    httpClient.get('http://54.161.213.189:8080/api/v1/areas').subscribe((res) => (req2Result = res));
+    httpClient.get(`${API}/properties`).subscribe((res) => (req1Result = res));
+    httpClient.get(`${API}/areas`).subscribe((res) => (req2Result = res));
 
     // Request 1 fails with 401, triggering silent refresh
-    const req1 = httpMock.expectOne('http://54.161.213.189:8080/api/v1/properties');
+    const req1 = httpMock.expectOne(`${API}/properties`);
     req1.flush({ error: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
 
     expect(refreshSpy).toHaveBeenCalledTimes(1);
 
     // Request 2 fails with 401 while refresh is in flight; should queue behind refresh
-    const req2 = httpMock.expectOne('http://54.161.213.189:8080/api/v1/areas');
+    const req2 = httpMock.expectOne(`${API}/areas`);
     req2.flush({ error: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
 
     // Still only 1 refresh call should have been made
@@ -136,8 +140,8 @@ describe('authInterceptor', () => {
     refreshSubject.complete();
 
     // Both requests should now retry with newRefreshedToken
-    const retry1 = httpMock.expectOne('http://54.161.213.189:8080/api/v1/properties');
-    const retry2 = httpMock.expectOne('http://54.161.213.189:8080/api/v1/areas');
+    const retry1 = httpMock.expectOne(`${API}/properties`);
+    const retry2 = httpMock.expectOne(`${API}/areas`);
 
     expect(retry1.request.headers.get('Authorization')).toBe(`Bearer ${newRefreshedToken}`);
     expect(retry2.request.headers.get('Authorization')).toBe(`Bearer ${newRefreshedToken}`);
@@ -159,21 +163,21 @@ describe('authInterceptor', () => {
     let req1Error: any = null;
     let req2Error: any = null;
 
-    httpClient.get('http://54.161.213.189:8080/api/v1/properties').subscribe({
+    httpClient.get(`${API}/properties`).subscribe({
       next: () => {},
       error: (err) => (req1Error = err),
     });
-    httpClient.get('http://54.161.213.189:8080/api/v1/areas').subscribe({
+    httpClient.get(`${API}/areas`).subscribe({
       next: () => {},
       error: (err) => (req2Error = err),
     });
 
     // Request 1 fails with 401
-    const req1 = httpMock.expectOne('http://54.161.213.189:8080/api/v1/properties');
+    const req1 = httpMock.expectOne(`${API}/properties`);
     req1.flush({ error: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
 
     // Request 2 fails with 401 and joins queue
-    const req2 = httpMock.expectOne('http://54.161.213.189:8080/api/v1/areas');
+    const req2 = httpMock.expectOne(`${API}/areas`);
     req2.flush({ error: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
 
     // Refresh fails

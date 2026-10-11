@@ -1,0 +1,54 @@
+@use 'tokens' as *;
+
+:host {
+  display: block;
+}
+
+.mailpit-tip-box {
+  margin-top: $space-6;
+  padding: $space-3 $space-4;
+  border-radius: $radius-md;
+  background-color: $color-slate-100;
+  border: 1px dashed $color-slate-300;
+}
+
+.tip-title {
+  display: block;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-slate-700;
+  margin-bottom: 2px;
+}
+
+.tip-note {
+  font-weight: $font-weight-regular;
+  color: $color-slate-600;
+}
+
+.mailpit-button {
+  display: inline-flex;
+  align-items: center;
+  margin-top: $space-2;
+  padding: $space-2 $space-4;
+  border-radius: $radius-md;
+  background-color: #ffffff;
+  border: 1px solid $color-slate-300;
+  color: $color-slate-700;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-decoration: none;
+
+  &::after {
+    content: '\2197';
+    margin-left: 6px;
+  }
+
+  &:hover {
+    background-color: $color-slate-50;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-slate-700;
+    outline-offset: 2px;
+  }
+}

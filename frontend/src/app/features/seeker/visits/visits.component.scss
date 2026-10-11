@@ -53,6 +53,31 @@
   margin-top: 0.5rem;
 }
 
+// Leaves the site, so it looks like a link-out rather than one of the page's own actions.
+.visit-directions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid #123b5d;
+  border-radius: 8px;
+  color: #123b5d;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+
+  &::after {
+    content: '↗';
+    font-size: 0.8em;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: #123b5d;
+    color: #fff;
+  }
+}
+
 .visits-error {
   padding: 0.75rem 1rem;
   border-radius: 8px;

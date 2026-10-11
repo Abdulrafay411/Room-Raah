@@ -1,96 +1,175 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
 .form-page {
-  padding: 1.5rem 1rem 3rem;
-  max-width: 760px;
+  padding-top: $space-6;
+  // Room for the save bar that stays at the bottom of the screen.
+  padding-bottom: calc(#{$space-12} + 72px);
 }
 
 .form-breadcrumb {
-  margin-bottom: 0.5rem;
+  margin-bottom: $space-2;
+  font-size: $font-size-sm;
+
+  a {
+    color: $color-navy;
+    @include focus-visible;
+  }
 }
 
 .form-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: $space-3;
+  margin-bottom: $space-4;
 }
 
 .form-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: $font-size-2xl;
+  line-height: $line-height-tight;
+}
+
+.form-loading {
+  margin: 0;
+  padding: $space-5 0;
+  color: $color-slate-500;
+}
+
+// The form on the left, the listing's state on the right. One column below a laptop,
+// where the state card leads so the next step is read before the fields.
+.form-layout {
+  display: grid;
+  gap: $space-5;
+  align-items: start;
+
+  @include laptop-up {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+}
+
+.form-main {
+  display: grid;
+  gap: $space-5;
+  min-width: 0;
+}
+
+.form-side {
+  min-width: 0;
+
+  @include laptop-up {
+    position: sticky;
+    top: calc(64px + #{$space-4});
+  }
+
+  @media (max-width: #{$breakpoint-tablet-max}) {
+    order: -1;
+  }
 }
 
 .listing-form {
   display: grid;
-  gap: 1.5rem;
+  gap: $space-5;
 }
 
 .form-section {
   display: grid;
-  gap: 0.9rem;
+  gap: $space-4;
   margin: 0;
-  padding: 1.1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #fff;
+  min-width: 0;
+  padding: $space-5;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+  background: $color-surface;
+
+  @include phone {
+    padding: $space-4;
+  }
 }
 
 .form-legend {
-  padding: 0 0.35rem;
-  font-size: 1.05rem;
-  font-weight: 600;
+  padding: 0;
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
 }
 
 .form-row {
   display: grid;
-  gap: 0.9rem;
+  gap: $space-4;
   grid-template-columns: 1fr;
-}
 
-@media (min-width: 640px) {
-  .form-row {
+  @include tablet-up {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 .form-hint {
   margin: 0;
+  color: $color-slate-600;
+  font-size: $font-size-sm;
+}
+
+.form-hint-photos {
+  padding: $space-4;
+  border: 1px dashed $color-slate-300;
+  border-radius: $radius-lg;
+}
+
+.form-map {
+  display: grid;
+  gap: $space-2;
 }
 
 .facility-grid {
   display: grid;
-  gap: 0.4rem;
+  gap: $space-2;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
 }
 
 .facility-choice {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: border-color $transition-fast, background-color $transition-fast;
 
-.form-actions {
-  display: flex;
-  gap: 0.5rem;
+  &.is-on {
+    border-color: $color-green;
+    background: $color-green-light;
+  }
+
+  input {
+    accent-color: $color-green;
+  }
+
+  &:focus-within {
+    outline: 2px solid $color-navy;
+    outline-offset: 1px;
+  }
 }
 
 .form-banner,
 .form-notice,
 .form-error {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin: 0 0 1rem;
+  padding: $space-3 $space-4;
+  border-radius: $radius-md;
+  margin: 0 0 $space-4;
 }
 
 .form-banner.is-revision {
-  border: 1px solid #fcd34d;
-  background: #fffbeb;
-  color: #92400e;
+  border: 1px solid $color-warning-border;
+  background: $color-warning-light;
+  color: $color-warning-hover;
 }
 
 .form-banner.is-locked {
-  border: 1px solid #cbd5e1;
-  background: #f1f5f9;
+  border: 1px solid $color-slate-300;
+  background: $color-slate-100;
 }
 
 .form-notice {
@@ -100,20 +179,28 @@
 }
 
 .form-error {
-  border: 1px solid #fecaca;
-  background: #fef2f2;
+  border: 1px solid $color-danger-border;
+  background: $color-danger-light;
   color: #991b1b;
 }
 
-.photo-section {
-  display: grid;
-  gap: 0.75rem;
-  justify-items: start;
-  margin-top: 1.75rem;
-  padding: 1.1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #fff;
+// Photographs.
+.photo-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $space-2;
+}
+
+.photo-count {
+  color: $color-green-hover;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+
+  &.is-short {
+    color: $color-warning-hover;
+  }
 }
 
 .photo-list {
@@ -121,50 +208,297 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-  width: 100%;
+  gap: $space-3;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
 
 .photo {
   display: grid;
-  gap: 0.35rem;
-  padding: 0.5rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-}
+  gap: $space-2;
+  padding: $space-2;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-md;
+  background: $color-surface;
 
-/* A proposal is visibly not the same thing as a live photograph. */
-.photo.is-pending {
-  border-style: dashed;
-  opacity: 0.85;
+  &.is-primary {
+    border-color: $color-navy;
+  }
+
+  // A proposal is visibly not the same thing as a live photograph.
+  &.is-pending {
+    border-style: dashed;
+
+    .photo-thumb {
+      opacity: 0.7;
+    }
+  }
 }
 
 .photo-thumb {
+  display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
+  border-radius: $radius-sm;
   object-fit: cover;
-  border-radius: 6px;
+  background: $color-slate-100;
 }
 
-.photo-tags,
+.photo-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-1;
+  min-height: 20px;
+}
+
 .photo-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
   align-items: center;
+  gap: 2px;
 }
 
-.photo-actions button {
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #fff;
-  padding: 0.15rem 0.45rem;
-  font: inherit;
-  cursor: pointer;
+.photo-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.photo-remove {
+  margin-left: auto;
+  color: $color-danger;
+}
+
+.photo-add-tile {
+  padding: 0;
+  border: 0;
 }
 
 .photo-add {
+  position: relative;
   display: grid;
-  gap: 0.35rem;
+  justify-items: center;
+  align-content: center;
+  gap: $space-1;
+  height: 100%;
+  min-height: 160px;
+  padding: $space-3;
+  border: 2px dashed $color-slate-300;
+  border-radius: $radius-md;
+  color: $color-navy;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color $transition-fast, background-color $transition-fast;
+
+  &:hover {
+    border-color: $color-navy;
+    background: $color-navy-light;
+  }
+
+  &:focus-within {
+    outline: 2px solid $color-navy;
+    outline-offset: 2px;
+  }
+
+  &.is-busy {
+    cursor: progress;
+    opacity: 0.7;
+  }
+}
+
+// The real input stays in the page for the keyboard and the screen reader; the tile is
+// what the eye sees.
+.photo-add-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.photo-add-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.photo-add-label {
+  font-weight: $font-weight-semibold;
+}
+
+.photo-add-hint {
+  color: $color-slate-500;
+  font-size: $font-size-xs;
+}
+
+// The side card: status, what was proposed, and the checklist for sending.
+.side-card {
+  display: grid;
+  gap: $space-3;
+  padding: $space-4;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-lg;
+  background: $color-surface;
+}
+
+.side-eyebrow {
+  margin: 0;
+  color: $color-slate-500;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.side-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-1;
+}
+
+.side-copy {
+  margin: 0;
+  color: $color-slate-700;
+  font-size: $font-size-sm;
+}
+
+.side-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: $space-2;
+  margin: 0;
+  font-size: $font-size-base;
+}
+
+.side-count {
+  color: $color-slate-500;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.side-hint {
+  margin: 0;
+  color: $color-slate-500;
+  font-size: $font-size-xs;
+}
+
+.side-steps {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: $space-2;
+  color: $color-slate-700;
+  font-size: $font-size-sm;
+}
+
+.revision,
+.readiness {
+  display: grid;
+  gap: $space-2;
+  padding-top: $space-3;
+  border-top: 1px solid $color-slate-200;
+}
+
+.revision-diff {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-xs;
+
+  th,
+  td {
+    padding: $space-1 $space-2;
+    border-bottom: 1px solid $color-slate-200;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  thead th {
+    color: $color-slate-500;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  tbody th {
+    font-weight: $font-weight-semibold;
+  }
+
+  .was {
+    color: $color-slate-500;
+  }
+
+  .now {
+    background: $color-green-light;
+  }
+}
+
+.readiness-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: $space-1;
+  font-size: $font-size-sm;
+  color: $color-slate-700;
+
+  li {
+    display: flex;
+    gap: $space-2;
+    align-items: baseline;
+
+    &.is-done {
+      color: $color-slate-500;
+    }
+  }
+}
+
+.readiness-mark {
+  width: 1.2em;
+  color: $color-warning-hover;
+  font-weight: $font-weight-bold;
+
+  .is-done & {
+    color: $color-green;
+  }
+}
+
+.sr-only {
+  @include sr-only;
+}
+
+// The form's own save, where the thumb is: at the bottom of the screen, always.
+.save-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2 $space-4;
+  padding: $space-3 $space-4;
+  border-top: 1px solid $color-slate-200;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 -8px 24px rgba(18, 59, 93, 0.08);
+
+  @include tablet-up {
+    padding-left: $space-6;
+    padding-right: $space-6;
+  }
+}
+
+.save-state {
+  margin: 0;
+  color: $color-slate-600;
+  font-size: $font-size-sm;
+  max-width: 60ch;
+}
+
+.save-actions {
+  display: flex;
+  gap: $space-2;
+  margin-left: auto;
 }

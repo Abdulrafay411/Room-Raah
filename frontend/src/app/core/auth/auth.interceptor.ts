@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, filter, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { verifyParams } from './guards/session';
 import { environment } from '../../../environments/environment';
 
 let isRefreshing = false;
@@ -51,7 +52,9 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
       // landing page, off search and off every listing, which is the opposite of the rule.
       if (error.status === 403 && isApiRequest && req.method !== 'GET') {
         if (!authService.isEmailVerified()) {
-          router.navigate(['/verify']);
+          router.navigate(['/verify'], {
+            queryParams: verifyParams({ returnUrl: router.url, reason: 'action' }),
+          });
         }
       }
 

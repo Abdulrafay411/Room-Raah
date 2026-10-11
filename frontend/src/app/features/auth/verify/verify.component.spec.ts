@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { VerifyComponent } from './verify.component';
+import { VerifyComponent, safeReturnUrl } from './verify.component';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuthSessionDto } from '../../../core/auth/auth.model';
 
@@ -115,5 +115,58 @@ describe('VerifyComponent', () => {
 
     expect(component.errorMessage()).toContain('Please wait 45 seconds');
     expect(component.resendCooldownSeconds()).toBe(45);
+  });
+});
+
+describe('VerifyComponent sent here from somewhere', () => {
+  it('says why, and goes back there once the code is accepted', () => {
+    const auth = {
+      verifyOtp: vi.fn().mockReturnValue(
+        of({
+          accessToken: 'a',
+          refreshToken: 'r',
+          expiresInSeconds: 1800,
+          user: { id: 9, fullName: 'Zara Iqbal', email: 'zara@roomraah.local', role: 'Seeker', isEmailVerified: true },
+        }),
+      ),
+      resendOtp: vi.fn(),
+      currentUser: vi.fn().mockReturnValue(null),
+    };
+    TestBed.configureTestingModule({
+      imports: [VerifyComponent],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: auth },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParams: { returnUrl: '/property/4', reason: 'save' } } },
+        },
+      ],
+    });
+    const router = TestBed.inject(Router);
+    vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(VerifyComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    expect(fixture.nativeElement.querySelector('[data-smoke="verify-reason"]').textContent).toContain(
+      'save this room',
+    );
+
+    component.verifyForm.patchValue({ email: 'zara@roomraah.local', code: '123456' });
+    component.onSubmit();
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/property/4');
+  });
+});
+
+describe('safeReturnUrl', () => {
+  it('accepts only a path inside the app', () => {
+    expect(safeReturnUrl('/property/4?x=1')).toBe('/property/4?x=1');
+    expect(safeReturnUrl('https://evil.example')).toBeNull();
+    expect(safeReturnUrl('//evil.example')).toBeNull();
+    expect(safeReturnUrl('/' + String.fromCharCode(92) + 'evil.example')).toBeNull();
+    expect(safeReturnUrl('/verify')).toBeNull();
+    expect(safeReturnUrl(undefined)).toBeNull();
   });
 });

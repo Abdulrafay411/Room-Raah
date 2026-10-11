@@ -12,6 +12,7 @@ import { EngagementService } from '../../core/services/engagement.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { toFailure } from '../../core/http/api-error';
 import { REPORT_DETAILS_MAX, REPORT_REASONS, ReportReason } from '../../core/models/engagement.model';
+import { verifyParams } from '../../core/auth/guards/session';
 
 /**
  * Reporting a listing, as a dialog on the listing itself rather than a page of its own.
@@ -84,7 +85,9 @@ export class ReportDialogComponent {
       error: (err) => {
         const failure = toFailure(err);
         if (failure.needsVerification) {
-          this.router.navigate(['/verify']);
+          this.router.navigate(['/verify'], {
+            queryParams: verifyParams({ returnUrl: this.router.url, reason: 'report' }),
+          });
           return;
         }
         this.error.set(failure.message);

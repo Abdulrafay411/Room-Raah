@@ -1,43 +1,179 @@
 @use '../admin-common';
+@use 'tokens' as *;
+@use 'mixins' as *;
 
 .queue-tabs {
-  display: flex;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  display: inline-flex;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-md;
   overflow: hidden;
+
+  button {
+    border: 0;
+    border-radius: 0;
+    background: $color-surface;
+    padding: 0.55rem 0.85rem;
+    color: $color-slate-700;
+    font: inherit;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+
+    & + button {
+      border-left: 1px solid $color-slate-300;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-navy;
+      outline-offset: -2px;
+    }
+
+    &.is-active {
+      background: $color-navy;
+      color: #fff;
+    }
+  }
 }
 
-.queue-tabs button {
-  border: 0;
-  border-radius: 0;
-  background: #fff;
-  padding: 0.6rem 0.85rem;
-  font: inherit;
-  cursor: pointer;
+.beds {
+  display: flex;
+  align-items: baseline;
+  gap: $space-2;
+  margin: 0;
+
+  strong {
+    font-size: $font-size-lg;
+  }
+
+  &.beds-large strong {
+    font-size: $font-size-3xl;
+  }
 }
 
-.queue-tabs button.is-active {
-  background: #123b5d;
-  color: #fff;
+.beds-arrow {
+  color: $color-slate-400;
 }
 
-.revision-detail {
-  display: grid;
-  gap: 1rem;
+.changed {
+  margin: 0;
+  color: $color-slate-700;
+  font-size: $font-size-sm;
+}
+
+.sr-only {
+  @include sr-only;
 }
 
 .diff {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-sm;
+
+  th,
+  td {
+    padding: $space-2 $space-3;
+    border-bottom: 1px solid $color-slate-200;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  thead th {
+    background: $color-slate-50;
+    color: $color-slate-600;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  tbody th {
+    width: 28%;
+    font-weight: $font-weight-semibold;
+    color: $color-slate-800;
+  }
+
+  .was {
+    color: $color-slate-500;
+  }
+
+  .now {
+    background: $color-green-light;
+    color: $color-slate-900;
+  }
+
+  @include phone {
+    thead {
+      @include sr-only;
+    }
+
+    tr {
+      display: grid;
+      padding: $space-2 0;
+      border-bottom: 1px solid $color-slate-200;
+    }
+
+    th,
+    td {
+      border: 0;
+      padding: 2px $space-2;
+    }
+
+    tbody th {
+      width: auto;
+    }
+
+    .was::before {
+      content: 'Live now: ';
+      color: $color-slate-400;
+    }
+
+    .now::before {
+      content: 'Proposed: ';
+      color: $color-green-hover;
+    }
+  }
+}
+
+.photo-strip {
+  display: flex;
+  gap: $space-2;
+  margin: 0;
+  padding: 0 0 $space-1;
+  list-style: none;
   overflow-x: auto;
 }
 
-.diff-head,
-.diff-row {
-  display: grid;
-  grid-template-columns: minmax(120px, 0.6fr) repeat(2, minmax(220px, 1fr));
-  gap: 0.75rem;
-  min-width: 620px;
-  padding: 0.7rem;
-  border-bottom: 1px solid #e2e8f0;
+.photo {
+  flex: 0 0 auto;
+
+  a {
+    display: block;
+    border-radius: $radius-md;
+    @include focus-visible;
+  }
+
+  img {
+    display: block;
+    width: 96px;
+    height: 72px;
+    border-radius: $radius-md;
+    object-fit: cover;
+    background: $color-slate-100;
+  }
+
+  &.is-add img {
+    outline: 2px solid $color-green;
+    outline-offset: 1px;
+  }
+
+  &.is-remove img {
+    outline: 2px solid $color-danger;
+    outline-offset: 1px;
+    opacity: 0.7;
+  }
 }
 
-.diff-head { background: #f1f5f9; }
+.prose {
+  margin: 0;
+  white-space: pre-wrap;
+}

@@ -61,39 +61,50 @@
       </div>
     </form>
 
-    <!-- Seed accounts helper for rapid manual verification (§3) -->
-    <div class="seed-accounts-box">
-      <span class="seed-title">Quick test sign-in (Seed Accounts):</span>
-      <div class="seed-chips-row">
-        <button
-          type="button"
-          class="seed-chip"
-          (click)="fillSeedAccount('seeker1@roomraah.local')"
-        >
-          Seeker 1
-        </button>
-        <button
-          type="button"
-          class="seed-chip"
-          (click)="fillSeedAccount('seeker.unverified@roomraah.local')"
-        >
-          Seeker (Unverified)
-        </button>
-        <button
-          type="button"
-          class="seed-chip"
-          (click)="fillSeedAccount('owner.checked@roomraah.local')"
-        >
-          Owner (Checked)
-        </button>
-        <button
-          type="button"
-          class="seed-chip"
-          (click)="fillSeedAccount('admin@roomraah.local')"
-        >
-          Admin (Can Inspect)
-        </button>
+    <!-- TESTING ONLY: lists real accounts from the DB through the admin API. -->
+    <div class="seed-accounts-box" data-smoke="quick-login">
+      <p class="seed-title">Quick sign-in <span class="seed-note">(only for testing)</span></p>
+      <div class="seed-selects">
+        <label class="seed-field">
+          <span class="seed-label">Account type</span>
+          <select class="seed-select" (change)="pickType($any($event.target).value)">
+            <option value="">Choose a type</option>
+            @for (type of quickTypes; track type.key) {
+              <option [value]="type.key">{{ type.label }}</option>
+            }
+          </select>
+        </label>
+        <label class="seed-field">
+          <span class="seed-label">Account</span>
+          <select
+            class="seed-select"
+            [value]="quickEmail()"
+            [disabled]="!quickType() || quickLoading() || quickAccounts().length === 0"
+            (change)="pickAccount($any($event.target).value)"
+          >
+            <option value="">
+              @if (!quickType()) {
+                Choose a type first
+              } @else if (quickLoading()) {
+                Loading accounts…
+              } @else if (quickAccounts().length === 0) {
+                No {{ quickType()?.label }} accounts yet
+              } @else {
+                Choose an account
+              }
+            </option>
+            @for (account of quickAccounts(); track account.id) {
+              <option [value]="account.email">{{ accountLabel(account) }}</option>
+            }
+          </select>
+        </label>
       </div>
+      @if (quickError()) {
+        <p class="seed-message is-error" role="alert">{{ quickError() }}</p>
+      }
+      @if (quickHint()) {
+        <p class="seed-message">{{ quickHint() }}</p>
+      }
     </div>
 
     <div class="auth-footer">

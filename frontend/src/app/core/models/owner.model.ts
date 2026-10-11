@@ -95,11 +95,58 @@ export interface MyListing {
   pendingRevision?: PendingRevision | null;
 }
 
+/** One line of a revision's diff, rendered as text by the server. */
+export interface RevisionChange {
+  field: string;
+  current: string | null;
+  proposed: string | null;
+}
+
+/**
+ * The revision a write on a published listing created. The OpenAPI description answers
+ * with the full `RevisionDetailDto` - the diff included - which is the only time an owner
+ * ever sees what they proposed beside what is live. `status` and `createdAt` are the older
+ * names kept so either spelling reads.
+ */
 export interface PendingRevision {
   id: number;
   kind: RevisionKind;
-  status: RevisionStatus;
-  createdAt: string;
+  reviewStatus?: RevisionStatus;
+  status?: RevisionStatus;
+  submittedAt?: string;
+  createdAt?: string;
+  changes?: RevisionChange[];
+  photosToAdd?: { id: number; thumbnailUrl: string }[];
+  photosToRemove?: { id: number; thumbnailUrl: string }[];
+}
+
+export function revisionSince(revision: PendingRevision): string | null {
+  return revision.submittedAt ?? revision.createdAt ?? null;
+}
+
+/**
+ * What the OpenAPI description says a write on a listing answers with: the listing and
+ * the revision it made, as two fields. The prose in the brief reads as though it were one
+ * flat object, and the shape file wins. This reads both, so the screens are right either way.
+ */
+export type ListingWriteResponse =
+  | MyListing
+  | { listing: MyListing; pendingRevision: PendingRevision | null };
+
+export function unwrapWrite(response: ListingWriteResponse): MyListing {
+  if ('listing' in response && response.listing) {
+    return { ...response.listing, pendingRevision: response.pendingRevision ?? null };
+  }
+  return response as MyListing;
+}
+
+/** What `POST /owner/properties/{id}/inspection-request` answers with. Rule 108: once per listing. */
+export interface OwnerInspectionState {
+  propertyId: number;
+  inspectionRequested: boolean;
+  inspectionRequestedAt: string | null;
+  hasInspectionBadge: boolean;
+  lastInspectionAt: string | null;
 }
 
 /** What create and update both send. Every field is required except `houseRules`. */
@@ -264,3 +311,93 @@ export function statusVariant(
   if (status === 'Rejected' || status === 'Unpublished') return 'danger';
   return 'neutral';
 }
+
+/**
+ * The sentence under a listing on the dashboard: where it is in the lifecycle and what the
+ * owner does next. The status badge says the state; this says what to do about it.
+ */
+export function nextStep(status: PropertyStatus, photoCount: number): string {
+  switch (status) {
+    case 'Draft': {
+      const missing = PHOTOS_MIN - photoCount;
+      return missing > 0
+        ? `Not in search yet. Add ${missing} more photograph${missing === 1 ? '' : 's'}, then send it for review.`
+        : 'Not in search yet. Send it for review when you are ready.';
+    }
+    case 'PendingReview':
+      return 'With the review team. You will see their answer here; nothing can be changed until then.';
+    case 'ChangesRequested':
+      return 'The review team asked for changes. Edit the listing, then send it again.';
+    case 'Published':
+      return 'Live in search. Changes you make are reviewed before they show.';
+    case 'Rejected':
+      return 'The review team did not accept it. Edit the listing and send it again.';
+    case 'Unpublished':
+      return 'Taken out of search by the review team. It comes back once they approve it again.';
+  }
+}
+
+export interface ReadinessItem {
+  label: string;
+  done: boolean;
+}
+
+/**
+ * The checklist beside the form: what a listing still needs before it can go to review.
+ * The same things `localProblem` and the server refuse, listed so they can be seen rather
+ * than discovered one at a time.
+ */
+export function readiness(draft: ListingDraft, livePhotos: number): ReadinessItem[] {
+  return [
+    { label: 'A title', done: draft.title.trim().length > 0 },
+    { label: 'A description', done: draft.description.trim().length > 0 },
+    { label: 'City, area and address', done: draft.areaId > 0 && draft.addressLine.trim().length > 0 },
+    { label: 'A monthly rent', done: draft.monthlyRent > 0 },
+    {
+      label: `At least ${PHOTOS_MIN} photographs (${Math.min(livePhotos, PHOTOS_MAX)} of ${PHOTOS_MIN})`,
+      done: livePhotos >= PHOTOS_MIN,
+    },
+  ];
+}
+
+/** Whether the form differs from the listing it was loaded from. Facilities compare as a set. */
+export function isDirty(draft: ListingDraft, baseline: ListingDraft): boolean {
+  const keys = Object.keys(draft) as (keyof ListingDraft)[];
+  return keys.some((key) => {
+    if (key === 'facilityIds') {
+      const a = [...draft.facilityIds].sort((x, y) => x - y);
+      const b = [...baseline.facilityIds].sort((x, y) => x - y);
+      return a.length !== b.length || a.some((id, i) => id !== b[i]);
+    }
+    return draft[key] !== baseline[key];
+  });
+}
+
+/** Field names in a revision diff, as the form labels them. */
+const FIELD_LABELS: Record<string, string> = {
+  title: 'Title',
+  description: 'Description',
+  roomType: 'Room type',
+  genderPolicy: 'Who it is for',
+  totalBeds: 'Beds in the room',
+  availableBeds: 'Beds free right now',
+  monthlyRent: 'Monthly rent',
+  securityDeposit: 'Security deposit',
+  utilitiesCharge: 'Utilities a month',
+  messCharge: 'Mess a month',
+  houseRules: 'House rules',
+  addressLine: 'Address',
+  areaId: 'Area',
+  areaName: 'Area',
+  latitude: 'Map pin',
+  longitude: 'Map pin',
+  facilities: 'Facilities',
+  facilityIds: 'Facilities',
+};
+
+export function revisionFieldLabel(field: string): string {
+  if (FIELD_LABELS[field]) return FIELD_LABELS[field];
+  const spaced = field.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+

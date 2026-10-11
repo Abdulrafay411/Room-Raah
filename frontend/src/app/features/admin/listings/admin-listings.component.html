@@ -1,126 +1,259 @@
 <section class="admin-panel" data-smoke="admin-listings">
-  <div class="panel-card panel-head">
-    <div>
-      <h2>Listing queue</h2>
-      <p class="muted">Review listing facts, record checks, then make a publishing decision.</p>
-    </div>
-    <label>
-      Status
-      <select [ngModel]="status()" (ngModelChange)="status.set($event); load()">
-        <option value="">All listings</option>
-        <option value="PendingReview">Pending review</option>
-        <option value="Published">Published</option>
-        <option value="ChangesRequested">Changes requested</option>
-        <option value="Rejected">Rejected</option>
-        <option value="Unpublished">Unpublished</option>
-        <option value="Draft">Draft</option>
-      </select>
-    </label>
-  </div>
-
   @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
   @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
 
-  <div class="panel-card">
-    @if (loading()) {
-      <p>Loading listings…</p>
-    } @else if (items().length === 0) {
-      <p class="empty-copy" data-smoke="admin-listings-empty">No listings in this queue.</p>
-    } @else {
-      <ul class="queue" data-smoke="admin-listings-list">
-        @for (row of items(); track row.id) {
-          <li class="queue-row">
-            <div class="row-head">
-              <h3>{{ row.title }}</h3>
-              <span class="status" [attr.data-state]="row.status">{{ row.status }}</span>
-            </div>
-            <div class="meta">
-              <span>{{ row.areaName }}, {{ row.cityName }}</span>
-              <span>Owner: {{ row.ownerName }}</span>
-              <span>{{ row.monthlyRent | currency:'PKR':'symbol':'1.0-0' }}/month</span>
-              <span>{{ row.photoCount }} photos</span>
-            </div>
-            <div><app-button size="sm" variant="outline" (clicked)="open(row)">Review listing</app-button></div>
-          </li>
-        }
-      </ul>
-    }
-  </div>
-
-  @if (detailLoading()) {
-    <div class="panel-card"><p>Loading review…</p></div>
-  } @else if (selected(); as detail) {
-    <article class="panel-card listing-detail" data-smoke="admin-listing-detail">
+  <app-admin-workspace
+    [detailOpen]="!!selected() || detailLoading()"
+    detailLabel="Listing review"
+    placeholder="Choose a listing from the queue. Its facts, checks and decision open here."
+    (closed)="close()"
+  >
+    <div workspace-list class="panel-card">
       <div class="panel-head">
-        <div><h2>{{ detail.title }}</h2><p>{{ detail.addressLine }}, {{ detail.areaName }}, {{ detail.cityName }}</p></div>
-        <span class="status" [attr.data-state]="detail.status">{{ detail.status }}</span>
+        <div>
+          <h2>Listing queue</h2>
+          <p class="muted">Check the facts, record the four checks, then decide.</p>
+        </div>
+        <label class="filter">
+          Status
+          <select [ngModel]="status()" (ngModelChange)="filter($event)" name="status">
+            @for (option of statusFilters; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </label>
       </div>
 
-      <div class="detail-grid">
-        <p class="wide">{{ detail.description }}</p>
-        <p><strong>Owner</strong><br>{{ detail.owner.fullName }} · {{ detail.owner.identityStatus }}</p>
-        <p><strong>Room</strong><br>{{ detail.roomType }} · {{ detail.genderPolicy }}</p>
-        <p><strong>Beds</strong><br>{{ detail.availableBeds }} of {{ detail.totalBeds }} available</p>
-        <p><strong>Monthly rent</strong><br>{{ detail.monthlyRent | currency:'PKR':'symbol':'1.0-0' }}</p>
-        <p><strong>Facilities</strong><br>{{ detail.facilities.length ? detail.facilities.length + ' recorded' : 'None recorded' }}</p>
-        <p><strong>Photos</strong><br>{{ detail.photos.length }} uploaded</p>
-      </div>
-
-      <section class="checks">
-        <h3>Verification checks</h3>
-        <ul class="check-list">
-          @for (type of checkTypes; track type) {
-            <li>
-              <strong>{{ type }}</strong>
-              @if (checkFor(detail, type); as check) {
-                <span class="status" [attr.data-state]="check.status">{{ check.status }}</span>
+      @if (loading()) {
+        <p class="loading-copy" aria-busy="true">Loading listings…</p>
+      } @else if (items().length === 0) {
+        <p class="empty-copy" data-smoke="admin-listings-empty">
+          No {{ status() ? label(status()).toLowerCase() : '' }} listings right now.
+        </p>
+      } @else {
+        <ul class="queue" data-smoke="admin-listings-list">
+          @for (row of items(); track row.id) {
+            <li
+              class="queue-row listing-row"
+              [class.is-selected]="selected()?.id === row.id"
+              [attr.aria-current]="selected()?.id === row.id ? 'true' : null"
+            >
+              @if (row.primaryThumbnailUrl) {
+                <img class="thumb" [src]="row.primaryThumbnailUrl" alt="" />
               } @else {
-                <span class="status">NotChecked</span>
+                <div class="thumb thumb-empty" aria-hidden="true">No photo</div>
               }
+              <div class="listing-row-body">
+                <div class="row-head">
+                  <h3>{{ row.title }}</h3>
+                  <app-admin-status [value]="row.status" />
+                </div>
+                <p class="meta">
+                  <span>{{ row.areaName }}, {{ row.cityName }}</span>
+                  <span>{{ row.ownerName }}</span>
+                  <span>{{ row.monthlyRent | currency: 'PKR' : 'symbol' : '1.0-0' }}/month</span>
+                  <span>{{ row.photoCount }} photo{{ row.photoCount === 1 ? '' : 's' }}</span>
+                </p>
+              </div>
+              <div class="row-actions">
+                <app-button size="sm" variant="outline" (clicked)="open(row)">Review listing</app-button>
+              </div>
             </li>
           }
         </ul>
+      }
 
-        <div class="form-grid">
-          <label class="field">Check
-            <select [ngModel]="checkType()" (ngModelChange)="checkType.set($event)">
-              @for (type of checkTypes; track type) { <option [value]="type">{{ type }}</option> }
-            </select>
-          </label>
-          <label class="field">Result
-            <select [ngModel]="checkStatus()" (ngModelChange)="checkStatus.set($event)">
-              <option value="Checked">Checked</option><option value="Failed">Failed</option><option value="NotChecked">Not checked</option>
-            </select>
-          </label>
-          <label class="field">Evidence date (optional)
-            <input type="date" [max]="today" [ngModel]="evidenceDate()" (ngModelChange)="evidenceDate.set($event)">
-          </label>
-          <label class="field">Note (optional)
-            <input [ngModel]="checkNote()" (ngModelChange)="checkNote.set($event)" maxlength="1000">
-          </label>
-        </div>
-        <app-button size="sm" [loading]="saving()" (clicked)="recordCheck()">Record check</app-button>
-      </section>
+      <app-admin-pager
+        [page]="page()"
+        [pageSize]="pageSize"
+        [totalCount]="total()"
+        noun="listings"
+        (pageChange)="goTo($event)"
+      />
+    </div>
 
-      <section class="decision">
-        <h3>Decision</h3>
-        <label class="field">Reason or note
-          <textarea [ngModel]="adminNote()" (ngModelChange)="adminNote.set($event)" maxlength="1000"></textarea>
-        </label>
-        <div class="action-row">
-          @if (detail.status === 'PendingReview') {
-            <app-button variant="success" [disabled]="!detail.canPublish" [loading]="saving()" (clicked)="decide('approve')">Approve and publish</app-button>
-            <app-button variant="outline" [loading]="saving()" (clicked)="decide('request-changes')">Request changes</app-button>
-            <app-button variant="danger" [loading]="saving()" (clicked)="decide('reject')">Reject</app-button>
+    <div workspace-detail>
+      @if (detailLoading()) {
+        <p class="loading-copy" aria-busy="true">Loading review…</p>
+      } @else if (selected(); as detail) {
+        <article class="detail" data-smoke="admin-listing-detail">
+          <header class="detail-head">
+            <div>
+              <h2>{{ detail.title }}</h2>
+              <p>{{ detail.addressLine }}, {{ detail.areaName }}, {{ detail.cityName }}</p>
+            </div>
+            <app-admin-status [value]="detail.status" />
+          </header>
+
+          @if (photosInOrder(detail); as photos) {
+            @if (photos.length) {
+              <ul class="photo-strip" aria-label="Photographs">
+                @for (photo of photos; track photo.id; let i = $index) {
+                  <li class="photo" [class.is-primary]="photo.isPrimary">
+                    @let caption = 'Photograph ' + (i + 1) + ' of ' + photos.length + (photo.isPrimary ? ', the main one' : '');
+                    <a [href]="photo.url" target="_blank" rel="noopener" [attr.aria-label]="caption + ' (opens full size)'">
+                      <img [src]="photo.thumbnailUrl" [alt]="caption" />
+                    </a>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="muted">No photographs uploaded yet.</p>
+            }
           }
-          @if (detail.status === 'Published') {
-            <app-button variant="danger" [loading]="saving()" (clicked)="decide('unpublish')">Unpublish listing</app-button>
-          }
-        </div>
-        @if (detail.status === 'PendingReview' && !detail.canPublish) {
-          <p class="muted">Complete the four required checks before publishing.</p>
-        }
-      </section>
-    </article>
-  }
+
+          <dl class="facts">
+            <div>
+              <dt>Owner</dt>
+              <dd>
+                {{ detail.owner.fullName }}
+                <app-admin-status [value]="detail.owner.identityStatus" />
+              </dd>
+            </div>
+            <div>
+              <dt>Room</dt>
+              <dd>{{ detail.roomType }} · {{ detail.genderPolicy }}</dd>
+            </div>
+            <div>
+              <dt>Beds</dt>
+              <dd>{{ detail.availableBeds }} of {{ detail.totalBeds }} free</dd>
+            </div>
+            <div>
+              <dt>Rent</dt>
+              <dd>
+                {{ detail.monthlyRent | currency: 'PKR' : 'symbol' : '1.0-0' }}/month
+                @if (detail.securityDeposit) { · {{ detail.securityDeposit | currency: 'PKR' : 'symbol' : '1.0-0' }} deposit }
+              </dd>
+            </div>
+            <div>
+              <dt>Extras</dt>
+              <dd>
+                Utilities {{ detail.utilitiesCharge | currency: 'PKR' : 'symbol' : '1.0-0' }} ·
+                Mess {{ detail.messCharge | currency: 'PKR' : 'symbol' : '1.0-0' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Last updated</dt>
+              <dd>{{ detail.updatedAt | date: 'd MMM y' }}</dd>
+            </div>
+            <div class="wide">
+              <dt>Facilities</dt>
+              <dd>{{ detail.facilities.length ? facilityNames(detail) : 'None ticked' }}</dd>
+            </div>
+            <div class="wide">
+              <dt>Description</dt>
+              <dd class="prose">{{ detail.description }}</dd>
+            </div>
+            @if (detail.houseRules) {
+              <div class="wide">
+                <dt>House rules</dt>
+                <dd class="prose">{{ detail.houseRules }}</dd>
+              </div>
+            }
+          </dl>
+
+          <section class="detail-section" aria-labelledby="checks-title">
+            <div class="section-head">
+              <h3 id="checks-title">Verification checks</h3>
+              <p class="muted">
+                {{ requiredPassed() }} of {{ requiredTotal }} required checks passed.
+              </p>
+            </div>
+
+            <ul class="check-list">
+              @for (type of checkTypes; track type) {
+                @let check = checkFor(detail, type);
+                <li class="check" [class.is-editing]="editingCheck() === type">
+                  <div class="check-row">
+                    <div class="check-copy">
+                      <strong>{{ checkLabels[type].name }}</strong>
+                      <span class="check-kind">{{ isRequired(type) ? 'Required' : 'Optional' }}</span>
+                      <p class="check-hint">
+                        @if (check) {
+                          Recorded {{ check.recordedAt | date: 'd MMM y' }}
+                          @if (check.evidenceDate) { · evidence from {{ check.evidenceDate | date: 'd MMM y' }} }
+                          @if (check.note) { · {{ check.note }} }
+                        } @else {
+                          {{ checkLabels[type].hint }}
+                        }
+                      </p>
+                    </div>
+                    <app-admin-status [value]="check?.status ?? 'NotChecked'" />
+                    <app-button size="sm" variant="ghost" (clicked)="editCheck(detail, type)">
+                      {{ editingCheck() === type ? 'Cancel' : check ? 'Update check' : 'Record check' }}
+                    </app-button>
+                  </div>
+
+                  @if (editingCheck() === type) {
+                    <form class="check-form" (submit)="$event.preventDefault(); recordCheck()">
+                      <div class="form-grid">
+                        <label class="field">
+                          Result
+                          <select [ngModel]="checkStatus()" (ngModelChange)="checkStatus.set($event)" name="checkStatus">
+                            <option value="Checked">Checked</option>
+                            <option value="Failed">Failed</option>
+                            <option value="NotChecked">Not checked</option>
+                          </select>
+                        </label>
+                        <label class="field">
+                          Evidence date <span class="field-hint">(optional)</span>
+                          <input type="date" [max]="today" [ngModel]="evidenceDate()" (ngModelChange)="evidenceDate.set($event)" name="evidenceDate" />
+                        </label>
+                        <label class="field wide">
+                          Note <span class="field-hint">(optional)</span>
+                          <input [ngModel]="checkNote()" (ngModelChange)="checkNote.set($event)" maxlength="1000" name="checkNote" />
+                        </label>
+                      </div>
+                      <div class="action-row">
+                        <app-button type="submit" size="sm" [loading]="saving()">Save check</app-button>
+                      </div>
+                    </form>
+                  }
+                </li>
+              }
+            </ul>
+          </section>
+
+          <section class="detail-section" aria-labelledby="decision-title">
+            <h3 id="decision-title">Decision</h3>
+
+            @if (detail.status === 'PendingReview') {
+              <label class="field">
+                Note to the owner
+                <span class="field-hint">Required when rejecting or asking for changes. The owner reads it.</span>
+                <textarea [ngModel]="adminNote()" (ngModelChange)="adminNote.set($event)" maxlength="1000" name="adminNote"></textarea>
+              </label>
+              <div class="action-row">
+                <app-button variant="success" [disabled]="!detail.canPublish" [loading]="saving()" (clicked)="request('approve')">
+                  Approve and publish
+                </app-button>
+                <app-button variant="outline" [loading]="saving()" (clicked)="request('request-changes')">
+                  Request changes
+                </app-button>
+                <app-button variant="danger" [loading]="saving()" (clicked)="request('reject')">Reject</app-button>
+              </div>
+              @if (!detail.canPublish) {
+                <p class="muted">Publishing unlocks once all four required checks are recorded as checked.</p>
+              }
+            } @else if (detail.status === 'Published') {
+              <label class="field">
+                Reason
+                <span class="field-hint">Required. The owner reads it.</span>
+                <textarea [ngModel]="adminNote()" (ngModelChange)="adminNote.set($event)" maxlength="1000" name="adminNote"></textarea>
+              </label>
+              <div class="action-row">
+                <app-button variant="danger" [loading]="saving()" (clicked)="request('unpublish')">Unpublish listing</app-button>
+              </div>
+            } @else {
+              <p class="muted">
+                Nothing to decide on a listing that is {{ label(detail.status).toLowerCase() }}. It comes back to the queue when the owner sends it for review.
+              </p>
+            }
+          </section>
+        </article>
+      }
+    </div>
+  </app-admin-workspace>
+
+  <app-confirm-dialog [request]="confirm()" [busy]="saving()" (cancelled)="confirm.set(null)" />
 </section>
