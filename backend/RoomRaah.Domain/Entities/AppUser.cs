@@ -12,6 +12,12 @@ public class AppUser
     public UserRole Role { get; set; }
     public bool IsEmailVerified { get; set; }
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Rule 137: why an admin deactivated the account, so the person can be told when they
+    /// try to sign in. Null while the account is active.
+    /// </summary>
+    public string? DeactivationReason { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public SeekerProfile? SeekerProfile { get; set; }

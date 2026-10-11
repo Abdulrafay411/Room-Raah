@@ -10,6 +10,7 @@ import {
   AdminUserSummary,
   InspectionPage,
   InspectionRecord,
+  RequestedInspectionPage,
   ReportPage,
   ReportRow,
   ReportStatus,
@@ -31,9 +32,11 @@ export class AdminService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiBaseUrl}/admin`;
 
-  properties(status?: PropertyStatus, page = 1): Observable<AdminPropertyPage> {
+  /** `q` is rule 135: title, city or owner's display name. */
+  properties(status?: PropertyStatus, page = 1, q?: string): Observable<AdminPropertyPage> {
     let params = new HttpParams().set('page', page).set('pageSize', ADMIN_PAGE_SIZE);
     if (status) params = params.set('status', status);
+    if (q?.trim()) params = params.set('q', q.trim());
     return this.http.get<AdminPropertyPage>(`${this.base}/properties`, { params });
   }
 
@@ -73,6 +76,12 @@ export class AdminService {
   dueInspections(page = 1): Observable<InspectionPage> {
     const params = new HttpParams().set('page', page).set('pageSize', ADMIN_PAGE_SIZE);
     return this.http.get<InspectionPage>(`${this.base}/inspections/due`, { params });
+  }
+
+  /** Rule 136: owners waiting for an inspection, oldest request first. */
+  requestedInspections(page = 1): Observable<RequestedInspectionPage> {
+    const params = new HttpParams().set('page', page).set('pageSize', ADMIN_PAGE_SIZE);
+    return this.http.get<RequestedInspectionPage>(`${this.base}/inspections/requested`, { params });
   }
 
   recordInspection(body: {

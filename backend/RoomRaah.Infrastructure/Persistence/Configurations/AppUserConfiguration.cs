@@ -35,6 +35,7 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 
         builder.Property(u => u.IsEmailVerified).IsRequired();
         builder.Property(u => u.IsActive).IsRequired();
+        builder.Property(u => u.DeactivationReason).HasMaxLength(1000);
         builder.Property(u => u.CreatedAt).IsRequired();
 
         builder.HasIndex(u => u.Email).IsUnique();

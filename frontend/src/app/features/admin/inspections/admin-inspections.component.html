@@ -11,10 +11,23 @@
     <div workspace-list class="panel-card">
       <div class="panel-head">
         <div>
-          <h2>Due for inspection</h2>
-          <p class="muted">Ordered by how overdue they are. Built from visits that have already happened; nothing here is a scheduled date.</p>
+          @if (worklist() === 'requested') {
+            <h2>Requested by owners</h2>
+            <p class="muted">Owners who asked for an inspection that has not happened yet, oldest request first.</p>
+          } @else {
+            <h2>Due for re-inspection</h2>
+            <p class="muted">Badged listings not visited in thirty days, most overdue first. Built from visits that have already happened; nothing here is a scheduled date.</p>
+          }
         </div>
         <div class="head-side">
+          <div class="queue-tabs" role="group" aria-label="Inspection worklist">
+            <button type="button" data-smoke="worklist-requested" [class.is-active]="worklist() === 'requested'" [attr.aria-pressed]="worklist() === 'requested'" (click)="show('requested')">
+              Requested
+            </button>
+            <button type="button" data-smoke="worklist-due" [class.is-active]="worklist() === 'due'" [attr.aria-pressed]="worklist() === 'due'" (click)="show('due')">
+              Due
+            </button>
+          </div>
           @if (canInspect()) {
             <span class="muted access-copy">You have inspector access: you can record inspections and grant badges.</span>
           } @else {
@@ -28,8 +41,40 @@
 
       @if (loading()) {
         <p class="loading-copy" aria-busy="true">Loading worklist…</p>
+      } @else if (worklist() === 'requested') {
+        @if (requested().length === 0) {
+          <p class="empty-copy" data-smoke="admin-inspections-empty">No owner is waiting for an inspection.</p>
+        } @else {
+          <ul class="queue" data-smoke="admin-inspections-list">
+            @for (row of requested(); track row.propertyId) {
+              <li
+                class="queue-row"
+                [class.is-selected]="target()?.id === row.propertyId"
+                [attr.aria-current]="target()?.id === row.propertyId ? 'true' : null"
+              >
+                <div class="row-head">
+                  <h3>{{ row.title }}</h3>
+                  <span class="asked">Asked {{ row.inspectionRequestedAt | date: 'd MMM y' }}</span>
+                </div>
+                <p class="meta">
+                  <span>{{ row.areaName }}, {{ row.cityName }}</span>
+                  <span>{{ row.ownerDisplayName }}</span>
+                  <span>Last inspected {{ row.lastInspectionAt ? (row.lastInspectionAt | date: 'd MMM y') : 'never' }}</span>
+                  @if (row.hasInspectionBadge) {
+                    <span class="has-badge">Carries the badge</span>
+                  }
+                </p>
+                <div class="row-actions">
+                  <app-button size="sm" variant="outline" (clicked)="useRequested(row)">
+                    {{ canInspect() ? 'Record inspection' : 'Open' }}
+                  </app-button>
+                </div>
+              </li>
+            }
+          </ul>
+        }
       } @else if (due().length === 0) {
-        <p class="empty-copy" data-smoke="admin-inspections-empty">Nothing is due for inspection.</p>
+        <p class="empty-copy" data-smoke="admin-inspections-empty">Nothing is due for re-inspection.</p>
       } @else {
         <ul class="queue" data-smoke="admin-inspections-list">
           @for (row of due(); track row.propertyId) {
@@ -89,14 +134,39 @@
             }
           </p>
         } @else {
-          <p class="target-prompt">Pick a listing from the worklist, or find one by its number.</p>
-          <form class="lookup" (submit)="$event.preventDefault(); lookUp()">
+          <p class="target-prompt">Pick a listing from a worklist, or find any published listing.</p>
+          <form class="lookup" role="search" (submit)="$event.preventDefault(); lookUp()" data-smoke="inspection-search">
             <label class="field">
-              Listing number
-              <input type="number" min="1" [ngModel]="lookupId()" (ngModelChange)="lookupId.set($event)" name="lookupId" />
+              Find a listing
+              <span class="field-hint">Name, city or owner — or the listing ID</span>
+              <input
+                type="search"
+                autocomplete="off"
+                maxlength="150"
+                [ngModel]="query()"
+                (ngModelChange)="onQuery($event)"
+                name="listingQuery"
+              />
             </label>
             <app-button type="submit" size="sm" variant="outline" [loading]="lookingUp()">Find listing</app-button>
           </form>
+          @if (searching()) {
+            <p class="muted search-status" aria-live="polite">Searching…</p>
+          } @else if (results().length) {
+            <ul class="search-results" aria-label="Matching listings" data-smoke="inspection-search-results">
+              @for (row of results(); track row.id) {
+                <li>
+                  <button type="button" class="search-result" (click)="pick(row)">
+                    <span class="search-result-title">{{ row.title }}</span>
+                    <span class="search-result-meta">
+                      {{ row.areaName }}, {{ row.cityName }} · {{ row.ownerName }}
+                      @if (row.hasInspectionBadge) { · <span class="has-badge">Badge</span> }
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
         }
       </div>
 
@@ -145,15 +215,15 @@
           <h3 id="badge-title">Inspection badge</h3>
           <p class="muted">
             @if (canInspect()) {
-              Grant it only after the latest inspection passed. Any admin may remove it.
+              Grant it only after the latest inspection passed. Any admin may remove it; the owner sees the reason.
             } @else {
-              Any admin may remove a badge. Granting one needs inspector access.
+              Any admin may remove a badge, and the owner sees the reason. Granting one needs inspector access.
             }
           </p>
         </div>
         <label class="field">
           Reason
-          <span class="field-hint">Required. Kept with the listing for the record.</span>
+          <span class="field-hint">Required. Kept with the listing; on removal the owner is shown it.</span>
           <input [ngModel]="badgeReason()" (ngModelChange)="badgeReason.set($event)" maxlength="1000" name="badgeReason" />
         </label>
         <div class="action-row">

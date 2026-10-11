@@ -60,6 +60,9 @@ public class AdminPropertySummaryDto
     /// <summary>Display name of the owner.</summary>
     public string OwnerName { get; set; } = string.Empty;
 
+    /// <summary>Whether the listing carries the inspection badge. Rule 135.</summary>
+    public bool HasInspectionBadge { get; set; }
+
     /// <summary>Monthly rent.</summary>
     public decimal MonthlyRent { get; set; }
 

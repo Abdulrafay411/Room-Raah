@@ -1,9 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { ADMIN_PAGE_SIZE, AdminService } from '../../../core/services/admin.service';
 import { AuthService } from '../../../core/auth/auth.service';
-import { DueInspection, inspectionProblem, requiredNote } from '../../../core/models/admin.model';
+import {
+  AdminPropertySummary,
+  DueInspection,
+  RequestedInspection,
+  inspectionProblem,
+  isListingSearch,
+  listingNumber,
+  requiredNote,
+} from '../../../core/models/admin.model';
 import { toLocalInputValue } from '../../../core/models/engagement.model';
 import { toFailure } from '../../../core/http/api-error';
 import { ButtonComponent } from '../../../shared/components';
@@ -14,7 +24,7 @@ import {
   ConfirmRequest,
 } from '../shared';
 
-/** The listing the two forms act on. Chosen from the worklist, or looked up by number. */
+/** The listing the two forms act on. Chosen from a worklist, or found by search or number. */
 interface Target {
   id: number;
   title: string;
@@ -23,6 +33,13 @@ interface Target {
   lastInspectionAt: string | null;
   hasBadge: boolean | null;
 }
+
+/**
+ * Two worklists: owners waiting for an inspection they asked for - rule 136 - and badged
+ * listings due for a re-inspection - rule 114. A listing on neither is found by name,
+ * city, owner or number (rule 135).
+ */
+type Worklist = 'requested' | 'due';
 
 @Component({
   selector: 'app-admin-inspections',
@@ -42,6 +59,8 @@ export class AdminInspectionsComponent {
   private readonly api = inject(AdminService);
   private readonly auth = inject(AuthService);
 
+  readonly worklist = signal<Worklist>('requested');
+  readonly requested = signal<RequestedInspection[]>([]);
   readonly due = signal<DueInspection[]>([]);
   readonly page = signal(1);
   readonly total = signal(0);
@@ -59,7 +78,12 @@ export class AdminInspectionsComponent {
   /** On a phone the forms live in a drawer; this opens it without a worklist row. */
   readonly drawerForced = signal(false);
   readonly detailOpen = computed(() => !!this.target() || this.drawerForced());
-  readonly lookupId = signal<number | null>(null);
+
+  /** What the admin typed to find a listing: a name, a city, an owner or an ID. */
+  readonly query = signal('');
+  readonly results = signal<AdminPropertySummary[]>([]);
+  readonly searching = signal(false);
+  private readonly terms = new Subject<string>();
 
   readonly inspectedAt = signal(toLocalInputValue(new Date()));
   readonly result = signal<'Passed' | 'Failed'>('Passed');
@@ -72,33 +96,72 @@ export class AdminInspectionsComponent {
 
   constructor() {
     this.loadPermission();
-    this.loadDue();
+    this.load();
+
+    // Published only: an inspection and a badge both belong to a live listing.
+    this.terms
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((term) => {
+          if (!isListingSearch(term)) return of(null);
+          this.searching.set(true);
+          return this.api.properties('Published', 1, term.trim()).pipe(catchError(() => of(null)));
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe((page) => {
+        this.searching.set(false);
+        this.results.set(page?.items?.slice(0, 8) ?? []);
+      });
+  }
+
+  // --- worklists -----------------------------------------------------------------------
+
+  show(list: Worklist): void {
+    if (this.worklist() === list) return;
+    this.worklist.set(list);
+    this.page.set(1);
+    this.load();
   }
 
   goTo(page: number): void {
     this.page.set(page);
-    this.loadDue();
+    this.load();
   }
 
-  loadDue(): void {
+  load(): void {
     this.loading.set(true);
-    this.api.dueInspections(this.page()).subscribe({
-      next: (page) => {
-        this.due.set(page.items ?? []);
-        this.total.set(page.totalCount ?? page.items?.length ?? 0);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set(toFailure(err).message);
-        this.loading.set(false);
-      },
-    });
+    const done = (total: number) => {
+      this.total.set(total);
+      this.loading.set(false);
+    };
+    const failed = (err: unknown) => {
+      this.error.set(toFailure(err).message);
+      this.loading.set(false);
+    };
+
+    if (this.worklist() === 'requested') {
+      this.api.requestedInspections(this.page()).subscribe({
+        next: (page) => {
+          this.requested.set(page.items ?? []);
+          done(page.totalCount ?? page.items?.length ?? 0);
+        },
+        error: failed,
+      });
+    } else {
+      this.api.dueInspections(this.page()).subscribe({
+        next: (page) => {
+          this.due.set(page.items ?? []);
+          done(page.totalCount ?? page.items?.length ?? 0);
+        },
+        error: failed,
+      });
+    }
   }
 
   use(row: DueInspection): void {
-    this.error.set(null);
-    this.notice.set(null);
-    this.target.set({
+    this.choose({
       id: row.propertyId,
       title: row.title,
       where: `${row.areaName}, ${row.cityName}`,
@@ -106,7 +169,7 @@ export class AdminInspectionsComponent {
       lastInspectionAt: row.lastInspectionAt,
       hasBadge: null,
     });
-    // The worklist does not say whether the listing already carries the badge; the
+    // The due worklist does not say whether the listing still carries the badge; the
     // listing itself does, and it decides which badge button makes sense.
     this.api.property(row.propertyId).subscribe({
       next: (detail) =>
@@ -117,18 +180,63 @@ export class AdminInspectionsComponent {
     });
   }
 
-  /** For a listing that is not on the worklist - one with a badge to remove, say. */
+  useRequested(row: RequestedInspection): void {
+    this.choose({
+      id: row.propertyId,
+      title: row.title,
+      where: `${row.areaName}, ${row.cityName}`,
+      owner: row.ownerDisplayName,
+      lastInspectionAt: row.lastInspectionAt,
+      hasBadge: row.hasInspectionBadge,
+    });
+  }
+
+  // --- finding a listing (rule 135) ----------------------------------------------------
+
+  onQuery(text: string): void {
+    this.query.set(text);
+    if (!isListingSearch(text)) this.results.set([]);
+    this.terms.next(text);
+  }
+
+  pick(row: AdminPropertySummary): void {
+    this.choose({
+      id: row.id,
+      title: row.title,
+      where: `${row.areaName}, ${row.cityName}`,
+      owner: row.ownerName,
+      lastInspectionAt: null,
+      hasBadge: row.hasInspectionBadge,
+    });
+  }
+
+  /**
+   * Enter in the search box: a number opens that listing, a search with results takes the
+   * first one, and anything else says why nothing happened.
+   */
   lookUp(): void {
-    const id = this.lookupId() ?? 0;
-    if (!Number.isInteger(id) || id <= 0) {
-      this.error.set('Enter a listing number.');
+    const text = this.query();
+    const id = listingNumber(text);
+
+    if (id === null) {
+      const first = this.results()[0];
+      if (first) {
+        this.pick(first);
+      } else {
+        this.error.set(
+          isListingSearch(text)
+            ? 'No published listing matches that name, city or owner.'
+            : 'Type at least two letters of a name, city or owner, or a listing ID.',
+        );
+      }
       return;
     }
+
     this.lookingUp.set(true);
     this.error.set(null);
     this.api.property(id).subscribe({
       next: (detail) => {
-        this.target.set({
+        this.choose({
           id: detail.id,
           title: detail.title,
           where: `${detail.areaName}, ${detail.cityName}`,
@@ -136,7 +244,6 @@ export class AdminInspectionsComponent {
           lastInspectionAt: null,
           hasBadge: detail.hasInspectionBadge,
         });
-        this.lookupId.set(null);
         this.lookingUp.set(false);
       },
       error: (err) => {
@@ -144,6 +251,14 @@ export class AdminInspectionsComponent {
         this.lookingUp.set(false);
       },
     });
+  }
+
+  private choose(target: Target): void {
+    this.error.set(null);
+    this.notice.set(null);
+    this.target.set(target);
+    this.query.set('');
+    this.results.set([]);
   }
 
   openDrawer(): void {
@@ -159,6 +274,8 @@ export class AdminInspectionsComponent {
     this.drawerForced.set(false);
     this.confirm.set(null);
   }
+
+  // --- inspection and badge ------------------------------------------------------------
 
   record(): void {
     const id = this.target()?.id ?? 0;
@@ -198,7 +315,7 @@ export class AdminInspectionsComponent {
             current ? { ...current, lastInspectionAt: saved.inspectedAt } : current,
           );
           this.saving.set(false);
-          this.loadDue();
+          this.load();
         },
         error: (err) => this.fail(err),
       });
@@ -223,7 +340,7 @@ export class AdminInspectionsComponent {
     }
     this.confirm.set({
       title: 'Remove the inspection badge?',
-      description: `"${target.title}" loses the RoomRaah inspection badge on every seeker-facing screen until an inspector grants it again.`,
+      description: `"${target.title}" loses the RoomRaah inspection badge on every seeker-facing screen until an inspector grants it again. The owner is shown your reason.`,
       quote: this.badgeReason(),
       confirmLabel: 'Remove badge',
       run: () => this.badge('remove'),
@@ -246,7 +363,7 @@ export class AdminInspectionsComponent {
           current ? { ...current, hasBadge: updated.hasInspectionBadge } : current,
         );
         this.saving.set(false);
-        this.loadDue();
+        this.load();
       },
       error: (err) => {
         this.confirm.set(null);

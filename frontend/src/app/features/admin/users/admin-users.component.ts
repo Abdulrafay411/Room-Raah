@@ -155,7 +155,10 @@ export class AdminUsersComponent {
     this.notice.set(null);
     this.api.setUserActive(user.id, active, this.reason().trim()).subscribe({
       next: (updated) => {
-        this.selected.set({ ...user, ...updated });
+        // Rule 137: the summary that comes back does not carry the reason, but this
+        // screen just sent it, so the detail can show it without another request.
+        const reason = this.reason().trim();
+        this.selected.set({ ...user, ...updated, deactivationReason: active ? null : reason });
         this.reason.set('');
         this.confirm.set(null);
         this.notice.set(

@@ -14,6 +14,12 @@ public class GetListingQueueQueryValidator : AbstractValidator<GetListingQueueQu
         RuleFor(x => x.PageSize)
             .InclusiveBetween(1, 50).WithMessage("Page size must be between 1 and 50.");
 
+        // Rule 135. A listing title is at most 150 characters, so a longer search can
+        // match nothing; one character matches nearly everything.
+        RuleFor(x => x.Q)
+            .Length(2, 150).WithMessage("The search term must be between 2 and 150 characters.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Q));
+
         RuleFor(x => x.Status)
             .Must(BeAStatus).WithMessage(
                 "Status must be Draft, PendingReview, ChangesRequested, Published, Rejected or Unpublished.")

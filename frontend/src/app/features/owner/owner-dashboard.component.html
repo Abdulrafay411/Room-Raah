@@ -80,6 +80,14 @@
 
                 <p class="listing-next">{{ nextStep(listing.status, listing.photoCount) }}</p>
 
+                <!-- Rule 138: a badge that quietly disappeared would be worse than no badge. -->
+                @if (!listing.hasInspectionBadge && listing.badgeRemovedReason) {
+                  <p class="badge-removed" role="note" data-smoke="badge-removed">
+                    <strong>Inspection badge removed{{ listing.badgeRemovedAt ? ' on ' + (listing.badgeRemovedAt | date: 'd MMM y') : '' }}.</strong>
+                    Reason: {{ listing.badgeRemovedReason }}
+                  </p>
+                }
+
                 @if (listing.status === 'Published') {
                   <!-- Rule 16: availability is its own, faster queue, with its own action.
                        Re-confirming the same number is accepted and is the point. -->

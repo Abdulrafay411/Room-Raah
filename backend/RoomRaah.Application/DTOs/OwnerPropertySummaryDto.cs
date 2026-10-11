@@ -36,6 +36,15 @@ public class OwnerPropertySummaryDto
     /// <summary>Whether the listing carries the physical inspection badge.</summary>
     public bool HasInspectionBadge { get; set; }
 
+    /// <summary>
+    /// Rule 138: when the badge was taken off, if that is the latest thing to have
+    /// happened to it. Null when it was never removed or has been granted again.
+    /// </summary>
+    public DateTime? BadgeRemovedAt { get; set; }
+
+    /// <summary>Rule 138: the reason the admin gave. The admin is not named.</summary>
+    public string? BadgeRemovedReason { get; set; }
+
     /// <summary>When availability was last confirmed.</summary>
     public DateTime AvailabilityConfirmedAt { get; set; }
 

@@ -69,6 +69,26 @@ public static class BadgeRules
     /// 422 for the same reason rule 26's note is: an absent field is a rule about the
     /// shape of the request, not about the state of the listing.
     /// </summary>
+    /// <summary>
+    /// Rule 138. The removal an owner should be told about: the badge's most recent
+    /// event, when that is a removal and the listing does not carry the badge. Null
+    /// otherwise - a badge granted again has nothing left to explain.
+    /// </summary>
+    public static BadgeEvent? CurrentRemoval(Property property)
+    {
+        if (property.HasInspectionBadge)
+        {
+            return null;
+        }
+
+        var latest = property.BadgeEvents
+            .OrderByDescending(e => e.ActedAt)
+            .ThenByDescending(e => e.Id)
+            .FirstOrDefault();
+
+        return latest?.Action == BadgeAction.Removed ? latest : null;
+    }
+
     public static string RequireReason(string? reason)
     {
         if (string.IsNullOrWhiteSpace(reason))

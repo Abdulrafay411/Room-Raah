@@ -1,5 +1,6 @@
 using AutoMapper;
 using RoomRaah.Application.DTOs;
+using RoomRaah.Application.Inspections;
 using RoomRaah.Domain.Entities;
 
 namespace RoomRaah.Application.Mappings;
@@ -19,6 +20,14 @@ public class PropertyProfile : Profile
             .ForMember(d => d.Photos, opt => opt.MapFrom(s => s.Photos.OrderBy(p => p.SortOrder)));
 
         CreateMap<Property, OwnerPropertySummaryDto>()
+            .ForMember(d => d.BadgeRemovedAt,
+                opt => opt.MapFrom(s => BadgeRules.CurrentRemoval(s) == null
+                    ? (DateTime?)null
+                    : BadgeRules.CurrentRemoval(s)!.ActedAt))
+            .ForMember(d => d.BadgeRemovedReason,
+                opt => opt.MapFrom(s => BadgeRules.CurrentRemoval(s) == null
+                    ? null
+                    : BadgeRules.CurrentRemoval(s)!.Reason))
             .ForMember(d => d.AreaName, opt => opt.MapFrom(s => s.Area.Name))
             .ForMember(d => d.CityName, opt => opt.MapFrom(s => s.Area.City.Name))
             .ForMember(d => d.PhotoCount, opt => opt.MapFrom(s => s.Photos.Count))

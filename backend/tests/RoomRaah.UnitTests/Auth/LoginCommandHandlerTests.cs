@@ -91,6 +91,34 @@ public class LoginCommandHandlerTests
     }
 
     [Fact]
+    public async Task Rule_137_the_right_password_is_told_why_the_account_is_off()
+    {
+        var user = TestData.User(isActive: false);
+        user.DeactivationReason = "Repeated abusive messages.";
+        _users.GetByEmailAsync(Arg.Any<string>()).Returns(user);
+        _hasher.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(true);
+
+        var exception = await Should.ThrowAsync<BusinessRuleException>(
+            () => _handler.Handle(Command(), CancellationToken.None));
+
+        exception.Message.ShouldBe("This account has been deactivated: Repeated abusive messages.");
+    }
+
+    [Fact]
+    public async Task Rule_137_a_wrong_password_never_hears_the_reason()
+    {
+        var user = TestData.User(isActive: false);
+        user.DeactivationReason = "Repeated abusive messages.";
+        _users.GetByEmailAsync(Arg.Any<string>()).Returns(user);
+        _hasher.Verify(Arg.Any<string>(), Arg.Any<string>()).Returns(false);
+
+        var exception = await Should.ThrowAsync<UnauthenticatedException>(
+            () => _handler.Handle(Command(), CancellationToken.None));
+
+        exception.Message.ShouldBe("Invalid email or password.");
+    }
+
+    [Fact]
     public async Task Rule_5_an_unverified_account_may_still_log_in()
     {
         var user = TestData.User(isEmailVerified: false);

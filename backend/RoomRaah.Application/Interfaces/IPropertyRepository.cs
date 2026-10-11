@@ -24,8 +24,12 @@ public interface IPropertyRepository
     /// </summary>
     Task<Property?> GetForReviewAsync(int id);
 
-    Task<List<Property>> GetByStatusAsync(PropertyStatus? status, int page, int pageSize);
-    Task<int> CountByStatusAsync(PropertyStatus? status);
+    /// <summary>
+    /// The admin listing queue. <paramref name="search"/> is rule 135: title, city or
+    /// owner's display name; null means no search.
+    /// </summary>
+    Task<List<Property>> GetByStatusAsync(PropertyStatus? status, string? search, int page, int pageSize);
+    Task<int> CountByStatusAsync(PropertyStatus? status, string? search);
 
     /// <summary>
     /// One page of the public search. Rule 28 is applied here rather than by the
@@ -69,4 +73,12 @@ public interface IPropertyRepository
     Task<List<Property>> GetDueForInspectionAsync(DateTime inspectedBefore, int page, int pageSize);
 
     Task<int> CountDueForInspectionAsync(DateTime inspectedBefore);
+
+    /// <summary>
+    /// Rule 136. Published listings whose owner asked for an inspection and that have
+    /// not been inspected on or after the day of the request, oldest request first.
+    /// </summary>
+    Task<List<Property>> GetInspectionRequestedAsync(int page, int pageSize);
+
+    Task<int> CountInspectionRequestedAsync();
 }

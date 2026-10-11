@@ -40,6 +40,14 @@ public class InspectionProfile : Profile
             .ForMember(d => d.OwnerDisplayName, opt => opt.MapFrom(s => s.Owner.FullName))
             .ForMember(d => d.DaysOverdue, opt => opt.Ignore());
 
+        CreateMap<Property, RequestedInspectionDto>()
+            .ForMember(d => d.PropertyId, opt => opt.MapFrom(s => s.Id))
+            .ForMember(d => d.AreaName, opt => opt.MapFrom(s => s.Area.Name))
+            .ForMember(d => d.CityName, opt => opt.MapFrom(s => s.Area.City.Name))
+            .ForMember(d => d.OwnerDisplayName, opt => opt.MapFrom(s => s.Owner.FullName))
+            .ForMember(d => d.InspectionRequestedAt,
+                opt => opt.MapFrom(s => s.InspectionRequestedAt ?? default(DateTime)));
+
         CreateMap<AppUser, AdminUserSummaryDto>();
 
         // Rule 116. The three profile-shaped fields are conditional on the role having

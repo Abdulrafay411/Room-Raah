@@ -422,3 +422,14 @@
   justify-content: flex-end;
   gap: $space-2;
 }
+
+// Rule 138: why the inspection badge came off, until it is granted again.
+.badge-removed {
+  margin: $space-2 0 0;
+  padding: $space-2 $space-3;
+  border: 1px solid $color-warning-border;
+  border-radius: $radius-md;
+  background: $color-warning-light;
+  color: $color-slate-800;
+  font-size: $font-size-sm;
+}

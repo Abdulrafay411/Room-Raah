@@ -51,6 +51,10 @@ public class SetAccountActiveCommandHandler
 
         user.IsActive = request.Active;
 
+        // Rule 137. Kept so the person can be told why when they try to sign in; a
+        // reactivation clears it, because the reason no longer applies.
+        user.DeactivationReason = request.Active ? null : reason;
+
         await _unitOfWork.SaveChangesAsync();
 
         // Rule 120. Nothing the account owns is modified — the query filters already

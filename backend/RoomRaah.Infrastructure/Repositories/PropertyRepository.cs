@@ -45,12 +45,18 @@ public class PropertyRepository : IPropertyRepository
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
+    /// <summary>
+    /// Badge events come along for rule 138. Split, so photos and badge events do not
+    /// multiply into each other's rows.
+    /// </summary>
     public async Task<List<Property>> GetByOwnerAsync(int ownerId, int page, int pageSize)
     {
         return await _context.Properties
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(p => p.Area).ThenInclude(a => a.City)
             .Include(p => p.Photos)
+            .Include(p => p.BadgeEvents)
             .Where(p => p.OwnerId == ownerId)
             .OrderByDescending(p => p.CreatedAt)
             .ThenByDescending(p => p.Id)
@@ -81,9 +87,10 @@ public class PropertyRepository : IPropertyRepository
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public async Task<List<Property>> GetByStatusAsync(PropertyStatus? status, int page, int pageSize)
+    public async Task<List<Property>> GetByStatusAsync(
+        PropertyStatus? status, string? search, int page, int pageSize)
     {
-        return await InStatus(status)
+        return await InStatus(status, search)
             .AsNoTracking()
             .Include(p => p.Area).ThenInclude(a => a.City)
             .Include(p => p.Photos)
@@ -95,16 +102,27 @@ public class PropertyRepository : IPropertyRepository
             .ToListAsync();
     }
 
-    public async Task<int> CountByStatusAsync(PropertyStatus? status)
+    public async Task<int> CountByStatusAsync(PropertyStatus? status, string? search)
     {
-        return await InStatus(status).CountAsync();
+        return await InStatus(status, search).CountAsync();
     }
 
-    private IQueryable<Property> InStatus(PropertyStatus? status)
+    private IQueryable<Property> InStatus(PropertyStatus? status, string? search)
     {
-        return status is null
+        var query = status is null
             ? _context.Properties
             : _context.Properties.Where(p => p.Status == status);
+
+        // Rule 135. The database's default collation already ignores case.
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(p =>
+                EF.Functions.Like(p.Title, $"%{search}%") ||
+                EF.Functions.Like(p.Area.City.Name, $"%{search}%") ||
+                EF.Functions.Like(p.Owner.FullName, $"%{search}%"));
+        }
+
+        return query;
     }
 
     public async Task<List<Property>> SearchAsync(PropertySearchCriteria criteria)
@@ -226,6 +244,37 @@ public class PropertyRepository : IPropertyRepository
             p.Status == PropertyStatus.Published &&
             p.HasInspectionBadge &&
             (p.LastInspectionAt == null || p.LastInspectionAt < inspectedBefore));
+    }
+
+    public Task<List<Property>> GetInspectionRequestedAsync(int page, int pageSize)
+    {
+        return InspectionRequested()
+            .AsNoTracking()
+            .Include(p => p.Area).ThenInclude(a => a.City)
+            .Include(p => p.Owner)
+            .OrderBy(p => p.InspectionRequestedAt)
+            .ThenBy(p => p.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
+    public Task<int> CountInspectionRequestedAsync()
+    {
+        return InspectionRequested().CountAsync();
+    }
+
+    /// <summary>
+    /// Rule 136. "On or after the day of the request" rather than the moment: an admin
+    /// records a visit by when it happened, and a visit on the afternoon an owner asked
+    /// that morning answers the request even if it is entered as nine o'clock.
+    /// </summary>
+    private IQueryable<Property> InspectionRequested()
+    {
+        return _context.Properties.Where(p =>
+            p.Status == PropertyStatus.Published &&
+            p.InspectionRequestedAt != null &&
+            (p.LastInspectionAt == null || p.LastInspectionAt < p.InspectionRequestedAt.Value.Date));
     }
 
     public async Task<List<Property>> GetFeaturedAsync(int count)

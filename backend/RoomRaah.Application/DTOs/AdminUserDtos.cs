@@ -63,4 +63,7 @@ public class AdminUserDto : AdminUserSummaryDto
 
     /// <summary>Whether this admin may record inspections, if this account is an admin.</summary>
     public bool? CanInspect { get; set; }
+
+    /// <summary>Rule 137: why the account was deactivated. Null while it is active.</summary>
+    public string? DeactivationReason { get; set; }
 }

@@ -57,6 +57,9 @@ export interface MyListingSummary {
   photoCount: number;
   primaryThumbnailUrl: string | null;
   hasInspectionBadge: boolean;
+  /** Rule 138: when and why the badge came off, while it is still off. */
+  badgeRemovedAt?: string | null;
+  badgeRemovedReason?: string | null;
   availabilityConfirmedAt: string | null;
   updatedAt: string | null;
 }

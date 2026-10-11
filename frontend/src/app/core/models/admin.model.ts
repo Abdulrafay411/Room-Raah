@@ -13,6 +13,8 @@ export interface AdminPropertySummary {
   areaName: string;
   cityName: string;
   ownerName: string;
+  /** Rule 135: lets an inspection screen choose the right badge button without opening it. */
+  hasInspectionBadge: boolean;
   monthlyRent: number;
   photoCount: number;
   primaryThumbnailUrl: string | null;
@@ -121,6 +123,18 @@ export interface DueInspection {
   daysOverdue: number;
 }
 
+/** Rule 136: a listing whose owner asked for an inspection that has not happened yet. */
+export interface RequestedInspection {
+  propertyId: number;
+  title: string;
+  areaName: string;
+  cityName: string;
+  ownerDisplayName: string;
+  inspectionRequestedAt: string;
+  lastInspectionAt: string | null;
+  hasInspectionBadge: boolean;
+}
+
 export interface InspectionRecord {
   id: number;
   propertyId: number;
@@ -177,11 +191,14 @@ export interface AdminUserDetail extends AdminUserSummary {
   identityStatus: VerificationStatus | null;
   identityCheckedAt: string | null;
   canInspect: boolean | null;
+  /** Rule 137: why the account was switched off. Null while it is active. */
+  deactivationReason?: string | null;
 }
 
 export type AdminPropertyPage = Page<AdminPropertySummary>;
 export type RevisionPage = Page<RevisionQueueRow>;
 export type InspectionPage = Page<DueInspection>;
+export type RequestedInspectionPage = Page<RequestedInspection>;
 export type ReviewQueuePage = Page<ReviewQueueRow>;
 export type ReportPage = Page<ReportRow>;
 export type AdminUserPage = Page<AdminUserSummary>;
@@ -193,6 +210,31 @@ export const CHECK_TYPES: VerificationCheckType[] = [
   'Facilities',
   'Availability',
 ];
+
+/** Rule 135's bounds on the admin listing search. */
+export const LISTING_SEARCH_MIN = 2;
+export const LISTING_SEARCH_MAX = 150;
+
+/**
+ * "12" or "#12" is a listing number, looked up directly; anything else is a search by
+ * title, city or owner. Null when the text is not a number.
+ */
+export function listingNumber(text: string): number | null {
+  const match = /^\s*#?(\d{1,9})\s*$/.exec(text);
+  if (!match) return null;
+  const id = Number(match[1]);
+  return id > 0 ? id : null;
+}
+
+/** Whether the text is worth sending as a search: long enough, and not a listing number. */
+export function isListingSearch(text: string): boolean {
+  const term = text.trim();
+  return (
+    term.length >= LISTING_SEARCH_MIN &&
+    term.length <= LISTING_SEARCH_MAX &&
+    listingNumber(term) === null
+  );
+}
 
 export function requiredNote(value: string): string | null {
   return value.trim() ? null : 'Write a reason before making this decision.';

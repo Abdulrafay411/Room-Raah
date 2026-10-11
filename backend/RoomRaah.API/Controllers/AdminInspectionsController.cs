@@ -61,6 +61,20 @@ public class AdminInspectionsController : ControllerBase
     }
 
     /// <summary>
+    /// Rule 136: listings whose owner asked for an inspection that has not happened yet,
+    /// oldest request first. The due worklist only holds listings that already carry the
+    /// badge, so a first inspection an owner asked for appears here instead.
+    /// </summary>
+    [HttpGet("inspections/requested")]
+    [ProducesResponseType(typeof(PagedResult<RequestedInspectionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PagedResult<RequestedInspectionDto>>> Requested(
+        [FromQuery] GetRequestedInspectionsQuery query)
+    {
+        return Ok(await _mediator.Send(query));
+    }
+
+    /// <summary>
     /// Turns the badge on. Refused unless the listing's most recent inspection passed,
     /// and refused for an admin who does not make visits.
     /// </summary>

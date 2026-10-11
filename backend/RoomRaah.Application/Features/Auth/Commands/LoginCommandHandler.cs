@@ -37,9 +37,11 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
             throw new UnauthenticatedException(AuthMessages.InvalidCredentials);
         }
 
+        // Rule 137. After the password, never before it: a wrong password stays the
+        // ordinary 401, so the reason cannot be read by someone guessing addresses.
         if (!user.IsActive)
         {
-            throw new BusinessRuleException(AuthMessages.AccountDeactivated);
+            throw new BusinessRuleException(AuthMessages.AccountDeactivatedBecause(user.DeactivationReason));
         }
 
         var response = await _sessionService.IssueAsync(user);

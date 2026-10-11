@@ -144,6 +144,7 @@ public class AdminUserHandlerTests
 
         dto.IsActive.ShouldBeFalse();
         seeker.IsActive.ShouldBeFalse();
+        seeker.DeactivationReason.ShouldBe("Repeated abusive messages.");
 
         await _unitOfWork.Received(1).SaveChangesAsync();
     }
@@ -152,6 +153,7 @@ public class AdminUserHandlerTests
     public async Task An_account_is_switched_back_on()
     {
         var seeker = TestData.User(SeekerId, isActive: false);
+        seeker.DeactivationReason = "Repeated abusive messages.";
         _users.GetByIdAsync(SeekerId).Returns(seeker);
 
         var dto = await SetActive().Handle(new SetAccountActiveCommand
@@ -163,6 +165,9 @@ public class AdminUserHandlerTests
         }, default);
 
         dto.IsActive.ShouldBeTrue();
+
+        // Rule 137: the reason no longer applies once the account is back on.
+        seeker.DeactivationReason.ShouldBeNull();
     }
 
     /// <summary>

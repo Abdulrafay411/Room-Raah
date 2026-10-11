@@ -15,6 +15,9 @@ listings and communication inside the platform.
   brings it back with only what came after.
 - Owner listing and photo management, availability confirmation and visit responses.
 - Admin listing/revision approval, review/report moderation, inspections and account management.
+  Admins find a listing by name, city or owner, and see owners' inspection requests as a
+  worklist. A deactivated user is told the reason when they sign in, and an owner is told why
+  an inspection badge was removed.
 - Email verification, JWT sessions and role permissions. Published edits need admin approval.
   An unverified account can browse; a banner says what needs verification, and the verify
   page returns the user to what they were doing.
@@ -186,7 +189,7 @@ npm test -- --watch=false
 ```
 
 Integration tests require Docker. Test source is included. The latest frontend validation
-passed 268 unit tests, including the AI assistant's. An earlier packaging also passed 50 live
+passed 271 unit tests, including the AI assistant's. An earlier packaging also passed 50 live
 browser checks, including the assistant for seekers, owners and admins. The original browser
 automation harness and generated reports are excluded from this source-only submission.
 

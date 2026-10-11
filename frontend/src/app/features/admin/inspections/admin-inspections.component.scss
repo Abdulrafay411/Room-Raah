@@ -7,7 +7,47 @@
   flex-wrap: wrap;
   align-items: center;
   gap: $space-2;
-  max-width: 32ch;
+  max-width: 34ch;
+}
+
+// The same two-way switch the revisions queue uses.
+.queue-tabs {
+  display: inline-flex;
+  border: 1px solid $color-slate-300;
+  border-radius: $radius-md;
+  overflow: hidden;
+
+  button {
+    border: 0;
+    border-radius: 0;
+    background: $color-surface;
+    padding: 0.55rem 0.85rem;
+    color: $color-slate-700;
+    font: inherit;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+
+    & + button {
+      border-left: 1px solid $color-slate-300;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-navy;
+      outline-offset: -2px;
+    }
+
+    &.is-active {
+      background: $color-navy;
+      color: $color-surface;
+    }
+  }
+}
+
+.asked {
+  color: $color-slate-600;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
 }
 
 .access-copy {
@@ -68,4 +108,48 @@
   .field {
     flex: 1 1 160px;
   }
+}
+
+.search-status {
+  margin: 0;
+  font-size: $font-size-sm;
+}
+
+.search-results {
+  display: grid;
+  gap: $space-1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-result {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  padding: $space-2 $space-3;
+  border: 1px solid $color-slate-200;
+  border-radius: $radius-md;
+  background: $color-surface;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $color-navy;
+  }
+
+  &:focus-visible {
+    @include focus-visible;
+  }
+}
+
+.search-result-title {
+  color: $color-navy;
+  font-weight: $font-weight-semibold;
+}
+
+.search-result-meta {
+  color: $color-slate-600;
+  font-size: $font-size-sm;
 }

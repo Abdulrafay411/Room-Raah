@@ -15,6 +15,15 @@ public static class AuthMessages
     public const string CodeBurned = "This code has been used too many times. Request a new one.";
     public const string AccountDeactivated = "This account has been deactivated and cannot log in.";
     public const string AccountDeactivatedShort = "This account has been deactivated.";
+
+    /// <summary>
+    /// Rule 137. Only ever returned after the password has been checked, so the reason is
+    /// told to the account's owner and to nobody who merely knows the address.
+    /// </summary>
+    public static string AccountDeactivatedBecause(string? reason) =>
+        string.IsNullOrWhiteSpace(reason)
+            ? AccountDeactivated
+            : $"This account has been deactivated: {reason.Trim()}";
     public const string EmailAlreadyVerified = "This email address has already been verified.";
     public const string EmailAlreadyTaken = "An account with this email address already exists.";
     public const string AccountNotFound = "No account was found for this email address.";

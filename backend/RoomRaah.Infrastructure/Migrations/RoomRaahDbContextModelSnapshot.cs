@@ -58,6 +58,10 @@ namespace RoomRaah.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DeactivationReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(200)

@@ -88,6 +88,37 @@ public class DueForInspectionDto
     public int DaysOverdue { get; set; }
 }
 
+/// <summary>
+/// A row on the admin's "requested by owners" worklist. Rule 136: a listing whose owner
+/// asked for an inspection that has not happened yet.
+/// </summary>
+public class RequestedInspectionDto
+{
+    /// <summary>The listing.</summary>
+    public int PropertyId { get; set; }
+
+    /// <summary>Its title.</summary>
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>The area it is in.</summary>
+    public string AreaName { get; set; } = string.Empty;
+
+    /// <summary>The city that area is in.</summary>
+    public string CityName { get; set; } = string.Empty;
+
+    /// <summary>The owner, by display name. Rule 33 applies here as everywhere else.</summary>
+    public string OwnerDisplayName { get; set; } = string.Empty;
+
+    /// <summary>When the owner asked.</summary>
+    public DateTime InspectionRequestedAt { get; set; }
+
+    /// <summary>When it was last visited, if ever - always before the request.</summary>
+    public DateTime? LastInspectionAt { get; set; }
+
+    /// <summary>Whether it carries the badge today.</summary>
+    public bool HasInspectionBadge { get; set; }
+}
+
 /// <summary>One entry on the badge's audit trail. Rule 112.</summary>
 public class BadgeEventDto
 {
